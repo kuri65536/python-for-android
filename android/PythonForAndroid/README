@@ -1,0 +1,9 @@
+Python Interpreter For Android
+
+In order to build this project first you need to ant build this projects:
+    Common
+    Utils
+    InterpreterForAndroid
+
+Copy the generated jar files (<project>/dist) into PythonForAndroid/libs each time
+any of them is upgraded

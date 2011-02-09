@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<project default="dist">
+    <property name="src" location="src"/>
+    <property name="build" location="bin"/>
+    <property environment="env"/>
+    <path id="classpath">
+	<fileset dir="libs" includes="**/*.jar" />
+	<fileset dir="${env.ANDROID_SDK}/platforms/android-3/" includes="**/*.jar" />
+    </path>
+
+    <target name="init">
+	<mkdir dir="${build}"/>
+    </target>
+    
+    <target name="compile" depends="init">
+	<javac srcdir="${src}" destdir="${build}" classpathref="classpath"/>
+    </target>
+
+    <target name="dist" depends="compile">
+	<jar jarfile="dist/interpreter.jar" basedir="${build}"/>
+    </target>
+    
+    <target name="clean">
+	<delete dir="${build}"/>
+	<delete dir="${dist}"/>
+    </target>
+</project>
