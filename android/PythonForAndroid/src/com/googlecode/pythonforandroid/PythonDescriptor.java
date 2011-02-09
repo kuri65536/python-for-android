@@ -22,7 +22,10 @@ import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterUtils;
 import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,10 +36,12 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private static final String ENV_PATH = "PYTHONPATH";
   private static final String ENV_TEMP = "TEMP";
   private static final String ENV_LD = "LD_LIBRARY_PATH";
+  private static final String BASE_URL = "http://python-for-android.googlecode.com/";
+  private static final int LATEST_VERSION = 12;
 
   @Override
   public String getBaseInstallUrl() {
-    return "http://python-for-android.googlecode.com/files/";
+    return BASE_URL + "/files/";
   }
 
   public String getExtension() {
@@ -63,18 +68,33 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     return true;
   }
 
+  private int __resolve_version(String what) {
+    // try resolving latest version
+    URL url;
+    try {
+      url = new URL(BASE_URL + "/hg/python-build/LATEST_VERSION_" + what.toUpperCase());
+      BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+      return Integer.parseInt(reader.readLine().substring(1));
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return LATEST_VERSION;
+    }
+
+  }
+
   public int getVersion() {
-    return 11;
+    return __resolve_version("");
   }
 
   @Override
   public int getExtrasVersion() {
-    return 11;
+    return __resolve_version("extras");
   }
 
   @Override
   public int getScriptsVersion() {
-    return 11;
+    return __resolve_version("scripts");
   }
 
   @Override

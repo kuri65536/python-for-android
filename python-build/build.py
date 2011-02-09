@@ -23,7 +23,19 @@ import shutil
 import sys
 import zipfile
 
-VERSION='_'+ sys.argv[1] if len(sys.argv)>1 else ''
+VERSION={
+    "": "",
+    "scripts": "",
+    "extra": ""
+}
+
+for i in ("scripts", "extra"):
+    if os.path.isfile("LATEST_VERSION_"+i.upper()):
+	VERSION[i] = "_"+open("LATEST_VERSION_"+i.upper()).read().strip()
+
+if os.path.isfile("LATEST_VERSION"):
+    VERSION[""] = "_"+open("LATEST_VERSION").read().strip()
+
 
 def run(cmd, exit=True, cwd=None):
   print cmd
@@ -129,7 +141,7 @@ map(rm, find('output.temp', '\.py$')[0])
 map(rm, find('output.temp', '\.pyc$')[0])
 map(rm, find('output.temp', 'python$')[0])
 rm('output.temp/usr/lib/python2.6')
-zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION),
+zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION[""]),
       os.path.join(pwd, 'output.temp', 'usr'),
       os.path.join(pwd, 'output.temp', 'usr'))
 rm('output.temp')
@@ -150,7 +162,7 @@ libs = os.path.join(pwd, 'output/usr/lib/python2.6')
 # Copy in ASE's Android module.
 shutil.copy(os.path.join(pwd, 'python-libs', 'ase', 'android.py'),
             'output/usr/lib/python2.6')
-zipup(os.path.join(pwd, 'python_extras%s.zip' % VERSION), libs, libs,
+zipup(os.path.join(pwd, 'python_extras%s.zip' % VERSION["extra"]), libs, libs,
       exclude=['lib-dynload'], prefix='python/')
 
 map(rm, find('output', '\.py$')[0])
@@ -162,13 +174,13 @@ def clean_library(lib):
 map (clean_library, ['ctypes', 'distutils', 'idlelib', 'plat-linux2', 'site-packages'])
 
 print 'Zipping up Python interpreter for deployment.'
-zipup(os.path.join(pwd, 'python%s.zip' % VERSION),
+zipup(os.path.join(pwd, 'python%s.zip' % VERSION[""]),
       os.path.join(pwd, 'output', 'usr'),
       os.path.join(pwd, 'output', 'usr'),
       exclude=['*.pyc',  '*.py'], prefix="python/")
 
 print 'Zipping up Python scripts.'
-zipup(os.path.join(pwd, 'python_scripts%s.zip' % VERSION),
+zipup(os.path.join(pwd, 'python_scripts%s.zip' % VERSION["scripts"]),
       os.path.join(pwd, 'python-libs', 'ase', 'scripts'),
       os.path.join(pwd, 'python-libs', 'ase', 'scripts'))
 
