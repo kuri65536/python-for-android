@@ -6,7 +6,9 @@ set -ex
 CWD=$(pwd)
 DEBUG=no
 
-RELEASE_VERSION=r11
+RELEASE_VERSION=$(cat LATEST_VERSION)
+echo "Building Python VM For Android Release ${RELEASE_VERSION}"
+
 rm -rf python*${RELEASE_VERSION}.zip
 
 if [ ! -f ${CWD}/Python-${VERSION}.tar.bz2 ]; then
