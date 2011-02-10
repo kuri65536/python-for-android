@@ -37,7 +37,10 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private static final String ENV_TEMP = "TEMP";
   private static final String ENV_LD = "LD_LIBRARY_PATH";
   private static final String BASE_URL = "http://python-for-android.googlecode.com/";
-  private static final int LATEST_VERSION = 12;
+  private static final int LATEST_VERSION = -1;
+  private int cache_version = -1;
+  private int cache_extras_version = -1;
+  private int cache_scripts_version = -1;
 
   @Override
   public String getBaseInstallUrl() {
@@ -72,9 +75,9 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     // try resolving latest version
     URL url;
     try {
-      url = new URL(BASE_URL + "/hg/python-build/LATEST_VERSION_" + what.toUpperCase());
+      url = new URL(BASE_URL + "hg/python-build/LATEST_VERSION" + what.toUpperCase());
       BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-      return Integer.parseInt(reader.readLine().substring(1));
+      return Integer.parseInt(reader.readLine().substring(1).trim());
     } catch (Exception e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -84,17 +87,41 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   public int getVersion() {
-    return __resolve_version("");
+    cache_version = __resolve_version("");
+    return cache_version;
+  }
+
+  public int getVersion(boolean usecache) {
+    if (usecache && cache_version > -1) {
+      return cache_version;
+    }
+    return this.getVersion();
   }
 
   @Override
   public int getExtrasVersion() {
-    return __resolve_version("extras");
+    cache_extras_version = __resolve_version("_extra");
+    return cache_extras_version;
+  }
+
+  public int getExtrasVersion(boolean usecache) {
+    if (usecache && cache_extras_version > -1) {
+      return cache_extras_version;
+    }
+    return this.getExtrasVersion();
   }
 
   @Override
   public int getScriptsVersion() {
-    return __resolve_version("scripts");
+    cache_scripts_version = __resolve_version("_scripts");
+    return cache_scripts_version;
+  }
+
+  public int getScriptsVersion(boolean usecache) {
+    if (usecache && cache_scripts_version > -1) {
+      return cache_scripts_version;
+    }
+    return getScriptsVersion();
   }
 
   @Override

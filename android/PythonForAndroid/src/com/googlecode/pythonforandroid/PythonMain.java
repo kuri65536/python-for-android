@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,6 +17,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.FileUtils;
@@ -50,7 +52,7 @@ import java.util.zip.ZipFile;
  * 
  * @author Damon
  * @author Robbie Matthews (rjmatthews62@gmail.com)
- * @author Manuel Narango
+ * @author Manuel Naranjo (manuel@aircable.net)
  */
 
 // TODO:(Robbie) The whole Import Module is more of a proof of concept than a fully realised
@@ -97,10 +99,18 @@ public class PythonMain extends Main {
   private File mFrom;
   private File mSoPath;
   private File mPythonPath;
+  private TextView mHostVersion, mOfficialVersion;
+  private PythonDescriptor mDescriptor;
+
+  private int getInstalledVersion(String key) {
+    SharedPreferences storage = getSharedPreferences("python-installer", 0);
+    return storage.getInt(key, -1);
+  }
 
   @Override
   protected InterpreterDescriptor getDescriptor() {
-    return new PythonDescriptor();
+    mDescriptor = new PythonDescriptor();
+    return mDescriptor;
   }
 
   @Override
@@ -113,6 +123,18 @@ public class PythonMain extends Main {
   protected InterpreterUninstaller getInterpreterUninstaller(InterpreterDescriptor descriptor,
       Context context, AsyncTaskListener<Boolean> listener) throws Sl4aException {
     return new PythonUninstaller(descriptor, context, listener);
+  }
+
+  private String createVersionString(String header, int version, int extras, int scripts) {
+    String out = header;
+    out += " Versions, interpreter: ";
+    out += version > -1 ? version : " ND";
+    out += ", extras: ";
+    out += extras > -1 ? extras : " ND";
+    out += ", scripts: ";
+    out += scripts > -1 ? scripts : " ND";
+
+    return out;
   }
 
   @Override
@@ -137,6 +159,19 @@ public class PythonMain extends Main {
     final float scale = getResources().getDisplayMetrics().density;
     int marginPixels = (int) (MARGIN_DIP * scale + 0.5f);
     marginParams.setMargins(marginPixels, marginPixels, marginPixels, marginPixels);
+
+    mOfficialVersion = new TextView(this);
+    mOfficialVersion.setLayoutParams(marginParams);
+    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(),
+        mDescriptor.getExtrasVersion(), mDescriptor.getScriptsVersion()));
+    mLayout.addView(mOfficialVersion);
+
+    mHostVersion = new TextView(this);
+    mHostVersion.setLayoutParams(marginParams);
+    mHostVersion.setText(createVersionString("Installed", getInstalledVersion("interpreter"),
+        getInstalledVersion("extras"), getInstalledVersion("scripts")));
+    mLayout.addView(mHostVersion);
+
     mButtonModules = new Button(this);
     mButtonModules.setLayoutParams(marginParams);
     mButtonModules.setText("Import Modules");
@@ -146,6 +181,7 @@ public class PythonMain extends Main {
         doImportModule();
       }
     });
+
     mButtonBrowse = new Button(this);
     mButtonBrowse.setLayoutParams(marginParams);
     mButtonBrowse.setText("Browse Modules");
@@ -155,6 +191,13 @@ public class PythonMain extends Main {
         doBrowseModule();
       }
     });
+  }
+
+  @Override
+  protected void setInstalled(boolean isInstalled) {
+    mHostVersion.setText(createVersionString("Installed", getInstalledVersion("interpreter"),
+        getInstalledVersion("extras"), getInstalledVersion("scripts")));
+    super.setInstalled(isInstalled);
   }
 
   protected void doBrowseModule() {

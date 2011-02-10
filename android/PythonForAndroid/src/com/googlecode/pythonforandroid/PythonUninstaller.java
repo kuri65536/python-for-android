@@ -1,7 +1,8 @@
 package com.googlecode.pythonforandroid;
 
 import android.content.Context;
-
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.InterpreterUninstaller;
@@ -17,6 +18,13 @@ public class PythonUninstaller extends InterpreterUninstaller {
 
   @Override
   protected boolean cleanup() {
+    SharedPreferences storage = mContext.getSharedPreferences("python-installer", 0);
+    Editor editor = storage.edit();
+    editor.remove("interpreter");
+    editor.remove("extras");
+    editor.remove("scripts");
+    editor.commit();
+
     return true;
   }
 }
