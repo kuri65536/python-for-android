@@ -195,6 +195,77 @@ PyLocale_setlocale(PyObject* self, PyObject* args)
     return result_object;
 }
 
+PyDoc_STRVAR(localeconv__doc__,
+"() -> dict. Returns numeric and monetary locale-specific parameters.");
+
+static PyObject*
+PyLocale_localeconv(PyObject* self)
+{
+#ifndef ANDROID
+    PyObject* result;
+    struct lconv *l;
+    PyObject *x;
+
+    result = PyDict_New();
+    if (!result)
+        return NULL;
+
+    /* if LC_NUMERIC is different in the C library, use saved value */
+    l = localeconv();
+
+    /* hopefully, the localeconv result survives the C library calls
+       involved herein */
+
+#define RESULT_STRING(s)\
+    x = PyString_FromString(l->s);\
+    if (!x) goto failed;\
+    PyDict_SetItemString(result, #s, x);\
+    Py_XDECREF(x)
+
+#define RESULT_INT(i)\
+    x = PyInt_FromLong(l->i);\
+    if (!x) goto failed;\
+    PyDict_SetItemString(result, #i, x);\
+    Py_XDECREF(x)
+
+    /* Numeric information */
+    RESULT_STRING(decimal_point);
+    RESULT_STRING(thousands_sep);
+    x = copy_grouping(l->grouping);
+    if (!x)
+        goto failed;
+    PyDict_SetItemString(result, "grouping", x);
+    Py_XDECREF(x);
+
+    /* Monetary information */
+    RESULT_STRING(int_curr_symbol);
+    RESULT_STRING(currency_symbol);
+    RESULT_STRING(mon_decimal_point);
+    RESULT_STRING(mon_thousands_sep);
+    x = copy_grouping(l->mon_grouping);
+    if (!x)
+        goto failed;
+    PyDict_SetItemString(result, "mon_grouping", x);
+    Py_XDECREF(x);
+    RESULT_STRING(positive_sign);
+    RESULT_STRING(negative_sign);
+    RESULT_INT(int_frac_digits);
+    RESULT_INT(frac_digits);
+    RESULT_INT(p_cs_precedes);
+    RESULT_INT(p_sep_by_space);
+    RESULT_INT(n_cs_precedes);
+    RESULT_INT(n_sep_by_space);
+    RESULT_INT(p_sign_posn);
+    RESULT_INT(n_sign_posn);
+    return result;
+
+  failed:
+    Py_XDECREF(result);
+    Py_XDECREF(x);
+#endif
+    return NULL;
+}
+
 PyDoc_STRVAR(strcoll__doc__,
 "string,string -> int. Compares two strings according to the locale.");
 
@@ -614,6 +685,8 @@ PyIntl_bind_textdomain_codeset(PyObject* self,PyObject*args)
 static struct PyMethodDef PyLocale_Methods[] = {
   {"setlocale", (PyCFunction) PyLocale_setlocale, 
    METH_VARARGS, setlocale__doc__},
+  {"localeconv", (PyCFunction) PyLocale_localeconv, 
+   METH_NOARGS, localeconv__doc__},
   {"strcoll", (PyCFunction) PyLocale_strcoll, 
    METH_VARARGS, strcoll__doc__},
   {"strxfrm", (PyCFunction) PyLocale_strxfrm, 

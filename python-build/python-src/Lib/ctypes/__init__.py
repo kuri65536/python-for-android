@@ -439,7 +439,6 @@ elif _sys.platform == "cygwin":
     pythonapi = PyDLL("libpython%d.%d.dll" % _sys.version_info[:2])
 else:
     pythonapi = PyDLL("libpython%d.%d.so" % _sys.version_info[:2])
-    print pythonapi
 
 
 if _os.name in ("nt", "ce"):

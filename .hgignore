@@ -18,6 +18,9 @@ lua/log
 android/PythonForAndroid/obj/*
 android/PythonForAndroid/libs/armeabi/*
 android/DocumentationGenerator/doc/*
+python-build/*.tar.bz2
+python-build/*.zip
+
 syntax: regexp
 (python|lua)/.*\.o
 python/.*\.pyc
@@ -25,5 +28,8 @@ python/.*\.pyc
 (python|lua)/.*\.a
 android/.*/(bin|gen)/.*
 android/.metadata/
+python-build/output
+python-build/host
+python-build/python/libs
 
 glob:*~
