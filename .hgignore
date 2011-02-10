@@ -20,6 +20,7 @@ android/PythonForAndroid/libs/armeabi/*
 android/DocumentationGenerator/doc/*
 python-build/*.tar.bz2
 python-build/*.zip
+python-build/*.apk
 
 syntax: regexp
 (python|lua)/.*\.o
@@ -31,5 +32,6 @@ android/.metadata/
 python-build/output
 python-build/host
 python-build/python/libs
+python-modules/python-lib
 
 glob:*~
