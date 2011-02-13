@@ -162,8 +162,8 @@ public class PythonMain extends Main {
 
     mOfficialVersion = new TextView(this);
     mOfficialVersion.setLayoutParams(marginParams);
-    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(),
-        mDescriptor.getExtrasVersion(), mDescriptor.getScriptsVersion()));
+    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(), mDescriptor
+        .getExtrasVersion(), mDescriptor.getScriptsVersion()));
     mLayout.addView(mOfficialVersion);
 
     mHostVersion = new TextView(this);
@@ -202,7 +202,8 @@ public class PythonMain extends Main {
 
   protected void doBrowseModule() {
     Intent intent =
-        new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mithril.com.au/android/modules"));
+        new Intent(Intent.ACTION_VIEW, Uri
+            .parse("http://code.google.com/p/python-for-android/wiki/Modules"));
     startActivity(intent);
   }
 
