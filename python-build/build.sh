@@ -78,6 +78,7 @@ ${CWD}/host/pgen ${CWD}/python-src/Grammar/Grammar \
 	${CWD}/python-src/Include/graminit.h \
 	${CWD}/python-src/Python/graminit.c
 ndk-build
+
 # copy out all the needed files
 mv obj/local/armeabi/python	${OUT}/usr/bin
 mv obj/local/armeabi/lib*.so	${OUT}/usr/lib

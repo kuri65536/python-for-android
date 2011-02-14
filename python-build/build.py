@@ -138,16 +138,14 @@ for p in glob.glob(os.path.join(pwd, '*.zip')):
 print 'Zipping up Python Libs for deployment.'
 output=os.path.join(pwd, 'output')
 shutil.copytree(output, 'output.temp')
-map(rm, find('output.temp', '\.py$')[0])
+map(rm, find('output.temp', '\.py$', exclude=['setuptools', 'distutils'])[0])
 map(rm, find('output.temp/usr/lib/python2.6', '.*', exclude=['setuptools', 'distutils'])[0])
 map(rm, find('output.temp', 'python$', exclude=['setuptools', 'distutils'])[0])
 run("mkdir python", cwd="output.temp/usr")
-run("mv lib/python2.6/distutils python", cwd="output.temp/usr")
-run("wget http://pypi.python.org/packages/source/s/setuptools/setuptools-0.6c11.tar.gz", cwd="output.temp/usr/python")
-run("tar -xvf setuptools-0.6c11.tar.gz setuptools-0.6c11/setuptools/", cwd="output.temp/usr/python")
-run("mv setuptools-0.6c11/setuptools .", cwd="output.temp/usr/python")
-run("rm -rf setuptools-0.6c11 setuptools-0.6c11.tar.gz", cwd="output.temp/usr/python")
+run("cp -r %s/python-libs/py4a python" % pwd, cwd="output.temp/usr")
+run("cp %s/setup.cfg ." % pwd, cwd="output.temp/usr")
 run("cp %s/prepare_setuptools.sh setup.sh" % pwd, cwd="output.temp/usr")
+run("cp %s/standalone_python.sh python.sh" % pwd, cwd="output.temp/usr")
 zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION["lib"]),
       os.path.join(pwd, 'output.temp', 'usr'),
       os.path.join(pwd, 'output.temp', 'usr'))

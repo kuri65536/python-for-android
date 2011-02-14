@@ -86,6 +86,17 @@ LOCAL_SRC_FILES := Modules/bz2module.c
 LOCAL_SHARED_LIBRARIES := libpython2.6 libbz
 include $(BUILD_SHARED_LIBRARY)
 
+# build zlib
+LOCAL_MODULE := zlib
+LOCAL_MODULE_FILENAME := zlib
+LOCAL_SRC_FILES := Modules/zlibmodule.c
+LOCAL_SHARED_LIBRARIES := libpython2.6 libz
+LOCAL_CFLAGS := -lz
+LOCAL_LDFLAGS := -lz
+LOCAL_LDLIBS := -lz
+include $(BUILD_SHARED_LIBRARY)
+
+
 $(call import-module, libcrypt)
 LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
 LOCAL_PATH := $(PYTHON_SRC_PATH)
