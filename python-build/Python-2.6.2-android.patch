@@ -1473,3 +1473,103 @@ diff --ignore-file-name-case -wuprN Python-2.6.2/Modules/_localemodule.c python-
      return NULL;
  }
  
+diff -uprN sysconfig.py distutils/sysconfig.py
+--- Python-2.6.2/Lib/distutils/sysconfig.py	2009-02-10 10:33:42.000000000 -0200
++++ Python-src/Lib/distutils/sysconfig.py	2011-02-13 21:49:49.000000000 -0300
+@@ -69,33 +69,7 @@ def get_python_inc(plat_specific=0, pref
+     If 'prefix' is supplied, use it instead of sys.prefix or
+     sys.exec_prefix -- i.e., ignore 'plat_specific'.
+     """
+-    if prefix is None:
+-        prefix = plat_specific and EXEC_PREFIX or PREFIX
+-    if os.name == "posix":
+-        if python_build:
+-            base = os.path.dirname(os.path.abspath(sys.executable))
+-            if plat_specific:
+-                inc_dir = base
+-            else:
+-                inc_dir = os.path.join(base, "Include")
+-                if not os.path.exists(inc_dir):
+-                    inc_dir = os.path.join(os.path.dirname(base), "Include")
+-            return inc_dir
+-        return os.path.join(prefix, "include", "python" + get_python_version())
+-    elif os.name == "nt":
+-        return os.path.join(prefix, "include")
+-    elif os.name == "mac":
+-        if plat_specific:
+-            return os.path.join(prefix, "Mac", "Include")
+-        else:
+-            return os.path.join(prefix, "Include")
+-    elif os.name == "os2":
+-        return os.path.join(prefix, "Include")
+-    else:
+-        raise DistutilsPlatformError(
+-            "I don't know where Python installs its C header files "
+-            "on platform '%s'" % os.name)
+-
++    return os.environ["PY4A_INC"]
+ 
+ def get_python_lib(plat_specific=0, standard_lib=0, prefix=None):
+     """Return the directory containing the Python library (standard or
+@@ -166,25 +140,21 @@ def customize_compiler(compiler):
+             get_config_vars('CC', 'CXX', 'OPT', 'CFLAGS',
+                             'CCSHARED', 'LDSHARED', 'SO')
+ 
+-        if 'CC' in os.environ:
+-            cc = os.environ['CC']
+-        if 'CXX' in os.environ:
+-            cxx = os.environ['CXX']
+-        if 'LDSHARED' in os.environ:
+-            ldshared = os.environ['LDSHARED']
+-        if 'CPP' in os.environ:
+-            cpp = os.environ['CPP']
+-        else:
+-            cpp = cc + " -E"           # not always
++	cflags = "-I%s/python2.6" % os.environ["PY4A_INC"]
++	cc = "arm-linux-androideabi-gcc"
++	cxx = "arm-linux-androideabi-g++"
++	cpp = "arm-linux-androideabi-cpp"
++	ldshared= "%s -shared" % cc
++
+         if 'LDFLAGS' in os.environ:
+-            ldshared = ldshared + ' ' + os.environ['LDFLAGS']
++            ldshared += os.environ['LDFLAGS']
+         if 'CFLAGS' in os.environ:
+-            cflags = opt + ' ' + os.environ['CFLAGS']
+-            ldshared = ldshared + ' ' + os.environ['CFLAGS']
++            cflags += os.environ['CFLAGS']
++            ldshared += os.environ['CFLAGS']
+         if 'CPPFLAGS' in os.environ:
+-            cpp = cpp + ' ' + os.environ['CPPFLAGS']
+-            cflags = cflags + ' ' + os.environ['CPPFLAGS']
+-            ldshared = ldshared + ' ' + os.environ['CPPFLAGS']
++            cpp += os.environ['CPPFLAGS']
++            cflags += os.environ['CPPFLAGS']
++            ldshared += os.environ['CPPFLAGS']
+ 
+         cc_cmd = cc + ' ' + cflags
+         compiler.set_executables(
+@@ -200,21 +170,10 @@ def customize_compiler(compiler):
+ 
+ def get_config_h_filename():
+     """Return full pathname of installed pyconfig.h file."""
+-    if python_build:
+-        if os.name == "nt":
+-            inc_dir = os.path.join(project_base, "PC")
+-        else:
+-            inc_dir = project_base
+-    else:
+-        inc_dir = get_python_inc(plat_specific=1)
+-    if get_python_version() < '2.2':
+-        config_h = 'config.h'
+-    else:
+-        # The name of the config.h file changed in 2.2
+-        config_h = 'pyconfig.h'
++    inc_dir = os.path.join(os.environ["PY4A_INC"], "python2.6")
++    config_h = 'pyconfig.h'
+     return os.path.join(inc_dir, config_h)
+ 
+-
+ def get_makefile_filename():
+     """Return full pathname of installed Makefile from the Python build."""
+     if python_build:

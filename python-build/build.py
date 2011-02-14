@@ -138,9 +138,14 @@ print 'Zipping up Python Libs for deployment.'
 output=os.path.join(pwd, 'output')
 shutil.copytree(output, 'output.temp')
 map(rm, find('output.temp', '\.py$')[0])
-map(rm, find('output.temp', '\.pyc$')[0])
-map(rm, find('output.temp', 'python$')[0])
-rm('output.temp/usr/lib/python2.6')
+map(rm, find('output.temp/usr/lib/python2.6', '.*', exclude=['setuptools', 'distutils'])[0])
+map(rm, find('output.temp', 'python$', exclude=['setuptools', 'distutils'])[0])
+run("mkdir python", cwd="output.temp/usr")
+run("mv lib/python2.6/distutils python", cwd="output.temp/usr")
+run("wget http://pypi.python.org/packages/source/s/setuptools/setuptools-0.6c11.tar.gz", cwd="output.temp/usr/python")
+run("tar -xvf setuptools-0.6c11.tar.gz setuptools-0.6c11/setuptools/", cwd="output.temp/usr/python")
+run("mv setuptools-0.6c11/setuptools .", cwd="output.temp/usr/python")
+run("rm -rf setuptools-0.6c11 setuptools-0.6c11.tar.gz", cwd="output.temp/usr/python")
 zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION[""]),
       os.path.join(pwd, 'output.temp', 'usr'),
       os.path.join(pwd, 'output.temp', 'usr'))
