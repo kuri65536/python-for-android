@@ -21,7 +21,7 @@ android/DocumentationGenerator/doc/*
 python-build/*.tar.bz2
 python-build/*.zip
 python-build/*.apk
-python-build/src
+python-build/python-src
 
 syntax: regexp
 (python|lua)/.*\.o

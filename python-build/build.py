@@ -26,10 +26,11 @@ import zipfile
 VERSION={
     "": "",
     "scripts": "",
-    "extra": ""
+    "extra": "",
+    "lib": ""
 }
 
-for i in ("scripts", "extra"):
+for i in ("scripts", "extra", "lib"):
     if os.path.isfile("LATEST_VERSION_"+i.upper()):
 	VERSION[i] = "_"+open("LATEST_VERSION_"+i.upper()).read().strip()
 
@@ -146,7 +147,8 @@ run("wget http://pypi.python.org/packages/source/s/setuptools/setuptools-0.6c11.
 run("tar -xvf setuptools-0.6c11.tar.gz setuptools-0.6c11/setuptools/", cwd="output.temp/usr/python")
 run("mv setuptools-0.6c11/setuptools .", cwd="output.temp/usr/python")
 run("rm -rf setuptools-0.6c11 setuptools-0.6c11.tar.gz", cwd="output.temp/usr/python")
-zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION[""]),
+run("cp %s/prepare_setuptools.sh setup.sh" % pwd, cwd="output.temp/usr")
+zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION["lib"]),
       os.path.join(pwd, 'output.temp', 'usr'),
       os.path.join(pwd, 'output.temp', 'usr'))
 rm('output.temp')
