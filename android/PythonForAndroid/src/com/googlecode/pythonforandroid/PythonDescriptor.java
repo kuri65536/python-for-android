@@ -36,6 +36,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private static final String ENV_PATH = "PYTHONPATH";
   private static final String ENV_TEMP = "TEMP";
   private static final String ENV_LD = "LD_LIBRARY_PATH";
+  private static final String ENV_EXTRAS = "PY4A_EXTRAS";
   private static final String BASE_URL = "http://python-for-android.googlecode.com/";
   private static final int LATEST_VERSION = -1;
   private int cache_version = -1;
@@ -159,6 +160,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     values.put(ENV_LD, getHome(context) + "/lib");
     values.put(ENV_PATH, getExtras() + ":" + getHome(context) + "/lib/python2.6/lib-dynload" + ":"
         + getHome(context) + "/lib/python2.6");
+    values.put(ENV_EXTRAS, getExtrasRoot());
     values.put(ENV_TEMP, getTemp());
     return values;
   }

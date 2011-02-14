@@ -59,7 +59,8 @@ import java.util.zip.ZipFile;
 // process. Needs some means of checking that these are properly formatted zip files, and probably a
 // means of uninstalling as well. Import handling could well be a separate activity, too.
 public class PythonMain extends Main {
-  Button mButtonModules;
+  Button mButtonInstallModules;
+  Button mButtonUninstallModule;
   File mDownloads;
 
   private Dialog mDialog;
@@ -99,6 +100,7 @@ public class PythonMain extends Main {
   private File mFrom;
   private File mSoPath;
   private File mPythonPath;
+  private File mEggPath;
   private TextView mHostVersion, mOfficialVersion;
   private PythonDescriptor mDescriptor;
 
@@ -162,8 +164,8 @@ public class PythonMain extends Main {
 
     mOfficialVersion = new TextView(this);
     mOfficialVersion.setLayoutParams(marginParams);
-    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(), mDescriptor
-        .getExtrasVersion(), mDescriptor.getScriptsVersion()));
+    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(),
+        mDescriptor.getExtrasVersion(), mDescriptor.getScriptsVersion()));
     mLayout.addView(mOfficialVersion);
 
     mHostVersion = new TextView(this);
@@ -172,11 +174,11 @@ public class PythonMain extends Main {
         getInstalledVersion("extras"), getInstalledVersion("scripts")));
     mLayout.addView(mHostVersion);
 
-    mButtonModules = new Button(this);
-    mButtonModules.setLayoutParams(marginParams);
-    mButtonModules.setText("Import Modules");
-    mLayout.addView(mButtonModules);
-    mButtonModules.setOnClickListener(new OnClickListener() {
+    mButtonInstallModules = new Button(this);
+    mButtonInstallModules.setLayoutParams(marginParams);
+    mButtonInstallModules.setText("Import Modules");
+    mLayout.addView(mButtonInstallModules);
+    mButtonInstallModules.setOnClickListener(new OnClickListener() {
       public void onClick(View v) {
         doImportModule();
       }
@@ -191,6 +193,16 @@ public class PythonMain extends Main {
         doBrowseModule();
       }
     });
+
+    mButtonUninstallModule = new Button(this);
+    mButtonUninstallModule.setLayoutParams(marginParams);
+    mButtonUninstallModule.setText("Uninstall Module");
+    mLayout.addView(mButtonUninstallModule);
+    mButtonUninstallModule.setOnClickListener(new OnClickListener() {
+      public void onClick(View v) {
+        doDeleteModule();
+      }
+    });
   }
 
   @Override
@@ -202,8 +214,8 @@ public class PythonMain extends Main {
 
   protected void doBrowseModule() {
     Intent intent =
-        new Intent(Intent.ACTION_VIEW, Uri
-            .parse("http://code.google.com/p/python-for-android/wiki/Modules"));
+        new Intent(Intent.ACTION_VIEW,
+            Uri.parse("http://code.google.com/p/python-for-android/wiki/Modules"));
     startActivity(intent);
   }
 
@@ -225,7 +237,48 @@ public class PythonMain extends Main {
 
     List<String> flist = new Vector<String>();
     for (File f : mDownloads.listFiles()) {
-      if (f.getName().endsWith(".zip")) {
+      if (f.getName().endsWith(".zip") || f.getName().endsWith(".egg")) {
+        flist.add(f.getName());
+      }
+    }
+
+    builder.setTitle("Import Module");
+
+    mList = flist.toArray(new CharSequence[flist.size()]);
+    builder.setItems(mList, new DialogInterface.OnClickListener() {
+
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        mModule = (String) mList[which];
+        performImport(mModule);
+        mDialog.dismiss();
+      }
+    });
+    builder.setNegativeButton("Cancel", buttonListener);
+    builder.setNeutralButton("Help", buttonListener);
+    mModule = null;
+    mDialog = builder.show();
+    if (mModule != null) {
+    }
+  }
+
+  public void doDeleteModule() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    DialogInterface.OnClickListener buttonListener = new DialogInterface.OnClickListener() {
+
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        mDialog.dismiss();
+        if (which == DialogInterface.BUTTON_NEUTRAL) {
+          showMessage("Uninstall Module",
+              "This will let you delete a module you got installed from an egg file");
+        }
+      }
+    };
+
+    List<String> flist = new Vector<String>();
+    for (File f : mEggPath.listFiles()) {
+      if (f.getName().endsWith(".egg")) {
         flist.add(f.getName());
       }
     }
@@ -252,23 +305,25 @@ public class PythonMain extends Main {
 
   protected void performImport(String module) {
     mFrom = new File(mDownloads, mModule);
-    mSoPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/lib/python2.6");
-    mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PYTHONPATH"));
+    mSoPath =
+        new File(InterpreterUtils.getInterpreterRoot(this), "python/lib/python2.6/lib-dynload");
+    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
+    mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"));
 
     prompt("Install module " + module, new DialogInterface.OnClickListener() {
 
       @Override
       public void onClick(DialogInterface dialog, int which) {
         if (which == AlertDialog.BUTTON_POSITIVE) {
-          extract("Extracting " + mModule, mFrom, mPythonPath, mSoPath);
+          extract("Extracting " + mModule, mFrom, mPythonPath, mSoPath, mEggPath);
         }
       }
     });
   }
 
-  protected void extract(String caption, File from, File pypath, File sopath) {
+  protected void extract(String caption, File from, File pypath, File sopath, File egginfo) {
     mProgress = showProgress(caption);
-    Thread t = new RunExtract(caption, from, pypath, sopath, mModuleHandler);
+    Thread t = new RunExtract(caption, from, pypath, sopath, mModuleHandler, egginfo);
     t.start();
   }
 
@@ -304,21 +359,21 @@ public class PythonMain extends Main {
     File from;
     File sopath;
     File pypath;
+    File egginfo;
     Handler mHandler;
 
-    RunExtract(String caption, File from, File pypath, File sopath, Handler h) {
+    RunExtract(String caption, File from, File pypath, File sopath, Handler h, File egginfo) {
       this.caption = caption;
       this.from = from;
       this.pypath = pypath;
       this.sopath = sopath;
+      this.egginfo = egginfo;
       mHandler = h;
     }
 
     @Override
     public void run() {
       byte[] buf = new byte[4096];
-      boolean useshared;
-      boolean hasSo = false;
       List<ZipEntry> list = new ArrayList<ZipEntry>();
       try {
         ZipFile zipfile = new ZipFile(from);
@@ -327,9 +382,6 @@ public class PythonMain extends Main {
         Enumeration<? extends ZipEntry> entries = zipfile.entries();
         while (entries.hasMoreElements()) {
           ZipEntry ex = entries.nextElement();
-          if (ex.getName().endsWith(".so")) {
-            hasSo = true;
-          }
           list.add(ex);
         }
         for (ZipEntry entry : list) {
@@ -337,9 +389,18 @@ public class PythonMain extends Main {
           if (entry.isDirectory()) {
             continue;
           }
-          useshared = hasSo;
-          File destinationPath = useshared ? sopath : pypath;
-          File destinationFile = new File(destinationPath, entry.getName());
+
+          File destinationPath;
+          File destinationFile;
+
+          if (entry.getName().contains("EGG-INFO")) {
+            destinationPath = new File(egginfo, from.getName());
+            destinationFile = new File(destinationPath, entry.getName().split("/", 2)[1]);
+          } else {
+            destinationPath = entry.getName().endsWith(".so") ? sopath : pypath;
+            destinationFile = new File(destinationPath, entry.getName());
+          }
+
           FileUtils.makeDirectories(destinationFile.getParentFile(), 0755);
           sendmsg(true, "pos", cnt);
           OutputStream output = new BufferedOutputStream(new FileOutputStream(destinationFile));
