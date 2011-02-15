@@ -2,6 +2,7 @@
 
 export EXTERNAL_STORAGE=/mnt/storage
 PYTHONPATH=/mnt/storage/com.googlecode.pythonforandroid/extras/python
+PYTHONPATH=${PYTHONPATH}:/data/data/com.googlecode.pythonforandroid/files/python/lib/python2.6/lib-dynload
 export PYTHONPATH
 export TEMP=/mnt/storage/com.googlecode.pythonforandroid/extras/python/tmp
 export PYTHON_EGG_CACHE=$TEMP
