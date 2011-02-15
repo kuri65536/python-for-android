@@ -1,0 +1,15 @@
+include README
+include setup.cfg
+include setup.py
+include PyBluez.egg-info/PKG-INFO
+include PyBluez.egg-info/SOURCES.txt
+include PyBluez.egg-info/dependency_links.txt
+include PyBluez.egg-info/top_level.txt
+include bluetooth/__init__.py
+include bluetooth/bluez.py
+include bluetooth/btcommon.py
+include bluetooth/msbt.py
+include bluetooth/osx.py
+include bluetooth/widcomm.py
+include bluez/btmodule.c
+include bluez/btsdp.c

@@ -31,6 +31,8 @@ python/.*\.pyc
 android/.*/(bin|gen)/.*
 python-modules/.*/(libs|obj|out)
 python-modules/.*/.*\.zip
+python-modules/.*/(build|dist)
+python-modules/.*/.*\.egg\-info
 android/.metadata/
 python-build/output
 python-build/host
