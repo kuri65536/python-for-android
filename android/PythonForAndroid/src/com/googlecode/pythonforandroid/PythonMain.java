@@ -29,8 +29,12 @@ import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 import com.googlecode.android_scripting.interpreter.InterpreterUtils;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -68,6 +72,17 @@ public class PythonMain extends Main {
   private CharSequence[] mList;
   private ProgressDialog mProgress;
   private boolean mPromptResult;
+
+  private String readFirstLine(File target) {
+    BufferedReader in;
+    try {
+      in = new BufferedReader(new FileReader(target));
+      return in.readLine();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return "";
+  }
 
   final Handler mModuleHandler = new Handler() {
 
@@ -263,6 +278,7 @@ public class PythonMain extends Main {
   }
 
   public void doDeleteModule() {
+    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     DialogInterface.OnClickListener buttonListener = new DialogInterface.OnClickListener() {
 
@@ -279,11 +295,11 @@ public class PythonMain extends Main {
     List<String> flist = new Vector<String>();
     for (File f : mEggPath.listFiles()) {
       if (f.getName().endsWith(".egg")) {
-        flist.add(f.getName());
+        flist.add(f.getName().replace(".egg", ""));
       }
     }
 
-    builder.setTitle("Import Module");
+    builder.setTitle("Installed Modules");
 
     mList = flist.toArray(new CharSequence[flist.size()]);
     builder.setItems(mList, new DialogInterface.OnClickListener() {
@@ -291,7 +307,7 @@ public class PythonMain extends Main {
       @Override
       public void onClick(DialogInterface dialog, int which) {
         mModule = (String) mList[which];
-        performImport(mModule);
+        performUninstall(mModule);
         mDialog.dismiss();
       }
     });
@@ -308,7 +324,7 @@ public class PythonMain extends Main {
     mSoPath =
         new File(InterpreterUtils.getInterpreterRoot(this), "python/lib/python2.6/lib-dynload");
     mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
-    mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"));
+    mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"), "python");
 
     prompt("Install module " + module, new DialogInterface.OnClickListener() {
 
@@ -321,9 +337,35 @@ public class PythonMain extends Main {
     });
   }
 
+  protected void performUninstall(String module) {
+    mModule = module;
+    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
+    mFrom = new File(mEggPath, module + ".egg");
+    mSoPath =
+        new File(InterpreterUtils.getInterpreterRoot(this), "python/lib/python2.6/lib-dynload");
+
+    mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"));
+
+    prompt("Uninstall module " + module, new DialogInterface.OnClickListener() {
+
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        if (which == AlertDialog.BUTTON_POSITIVE) {
+          remove("Deleting " + mModule, mFrom, mPythonPath, mSoPath, mEggPath);
+        }
+      }
+    });
+  }
+
   protected void extract(String caption, File from, File pypath, File sopath, File egginfo) {
     mProgress = showProgress(caption);
     Thread t = new RunExtract(caption, from, pypath, sopath, mModuleHandler, egginfo);
+    t.start();
+  }
+
+  protected void remove(String caption, File from, File pypath, File sopath, File egginfo) {
+    mProgress = showProgress(caption);
+    Thread t = new RunDelete(caption, from, pypath, sopath, mModuleHandler, egginfo);
     t.start();
   }
 
@@ -374,7 +416,9 @@ public class PythonMain extends Main {
     @Override
     public void run() {
       byte[] buf = new byte[4096];
+      boolean isInfo = false;
       List<ZipEntry> list = new ArrayList<ZipEntry>();
+      Vector<String> installed = new Vector<String>();
       try {
         ZipFile zipfile = new ZipFile(from);
         int cnt = 0;
@@ -392,8 +436,9 @@ public class PythonMain extends Main {
 
           File destinationPath;
           File destinationFile;
+          isInfo = entry.getName().contains("EGG-INFO");
 
-          if (entry.getName().contains("EGG-INFO")) {
+          if (isInfo) {
             destinationPath = new File(egginfo, from.getName());
             destinationFile = new File(destinationPath, entry.getName().split("/", 2)[1]);
           } else {
@@ -413,9 +458,30 @@ public class PythonMain extends Main {
           output.flush();
           output.close();
 
+          if (entry.getName().endsWith(".py")) {
+            if (readFirstLine(destinationFile).contains("__bootstrap__")) {
+              // don't include autogenerated bootstrap, not useful for us
+              destinationFile.delete();
+              continue;
+            }
+          }
+
+          if (!isInfo) {
+            installed.add(destinationFile.getAbsolutePath());
+          }
           destinationFile.setLastModified(entry.getTime());
           FileUtils.chmod(destinationFile, entry.getName().endsWith(".so") ? 0755 : 0644);
+
         }
+
+        FileWriter fstream =
+            new FileWriter(new File(new File(egginfo, from.getName()), "files.txt"));
+        BufferedWriter out = new BufferedWriter(fstream);
+        for (String line : installed) {
+          out.write(line + "\n");
+        }
+        out.close();
+
         sendmsg(false, "Success");
       } catch (Exception entry) {
         sendmsg(false, "Error" + entry);
@@ -442,4 +508,98 @@ public class PythonMain extends Main {
       mHandler.sendMessage(message);
     }
   }
+
+  class RunDelete extends Thread {
+    String caption;
+    File from;
+    File sopath;
+    File pypath;
+    File egginfo;
+    Handler mHandler;
+
+    RunDelete(String caption, File from, File pypath, File sopath, Handler h, File egginfo) {
+      this.caption = caption;
+      this.from = from;
+      this.pypath = pypath;
+      this.sopath = sopath;
+      this.egginfo = egginfo;
+      mHandler = h;
+    }
+
+    private void delete(File source) {
+      try {
+        if (source.exists() && source.isDirectory()) {
+          for (File entry : source.listFiles()) {
+            if (entry.isDirectory()) {
+              delete(entry);
+            } else {
+              entry.delete();
+            }
+            System.out.println(entry + " deleted");
+          }
+          source.delete();
+          System.out.println(source.getName() + " deleted");
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    private void deleteInstalledFiles() {
+      BufferedReader in;
+      String line;
+      File target;
+      try {
+        in = new BufferedReader(new FileReader(new File(from, "files.txt")));
+        while ((line = in.readLine()) != null) {
+          target = new File(line);
+          if (!target.exists()) {
+            continue;
+          }
+          target.delete();
+          System.out.println(target.getAbsolutePath() + " deleted " + target.exists());
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
+    }
+
+    @Override
+    public void run() {
+      sendmsg(true, "max", 4);
+      String toplevel = readFirstLine(new File(from, "top_level.txt"));
+      deleteInstalledFiles();
+      sendmsg(true, "pos", 1);
+      delete(new File(sopath, toplevel));
+      sendmsg(true, "pos", 2);
+      delete(new File(pypath, toplevel));
+      sendmsg(true, "pos", 3);
+      delete(from);
+      sendmsg(true, "pos", 4);
+
+      sendmsg(false, "Success");
+    }
+
+    private void sendmsg(boolean running, String info) {
+      Message message = mHandler.obtainMessage();
+      Bundle bundle = new Bundle();
+      bundle.putBoolean("running", running);
+      if (info != null) {
+        bundle.putString("info", info);
+      }
+      message.setData(bundle);
+      mHandler.sendMessage(message);
+    }
+
+    private void sendmsg(boolean running, String key, int value) {
+      Message message = mHandler.obtainMessage();
+      Bundle bundle = new Bundle();
+      bundle.putBoolean("running", running);
+      bundle.putInt(key, value);
+      message.setData(bundle);
+      mHandler.sendMessage(message);
+    }
+  }
+
 }
