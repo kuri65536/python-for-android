@@ -75,13 +75,19 @@ public class PythonMain extends Main {
 
   private String readFirstLine(File target) {
     BufferedReader in;
+    String result;
     try {
       in = new BufferedReader(new FileReader(target));
-      return in.readLine();
+      result = in.readLine();
+      if (result == null) {
+        result = "";
+      }
+      in.close();
     } catch (Exception e) {
       e.printStackTrace();
+      result = "";
     }
-    return "";
+    return result;
   }
 
   final Handler mModuleHandler = new Handler() {
@@ -179,8 +185,8 @@ public class PythonMain extends Main {
 
     mOfficialVersion = new TextView(this);
     mOfficialVersion.setLayoutParams(marginParams);
-    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(),
-        mDescriptor.getExtrasVersion(), mDescriptor.getScriptsVersion()));
+    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(), mDescriptor
+        .getExtrasVersion(), mDescriptor.getScriptsVersion()));
     mLayout.addView(mOfficialVersion);
 
     mHostVersion = new TextView(this);
@@ -229,8 +235,8 @@ public class PythonMain extends Main {
 
   protected void doBrowseModule() {
     Intent intent =
-        new Intent(Intent.ACTION_VIEW,
-            Uri.parse("http://code.google.com/p/python-for-android/wiki/Modules"));
+        new Intent(Intent.ACTION_VIEW, Uri
+            .parse("http://code.google.com/p/python-for-android/wiki/Modules"));
     startActivity(intent);
   }
 
@@ -244,7 +250,7 @@ public class PythonMain extends Main {
         if (which == DialogInterface.BUTTON_NEUTRAL) {
           showMessage("Import Module",
               "This will take a previously downloaded (and appropriately formatted) "
-                  + "python external module zip file.\nSee sl4a wiki for more defails.\n"
+                  + "python external module zip or egg file.\nSee sl4a wiki for more defails.\n"
                   + "Looking for files in \n" + mDownloads);
         }
       }
