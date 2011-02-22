@@ -18,6 +18,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.FileUtils;
@@ -146,6 +147,21 @@ public class PythonMain extends Main {
   protected InterpreterUninstaller getInterpreterUninstaller(InterpreterDescriptor descriptor,
       Context context, AsyncTaskListener<Boolean> listener) throws Sl4aException {
     return new PythonUninstaller(descriptor, context, listener);
+  }
+
+  @Override
+  protected void onResume() {
+    String s;
+    super.onResume();
+    Intent intent = getIntent();
+    if (intent.getData() != null) {
+      s = intent.getData().getPath();
+      Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+      File file = new File(intent.getData().getPath());
+      if (file.exists()) {
+        performImport(file, file.getName());
+      }
+    }
   }
 
   private String createVersionString(String header, int version, int extras, int scripts) {
@@ -326,7 +342,12 @@ public class PythonMain extends Main {
   }
 
   protected void performImport(String module) {
-    mFrom = new File(mDownloads, mModule);
+    performImport(new File(mDownloads, mModule), module);
+  }
+
+  protected void performImport(File sourceFile, String module) {
+    mModule = module;
+    mFrom = sourceFile;
     mSoPath =
         new File(InterpreterUtils.getInterpreterRoot(this), "python/lib/python2.6/lib-dynload");
     mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
@@ -425,6 +446,7 @@ public class PythonMain extends Main {
       boolean isInfo = false;
       List<ZipEntry> list = new ArrayList<ZipEntry>();
       Vector<String> installed = new Vector<String>();
+      boolean hasSo = false;
       try {
         ZipFile zipfile = new ZipFile(from);
         int cnt = 0;
@@ -432,6 +454,9 @@ public class PythonMain extends Main {
         Enumeration<? extends ZipEntry> entries = zipfile.entries();
         while (entries.hasMoreElements()) {
           ZipEntry ex = entries.nextElement();
+          if (ex.getName().endsWith(".so")) {
+            hasSo = true;
+          }
           list.add(ex);
         }
         for (ZipEntry entry : list) {
@@ -448,7 +473,10 @@ public class PythonMain extends Main {
             destinationPath = new File(egginfo, from.getName());
             destinationFile = new File(destinationPath, entry.getName().split("/", 2)[1]);
           } else {
-            destinationPath = entry.getName().endsWith(".so") ? sopath : pypath;
+            // destinationPath = entry.getName().endsWith(".so") ? sopath : pypath;
+            // Python does not cope well with splitting *.so and normal files. Sadly.
+            // At the moment, if we have an *.so, we will copy entire library to main memory.
+            destinationPath = hasSo ? sopath : pypath;
             destinationFile = new File(destinationPath, entry.getName());
           }
 

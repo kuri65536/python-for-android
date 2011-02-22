@@ -5,6 +5,6 @@
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="lib" path="libs/common.jar"/>
 	<classpathentry kind="lib" path="libs/utils.jar"/>
-	<classpathentry kind="lib" path="libs/interpreter.jar" sourcepath="/home/manuel/AptanaStudio3Workspace/python-for-android/android/InterpreterForAndroid/src"/>
+	<classpathentry kind="lib" path="libs/interpreter.jar" sourcepath="/InterpreterForAndroid"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
