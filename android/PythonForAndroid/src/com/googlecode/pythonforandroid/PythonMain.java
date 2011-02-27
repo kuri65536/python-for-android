@@ -3,6 +3,7 @@ package com.googlecode.pythonforandroid;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,6 +13,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
@@ -73,6 +76,13 @@ public class PythonMain extends Main {
   private CharSequence[] mList;
   private ProgressDialog mProgress;
   private boolean mPromptResult;
+
+  private static enum MenuId {
+    BROWSER, SL4A;
+    public int getId() {
+      return ordinal() + Menu.FIRST;
+    }
+  }
 
   private String readFirstLine(File target) {
     BufferedReader in;
@@ -421,6 +431,36 @@ public class PythonMain extends Main {
     builder.setPositiveButton("OK", btnlisten);
     builder.show();
     return mPromptResult;
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    menu.add(Menu.NONE, MenuId.BROWSER.getId(), Menu.NONE, "File Browser").setIcon(
+        android.R.drawable.ic_menu_myplaces);
+    menu.add(Menu.NONE, MenuId.SL4A.getId(), Menu.NONE, "SL4A").setIcon(
+        android.R.drawable.ic_menu_call);
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    Intent intent;
+    int id = item.getItemId();
+    if (MenuId.BROWSER.getId() == id) {
+      intent = new Intent(this, FileBrowser.class);
+      intent.setAction(PythonConstants.ACTION_FILE_BROWSER);
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(intent);
+    } else if (MenuId.SL4A.getId() == id) {
+      intent = new Intent();
+      intent.setComponent(new ComponentName(PythonConstants.SL4A, PythonConstants.SL4A_MANAGER));
+      try {
+        startActivity(intent);
+      } catch (Exception e) {
+        showMessage("Py4A", "SL4A may not be installed.");
+      }
+    }
+    return true;
   }
 
   class RunExtract extends Thread {

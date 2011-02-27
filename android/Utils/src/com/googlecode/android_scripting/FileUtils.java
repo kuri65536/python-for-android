@@ -54,6 +54,14 @@ public class FileUtils {
     return (Integer) setPermissions.invoke(null, path.getAbsolutePath(), mode, -1, -1);
   }
 
+  public static int getPermissions(File path) throws Exception {
+    Class<?> fileUtils = Class.forName("android.os.FileUtils");
+    int[] result = new int[1];
+    Method getPermissions = fileUtils.getMethod("getPermissions", String.class, int[].class);
+    getPermissions.invoke(null, path.getAbsolutePath(), result);
+    return result[0];
+  }
+
   public static boolean recursiveChmod(File root, int mode) throws Exception {
     boolean success = chmod(root, mode) == 0;
     for (File path : root.listFiles()) {

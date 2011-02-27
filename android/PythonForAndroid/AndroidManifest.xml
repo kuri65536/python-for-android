@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.googlecode.pythonforandroid" android:versionCode="5" android:versionName="5">
-	<application android:label="@string/app_name" android:icon="@drawable/python_icon">
+	package="com.googlecode.pythonforandroid" android:versionCode="5"
+	android:versionName="5">
+	<application android:label="@string/app_name" android:icon="@drawable/python_icon" android:debuggable="true">
 		<activity android:name=".PythonMain" android:label="@string/app_name"
 			android:configChanges="keyboardHidden|orientation">
 			<intent-filter>
@@ -22,6 +23,12 @@
 		</activity>
 		<provider android:authorities="com.googlecode.pythonforandroid.pythonprovider"
 			android:name=".PythonProvider" />
+		<activity android:name=".FileBrowser" android:label="File Browser">
+			<intent-filter>
+				<action android:name="com.googlecode.pythonforandroid.FILEBROWSER" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
 	</application>
 	<uses-sdk android:minSdkVersion="3" />
 	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
