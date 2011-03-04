@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.DataSetObserver;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -47,9 +48,11 @@ import com.googlecode.android_scripting.Constants;
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.interpreter.Interpreter;
+import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterConfiguration.ConfigurationObserver;
 
 import java.io.File;
+import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -74,8 +77,19 @@ public class FileBrowser extends ListActivity {
   private File mBaseDir;
   private File mCurrent;
 
+  // Linux stat constants
+  private static final int S_IFMT = 0170000; /* type of file */
+  private static final int S_IFLNK = 0120000; /* symbolic link */
+  private static final int S_IFREG = 0100000; /* regular */
+  private static final int S_IFBLK = 0060000; /* block special */
+  private static final int S_IFDIR = 0040000; /* directory */
+  private static final int S_IFCHR = 0020000; /* character special */
+  private static final int S_IFIFO = 0010000; /* this is a FIFO */
+  private static final int S_ISUID = 0004000; /* set user id on execution */
+  private static final int S_ISGID = 0002000; /* set group id on execution */
+
   private static enum MenuId {
-    DELETE, HELP, FOLDER_ADD, REFRESH, SEARCH, RENAME, COPY;
+    DELETE, HELP, FOLDER_ADD, REFRESH, SEARCH, RENAME, COPY, PLACES;
     public int getId() {
       return ordinal() + Menu.FIRST;
     }
@@ -111,6 +125,7 @@ public class FileBrowser extends ListActivity {
       mCurrentDir = mBaseDir;
       files = mCurrentDir.listFiles();
     }
+    setTitle(mCurrentDir.getPath());
     scripts = Arrays.asList(files);
     Predicate<File> p = new Predicate<File>() {
 
@@ -187,9 +202,15 @@ public class FileBrowser extends ListActivity {
 
   @Override
   public boolean onKeyDown(int keyCode, KeyEvent event) {
-    if (keyCode == KeyEvent.KEYCODE_BACK && mInSearchResultMode) {
-      mInSearchResultMode = false;
-      mAdapter.notifyDataSetInvalidated();
+    if (keyCode == KeyEvent.KEYCODE_BACK) {
+      if (mInSearchResultMode) {
+        mInSearchResultMode = false;
+        mAdapter.notifyDataSetInvalidated();
+      } else {
+        Intent intent = new Intent(this, PythonMain.class);
+        intent.setAction(Intent.ACTION_MAIN);
+        startActivity(intent);
+      }
       return true;
     }
     return super.onKeyDown(keyCode, event);
@@ -220,6 +241,8 @@ public class FileBrowser extends ListActivity {
         android.R.drawable.ic_menu_search);
     menu.add(Menu.NONE, MenuId.REFRESH.getId(), Menu.NONE, "Refresh").setIcon(
         android.R.drawable.ic_menu_revert);
+    menu.add(Menu.NONE, MenuId.PLACES.getId(), Menu.NONE, "Places").setIcon(
+        android.R.drawable.ic_menu_gallery);
     return true;
   }
 
@@ -231,8 +254,40 @@ public class FileBrowser extends ListActivity {
       mAdapter.notifyDataSetChanged();
     } else if (itemId == MenuId.SEARCH.getId()) {
       onSearchRequested();
+    } else if (itemId == MenuId.PLACES.getId()) {
+      doGetPlaces();
     }
     return true;
+  }
+
+  private void doGetPlaces() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    final CharSequence[] placesList = { "Main Files", "Extras", "Cache", "Scripts" };
+    builder.setTitle("Places");
+    builder.setItems(placesList, new DialogInterface.OnClickListener() {
+
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        PythonDescriptor descriptor = new PythonDescriptor();
+        switch (which) {
+        case 0:
+          mBaseDir = getFilesDir();
+          break;
+        case 1:
+          mBaseDir = new File(descriptor.getExtras());
+          break;
+        case 2:
+          mBaseDir = getCacheDir();
+          break;
+        case 3:
+          mBaseDir = new File(InterpreterConstants.SCRIPTS_ROOT);
+          break;
+        }
+        mCurrentDir = mBaseDir;
+        mAdapter.notifyDataSetInvalidated();
+      }
+    });
+    builder.show();
   }
 
   @Override
@@ -247,20 +302,48 @@ public class FileBrowser extends ListActivity {
     doDialogMenu();
   }
 
+  protected void showMessage(String message) {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Py4a File Browser");
+    builder.setMessage(message);
+    builder.setNeutralButton("OK", null);
+    builder.show();
+  }
+
   private void doDialogMenu() {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    final CharSequence[] menuList =
-        { "Run Foreground", "Run Background", "Edit", "Delete", "Rename" };
+    final CharSequence[] menuList = { "View", "Delete", "Rename" };
     builder.setTitle(mCurrent.getName());
     builder.setItems(menuList, new DialogInterface.OnClickListener() {
 
       @Override
       public void onClick(DialogInterface dialog, int which) {
+        Intent intent;
+        Uri uri;
         switch (which) {
-        case 3:
+        case 0:
+          intent = new Intent(Intent.ACTION_VIEW);
+          uri = Uri.fromFile(mCurrent);
+          String mime = URLConnection.guessContentTypeFromName(uri.toString());
+          if (mime == null) {
+            String name = mCurrent.getName();
+            if (name.endsWith(".html")) {
+              mime = "text/html";
+            } else {
+              mime = "text/plain";
+            }
+          }
+          intent.setDataAndType(uri, mime);
+          try {
+            startActivity(intent);
+          } catch (Exception e) {
+            showMessage(e.getMessage());
+          }
+          break;
+        case 1:
           delete(mCurrent);
           break;
-        case 4:
+        case 2:
           rename(mCurrent);
           break;
 
@@ -409,6 +492,45 @@ public class FileBrowser extends ListActivity {
       return position;
     }
 
+    private String permRwx(int perm) {
+      String result;
+      result =
+          ((perm & 01) != 0 ? "r" : "-") + ((perm & 02) != 0 ? "w" : "-")
+              + ((perm & 01) != 0 ? "x" : "-");
+      return result;
+    }
+
+    private String permFileType(int perm) {
+      String result = "?";
+      switch (perm & S_IFMT) {
+      case S_IFLNK:
+        result = "s";
+        break; /* symbolic link */
+      case S_IFREG:
+        result = "-";
+        break; /* regular */
+      case S_IFBLK:
+        result = "b";
+        break; /* block special */
+      case S_IFDIR:
+        result = "d";
+        break; /* directory */
+      case S_IFCHR:
+        result = "c";
+        break; /* character special */
+      case S_IFIFO:
+        result = "p";
+        break; /* this is a FIFO */
+      }
+      return result;
+    }
+
+    public String permString(int perms) {
+      String result;
+      result = permFileType(perms) + permRwx(perms >> 6) + permRwx(perms >> 3) + permRwx(perms);
+      return result;
+    }
+
     public View getView(int position, View convertView, ViewGroup parent) {
       LinearLayout container;
       File script = getScriptList().get(position);
@@ -432,7 +554,7 @@ public class FileBrowser extends ListActivity {
 
       String perms;
       try {
-        perms = Integer.toString(FileUtils.getPermissions(script), 8);
+        perms = permString(FileUtils.getPermissions(script));
       } catch (Exception e) {
         perms = "????";
       }

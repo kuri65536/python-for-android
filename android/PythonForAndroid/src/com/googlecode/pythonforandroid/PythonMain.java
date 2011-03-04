@@ -449,7 +449,7 @@ public class PythonMain extends Main {
     if (MenuId.BROWSER.getId() == id) {
       intent = new Intent(this, FileBrowser.class);
       intent.setAction(PythonConstants.ACTION_FILE_BROWSER);
-      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      // intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       startActivity(intent);
     } else if (MenuId.SL4A.getId() == id) {
       intent = new Intent();
