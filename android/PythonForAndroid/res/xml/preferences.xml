@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference android:key="showPermissions" android:title="Show Permissions"></CheckBoxPreference>
+    <CheckBoxPreference android:key="showSize" android:title="Show Size"></CheckBoxPreference>
+    <CheckBoxPreference android:key="showOwner" android:title="Show Owner"></CheckBoxPreference>
+</PreferenceScreen>
