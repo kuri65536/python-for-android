@@ -7,7 +7,7 @@
 			<accessrule kind="accessible" pattern="**/internal/**"/>
 		</accessrules>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/common.jar"/>
+	<classpathentry kind="lib" path="libs/common.jar" sourcepath="/Common"/>
 	<classpathentry kind="lib" path="libs/interpreter.jar" sourcepath="/InterpreterForAndroid"/>
 	<classpathentry kind="lib" path="/Common/libs/guava-r06.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Utils"/>

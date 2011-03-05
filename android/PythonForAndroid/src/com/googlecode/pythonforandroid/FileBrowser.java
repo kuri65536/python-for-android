@@ -22,17 +22,21 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.PackageManager;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
@@ -46,10 +50,10 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.googlecode.android_scripting.Constants;
 import com.googlecode.android_scripting.FileUtils;
+import com.googlecode.android_scripting.FileUtils.FileStatus;
 import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.interpreter.Interpreter;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
-import com.googlecode.android_scripting.interpreter.InterpreterConfiguration.ConfigurationObserver;
 
 import java.io.File;
 import java.net.URLConnection;
@@ -62,7 +66,7 @@ import java.util.List;
  * 
  * @author Damon Kohler (damonkohler@gmail.com)
  */
-public class FileBrowser extends ListActivity {
+public class FileBrowser extends ListActivity implements OnSharedPreferenceChangeListener {
 
   private final static String EMPTY = "";
 
@@ -74,8 +78,14 @@ public class FileBrowser extends ListActivity {
   private boolean mInSearchResultMode = false;
   private String mQuery = EMPTY;
   private File mCurrentDir;
+  private File mLastGoodDir;
   private File mBaseDir;
   private File mCurrent;
+  private SharedPreferences mPreferences;
+  private boolean mShowPermissions;
+  private boolean mShowOwner;
+  private boolean mShowSize;
+  private PackageManager mPackageManager;
 
   // Linux stat constants
   private static final int S_IFMT = 0170000; /* type of file */
@@ -89,7 +99,7 @@ public class FileBrowser extends ListActivity {
   private static final int S_ISGID = 0002000; /* set group id on execution */
 
   private static enum MenuId {
-    DELETE, HELP, FOLDER_ADD, REFRESH, SEARCH, RENAME, COPY, PLACES;
+    DELETE, HELP, FOLDER_ADD, REFRESH, SEARCH, RENAME, COPY, PLACES, PREFERENCES;
     public int getId() {
       return ordinal() + Menu.FIRST;
     }
@@ -105,11 +115,20 @@ public class FileBrowser extends ListActivity {
     mAdapter.registerDataSetObserver(mObserver);
     // mConfiguration = ((BaseApplication) getApplication()).getInterpreterConfiguration();
     mManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-
+    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    mPreferences.registerOnSharedPreferenceChangeListener(this);
+    mPackageManager = getPackageManager();
+    loadPreferences();
     registerForContextMenu(getListView());
     updateAndFilterScriptList(mQuery);
     setListAdapter(mAdapter);
     handleIntent(getIntent());
+  }
+
+  private void loadPreferences() {
+    mShowOwner = mPreferences.getBoolean("showOwner", false);
+    mShowPermissions = mPreferences.getBoolean("showPermissions", true);
+    mShowSize = mPreferences.getBoolean("showSize", false);
   }
 
   @Override
@@ -122,7 +141,8 @@ public class FileBrowser extends ListActivity {
     List<File> scripts;
     File[] files = mCurrentDir.listFiles();
     if (files == null) {
-      mCurrentDir = mBaseDir;
+      showMessage("Access denied.");
+      mCurrentDir = (mLastGoodDir != null) ? mLastGoodDir : mBaseDir;
       files = mCurrentDir.listFiles();
     }
     setTitle(mCurrentDir.getPath());
@@ -151,17 +171,21 @@ public class FileBrowser extends ListActivity {
     if (mScripts.size() == 0) {
       setEmpty("No matches found.");
     }
-    mScripts.add(0, new File(mCurrentDir.getParent()) {
-      @Override
-      public boolean isDirectory() {
-        return true;
-      }
+    File parent = mCurrentDir.getParentFile();
+    if (parent != null) {
+      mScripts.add(0, new File(mCurrentDir.getParent()) {
+        @Override
+        public boolean isDirectory() {
+          return true;
+        }
 
-      @Override
-      public String getName() {
-        return "..";
-      }
-    });
+        @Override
+        public String getName() {
+          return "..";
+        }
+      });
+    }
+    mLastGoodDir = mCurrentDir;
   }
 
   private void handleIntent(Intent intent) {
@@ -243,6 +267,8 @@ public class FileBrowser extends ListActivity {
         android.R.drawable.ic_menu_revert);
     menu.add(Menu.NONE, MenuId.PLACES.getId(), Menu.NONE, "Places").setIcon(
         android.R.drawable.ic_menu_gallery);
+    menu.add(Menu.NONE, MenuId.PREFERENCES.getId(), Menu.NONE, "Preferences").setIcon(
+        android.R.drawable.ic_menu_preferences);
     return true;
   }
 
@@ -256,6 +282,8 @@ public class FileBrowser extends ListActivity {
       onSearchRequested();
     } else if (itemId == MenuId.PLACES.getId()) {
       doGetPlaces();
+    } else if (itemId == MenuId.PREFERENCES.getId()) {
+      startActivity(new Intent(this, Preferences.class));
     }
     return true;
   }
@@ -449,24 +477,6 @@ public class FileBrowser extends ListActivity {
     mManager.setOnCancelListener(null);
   }
 
-  private class ScriptListObserver extends DataSetObserver implements ConfigurationObserver {
-    @Override
-    public void onInvalidated() {
-      updateAndFilterScriptList(EMPTY);
-    }
-
-    @Override
-    public void onConfigurationChanged() {
-      runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-          updateAndFilterScriptList(mQuery);
-          mAdapter.notifyDataSetChanged();
-        }
-      });
-    }
-  }
-
   private abstract class FileListAdapter extends BaseAdapter {
 
     protected final Context mContext;
@@ -553,12 +563,32 @@ public class FileBrowser extends ListActivity {
       TextView text = (TextView) container.findViewById(R.id.list_item_title);
 
       String perms;
-      try {
-        perms = permString(FileUtils.getPermissions(script));
-      } catch (Exception e) {
-        perms = "????";
+      String line = script.getName();
+      if (mShowPermissions) {
+        try {
+          perms = permString(FileUtils.getPermissions(script));
+        } catch (Exception e) {
+          perms = "????";
+        }
+        line += " " + perms;
       }
-      text.setText(getScriptList().get(position).getName() + " " + perms);
+      if (mShowSize) {
+        line += " " + script.length();
+      }
+      if (mShowOwner) {
+        String owner = "";
+        try {
+          FileStatus fs = FileUtils.getFileStatus(script);
+          if (fs.uid != 0) {
+            owner = mPackageManager.getNameForUid(fs.uid);
+          }
+        } catch (Exception e) {
+          owner = "?";
+        }
+        line += " " + owner;
+      }
+
+      text.setText(line);
       return container;
     }
 
@@ -581,5 +611,11 @@ public class FileBrowser extends ListActivity {
     public void onInvalidated() {
       updateAndFilterScriptList(EMPTY);
     }
+  }
+
+  @Override
+  public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    loadPreferences();
+    mAdapter.notifyDataSetInvalidated();
   }
 }

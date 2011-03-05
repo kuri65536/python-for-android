@@ -211,8 +211,8 @@ public class PythonMain extends Main {
 
     mOfficialVersion = new TextView(this);
     mOfficialVersion.setLayoutParams(marginParams);
-    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(), mDescriptor
-        .getExtrasVersion(), mDescriptor.getScriptsVersion()));
+    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(),
+        mDescriptor.getExtrasVersion(), mDescriptor.getScriptsVersion()));
     mLayout.addView(mOfficialVersion);
 
     mHostVersion = new TextView(this);
@@ -261,8 +261,8 @@ public class PythonMain extends Main {
 
   protected void doBrowseModule() {
     Intent intent =
-        new Intent(Intent.ACTION_VIEW, Uri
-            .parse("http://code.google.com/p/python-for-android/wiki/Modules"));
+        new Intent(Intent.ACTION_VIEW,
+            Uri.parse("http://code.google.com/p/python-for-android/wiki/Modules"));
     startActivity(intent);
   }
 
@@ -437,8 +437,7 @@ public class PythonMain extends Main {
   public boolean onCreateOptionsMenu(Menu menu) {
     menu.add(Menu.NONE, MenuId.BROWSER.getId(), Menu.NONE, "File Browser").setIcon(
         android.R.drawable.ic_menu_myplaces);
-    menu.add(Menu.NONE, MenuId.SL4A.getId(), Menu.NONE, "SL4A").setIcon(
-        android.R.drawable.ic_menu_call);
+    menu.add(Menu.NONE, MenuId.SL4A.getId(), Menu.NONE, "SL4A").setIcon(R.drawable.sl4a_logo_32);
     return true;
   }
 

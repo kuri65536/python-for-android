@@ -62,6 +62,30 @@ public class FileUtils {
     return result[0];
   }
 
+  public static FileStatus getFileStatus(File path) throws Exception {
+    FileStatus result = new FileStatus();
+    Class<?> fileUtils = Class.forName("android.os.FileUtils");
+    Class<?> fileStatus = Class.forName("android.os.FileUtils$FileStatus");
+    Method getOsFileStatus = fileUtils.getMethod("getFileStatus", String.class, fileStatus);
+    Object fs = fileStatus.newInstance();
+    if ((Boolean) getOsFileStatus.invoke(null, path.getAbsolutePath(), fs)) {
+      result.atime = fileStatus.getField("atime").getLong(fs);
+      result.blksize = fileStatus.getField("blksize").getInt(fs);
+      result.blocks = fileStatus.getField("blocks").getLong(fs);
+      result.ctime = fileStatus.getField("ctime").getLong(fs);
+      result.dev = fileStatus.getField("dev").getInt(fs);
+      result.gid = fileStatus.getField("gid").getInt(fs);
+      result.ino = fileStatus.getField("ino").getInt(fs);
+      result.mode = fileStatus.getField("mode").getInt(fs);
+      result.mtime = fileStatus.getField("mtime").getLong(fs);
+      result.nlink = fileStatus.getField("nlink").getInt(fs);
+      result.rdev = fileStatus.getField("rdev").getInt(fs);
+      result.size = fileStatus.getField("size").getLong(fs);
+      result.uid = fileStatus.getField("uid").getInt(fs);
+    }
+    return result;
+  }
+
   public static boolean recursiveChmod(File root, int mode) throws Exception {
     boolean success = chmod(root, mode) == 0;
     for (File path : root.listFiles()) {
@@ -177,4 +201,19 @@ public class FileUtils {
     return builder.toString();
   }
 
+  public static class FileStatus {
+    public long atime;
+    public int blksize;
+    public long blocks;
+    public long ctime;
+    public int dev;
+    public int gid;
+    public int ino;
+    public int mode;
+    public long mtime;
+    public int nlink;
+    public int rdev;
+    public long size;
+    public int uid;
+  }
 }
