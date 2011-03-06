@@ -49,9 +49,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.FileUtils.FileStatus;
 import com.googlecode.android_scripting.Log;
@@ -68,6 +65,7 @@ import java.net.URLConnection;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Manages creation, deletion, and execution of stored scripts.
@@ -163,9 +161,9 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
     handleIntent(intent);
   }
 
-  @SuppressWarnings("serial")
   private void updateAndFilterScriptList(final String query) {
     List<File> scripts;
+    List<File> work;
     File[] files = mCurrentDir.listFiles();
     if (files == null) {
       showMessage("Access denied.");
@@ -174,15 +172,16 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
     }
     setTitle(mCurrentDir.getPath());
     scripts = Arrays.asList(files);
-    Predicate<File> p = new Predicate<File>() {
 
-      @Override
-      public boolean apply(File file) {
-        return file.getName().toLowerCase().contains(query.toLowerCase());
+    work = new Vector<File>(scripts.size());
+    for (File file : scripts) {
+      if (query == null || query.equals(EMPTY)) {
+        work.add(file);
+      } else if (file.getName().toLowerCase().contains(query.toLowerCase())) {
+        work.add(file);
       }
-    };
-
-    mScripts = Lists.newArrayList(Collections2.filter(scripts, p));
+    }
+    mScripts = work;
 
     synchronized (mQuery) {
       if (!mQuery.equals(query)) {
