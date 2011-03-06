@@ -17,6 +17,7 @@
 package com.googlecode.pythonforandroid;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.SearchManager;
 import android.content.Context;
@@ -25,6 +26,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
@@ -39,26 +41,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
-import com.googlecode.android_scripting.Constants;
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.FileUtils.FileStatus;
 import com.googlecode.android_scripting.Log;
-import com.googlecode.android_scripting.interpreter.Interpreter;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLConnection;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -72,7 +80,6 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
 
   private List<File> mScripts;
   private FileBrowserAdapter mAdapter;
-  private HashMap<Integer, Interpreter> mAddMenuIds;
   private FileListObserver mObserver;
   private SearchManager mManager;
   private boolean mInSearchResultMode = false;
@@ -87,19 +94,24 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
   private boolean mShowSize;
   private PackageManager mPackageManager;
 
+  private boolean mCut;
+  private File mClipboard;
+  private Dialog mPermissionDialog;
+
   // Linux stat constants
-  private static final int S_IFMT = 0170000; /* type of file */
-  private static final int S_IFLNK = 0120000; /* symbolic link */
-  private static final int S_IFREG = 0100000; /* regular */
-  private static final int S_IFBLK = 0060000; /* block special */
-  private static final int S_IFDIR = 0040000; /* directory */
-  private static final int S_IFCHR = 0020000; /* character special */
-  private static final int S_IFIFO = 0010000; /* this is a FIFO */
-  private static final int S_ISUID = 0004000; /* set user id on execution */
-  private static final int S_ISGID = 0002000; /* set group id on execution */
+  public static final int S_IFMT = 0170000; /* type of file */
+  public static final int S_IFLNK = 0120000; /* symbolic link */
+  public static final int S_IFREG = 0100000; /* regular */
+  public static final int S_IFBLK = 0060000; /* block special */
+  public static final int S_IFDIR = 0040000; /* directory */
+  public static final int S_IFCHR = 0020000; /* character special */
+  public static final int S_IFIFO = 0010000; /* this is a FIFO */
+  public static final int S_ISUID = 0004000; /* set user id on execution */
+  public static final int S_ISGID = 0002000; /* set group id on execution */
 
   private static enum MenuId {
-    DELETE, HELP, FOLDER_ADD, REFRESH, SEARCH, RENAME, COPY, PLACES, PREFERENCES;
+    DELETE, HELP, FOLDER_ADD, REFRESH, SEARCH, RENAME, COPY, CUT, PASTE, PLACES, PREFERENCES, MAIN,
+    PERMISSIONS;
     public int getId() {
       return ordinal() + Menu.FIRST;
     }
@@ -123,6 +135,21 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
     updateAndFilterScriptList(mQuery);
     setListAdapter(mAdapter);
     handleIntent(getIntent());
+    mPermissionDialog = new Dialog(this);
+    mPermissionDialog.setContentView(R.layout.permissions);
+    mPermissionDialog.findViewById(R.id.btnOk).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        setPermissions();
+      }
+    });
+    mPermissionDialog.findViewById(R.id.btnCancel).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        mPermissionDialog.hide();
+      }
+    });
+
   }
 
   private void loadPreferences() {
@@ -201,6 +228,10 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
     menu.add(Menu.NONE, MenuId.RENAME.getId(), Menu.NONE, "Rename");
     menu.add(Menu.NONE, MenuId.DELETE.getId(), Menu.NONE, "Delete");
+    menu.add(Menu.NONE, MenuId.COPY.getId(), Menu.NONE, "Copy");
+    menu.add(Menu.NONE, MenuId.CUT.getId(), Menu.NONE, "Cut");
+    menu.add(Menu.NONE, MenuId.PASTE.getId(), Menu.NONE, "Paste");
+    menu.add(Menu.NONE, MenuId.PERMISSIONS.getId(), Menu.NONE, "Permissions");
   }
 
   @Override
@@ -220,6 +251,14 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
     } else if (itemId == MenuId.RENAME.getId()) {
       rename(file);
       return true;
+    } else if (itemId == MenuId.COPY.getId()) {
+      addCopy(mCurrent);
+    } else if (itemId == MenuId.CUT.getId()) {
+      addCut(mCurrent);
+    } else if (itemId == MenuId.PASTE.getId()) {
+      pasteFile();
+    } else if (itemId == MenuId.PERMISSIONS.getId()) {
+      showPermissions();
     }
     return false;
   }
@@ -231,11 +270,17 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
         mInSearchResultMode = false;
         mAdapter.notifyDataSetInvalidated();
       } else {
-        Intent intent = new Intent(this, PythonMain.class);
-        intent.setAction(Intent.ACTION_MAIN);
-        startActivity(intent);
+        if (mScripts != null && mScripts.size() > 0) {
+          File first = mScripts.get(0);
+          if (first.getName().equals("..")) {
+            mCurrentDir = first;
+            mAdapter.notifyDataSetInvalidated();
+            return true;
+          }
+        }
+        doGotoMain();
+        return true;
       }
-      return true;
     }
     return super.onKeyDown(keyCode, event);
   }
@@ -269,6 +314,13 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
         android.R.drawable.ic_menu_gallery);
     menu.add(Menu.NONE, MenuId.PREFERENCES.getId(), Menu.NONE, "Preferences").setIcon(
         android.R.drawable.ic_menu_preferences);
+    menu.add(Menu.NONE, MenuId.MAIN.getId(), Menu.NONE, "Main").setIcon(
+        android.R.drawable.ic_menu_manage);
+    menu.add(Menu.NONE, MenuId.FOLDER_ADD.getId(), Menu.NONE, "Add Folder").setIcon(
+        android.R.drawable.ic_menu_add);
+    if (mClipboard != null) {
+      menu.add(Menu.NONE, MenuId.PASTE.getId(), Menu.NONE, "Paste");
+    }
     return true;
   }
 
@@ -284,8 +336,225 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
       doGetPlaces();
     } else if (itemId == MenuId.PREFERENCES.getId()) {
       startActivity(new Intent(this, Preferences.class));
+    } else if (itemId == MenuId.MAIN.getId()) {
+      doGotoMain();
+    } else if (itemId == MenuId.FOLDER_ADD.getId()) {
+      addFolder();
+    } else if (itemId == MenuId.PASTE.getId()) {
+      pasteFile();
     }
     return true;
+  }
+
+  private void doDialogMenu() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    final CharSequence[] menuList = { "View", "Delete", "Rename", "Copy", "Cut", "Permissions" };
+    builder.setTitle(mCurrent.getName());
+    builder.setItems(menuList, new DialogInterface.OnClickListener() {
+
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        switch (which) {
+        case 0:
+          doViewCurrent();
+          break;
+        case 1:
+          delete(mCurrent);
+          break;
+        case 2:
+          rename(mCurrent);
+          break;
+        case 3:
+          addCopy(mCurrent);
+          break;
+        case 4:
+          addCut(mCurrent);
+          break;
+        case 5:
+          showPermissions();
+        }
+      }
+    });
+    builder.show();
+  }
+
+  /**
+   * Go to current packages main activity.
+   */
+  public void doGotoMain() {
+    Intent intent = new Intent(Intent.ACTION_MAIN); // Should default to main screen.
+    String packageName = getPackageName();
+    intent.setPackage(packageName);
+    intent.addCategory(Intent.CATEGORY_LAUNCHER);
+    ResolveInfo r = mPackageManager.resolveActivity(intent, 0);
+    intent.setClassName(packageName, r.activityInfo.name);
+    try {
+      startActivity(intent);
+    } catch (Exception e) {
+      showMessage(e.getMessage());
+    }
+  }
+
+  private void setPermBit(int perms, int bit, int id) {
+    CheckBox ck = (CheckBox) mPermissionDialog.findViewById(id);
+    ck.setChecked(((perms >> bit) & 1) == 1);
+  }
+
+  private int getPermBit(int bit, int id) {
+    CheckBox ck = (CheckBox) mPermissionDialog.findViewById(id);
+    int ret = (ck.isChecked()) ? (1 << bit) : 0;
+    return ret;
+  }
+
+  /**
+   * Show and edit file permissions
+   */
+  public void showPermissions() {
+    mPermissionDialog.setTitle(mCurrent.getName());
+    try {
+      int perms = FileUtils.getPermissions(mCurrent);
+      setPermBit(perms, 8, R.id.ckOwnRead);
+      setPermBit(perms, 7, R.id.ckOwnWrite);
+      setPermBit(perms, 6, R.id.ckOwnExec);
+      setPermBit(perms, 5, R.id.ckGrpRead);
+      setPermBit(perms, 4, R.id.ckGrpWrite);
+      setPermBit(perms, 3, R.id.ckGrpExec);
+      setPermBit(perms, 2, R.id.ckOthRead);
+      setPermBit(perms, 1, R.id.ckOthWrite);
+      setPermBit(perms, 0, R.id.ckOthExec);
+      TextView v = (TextView) mPermissionDialog.findViewById(R.id.permInfo);
+      Date date = new Date(mCurrent.lastModified());
+      v.setText(mCurrent.getParent() + "\nSize=" + mCurrent.length() + "\nModified=" + date);
+      mPermissionDialog.show();
+    } catch (Exception e) {
+      showMessage(e.getMessage());
+    }
+  }
+
+  /**
+   * Perform permission setting
+   */
+  public void setPermissions() {
+    mPermissionDialog.hide();
+    int perms =
+        getPermBit(8, R.id.ckOwnRead) | getPermBit(7, R.id.ckOwnWrite)
+            | getPermBit(6, R.id.ckOwnExec) | getPermBit(5, R.id.ckGrpRead)
+            | getPermBit(4, R.id.ckGrpWrite) | getPermBit(3, R.id.ckGrpExec)
+            | getPermBit(2, R.id.ckOthRead) | getPermBit(1, R.id.ckOthWrite)
+            | getPermBit(0, R.id.ckOthExec);
+
+    try {
+      FileUtils.chmod(mCurrent, perms);
+      toast(Integer.toString(perms, 8));
+      mAdapter.notifyDataSetChanged();
+    } catch (Exception e) {
+      showMessage(e.getMessage());
+    }
+  }
+
+  /**
+   * Attempt to view or edit the current file. Assume text unless told otherwise.
+   */
+  private void doViewCurrent() {
+    Intent intent = new Intent(Intent.ACTION_VIEW);
+    Uri uri = Uri.fromFile(mCurrent);
+    String mime = URLConnection.guessContentTypeFromName(uri.toString());
+    if (mime == null) {
+      String name = mCurrent.getName();
+      if (name.endsWith(".html")) {
+        mime = "text/html";
+      } else {
+        mime = "text/plain";
+      }
+    }
+    intent.setDataAndType(uri, mime);
+    try {
+      startActivity(intent);
+    } catch (Exception e) {
+      showMessage(e.getMessage());
+    }
+  }
+
+  public void toast(String message) {
+    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+  }
+
+  private void addCopy(File file) {
+    mClipboard = file;
+    toast("Copy to clipboard\n" + file.getName());
+    mCut = false;
+  }
+
+  private void addCut(File file) {
+    mClipboard = file;
+    toast("Cut to clipboard\n" + file.getName());
+    mCut = true;
+  }
+
+  private void pasteFile() {
+    String message = "";
+    if (mClipboard == null) {
+      showMessage("Nothing to copy");
+      return;
+    }
+    final File destination = new File(mCurrentDir, mClipboard.getName());
+    if (destination.exists()) {
+      message = "File " + destination.getName() + " already exists. Overwrite?";
+    }
+    if (message != "") {
+      prompt(message, new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          if (which == AlertDialog.BUTTON_POSITIVE) {
+            performPasteFile(mClipboard, destination);
+          }
+        }
+      });
+    } else {
+      performPasteFile(mClipboard, destination);
+    }
+
+  }
+
+  protected void performPasteFile(File source, File destination) {
+    if (source.isDirectory()) {
+      showMessage("Haven't worked out folder copy yet...");
+    } else {
+      try {
+        copyFile(source, destination);
+        if (mCut) {
+          source.delete();
+        }
+        mClipboard = null;
+        showMessage("Copied.");
+      } catch (Exception e) {
+        showMessage(e.getMessage());
+      }
+      mAdapter.notifyDataSetInvalidated();
+    }
+  }
+
+  /**
+   * Copy file from source to destination.
+   * 
+   * @param source
+   * @param destination
+   */
+
+  private void copyFile(File source, File destination) throws Exception {
+    byte[] buf = new byte[1024];
+    InputStream input = new BufferedInputStream(new FileInputStream(source));
+    OutputStream output = new BufferedOutputStream(new FileOutputStream(destination));
+    int len;
+    while ((len = input.read(buf)) > 0) {
+      output.write(buf, 0, len);
+    }
+    output.flush();
+    output.close();
+    int perms = FileUtils.getPermissions(source) & 0777;
+    FileUtils.chmod(destination, perms);
+    destination.setLastModified(source.lastModified());
   }
 
   private void doGetPlaces() {
@@ -338,59 +607,13 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
     builder.show();
   }
 
-  private void doDialogMenu() {
+  protected void prompt(String message, DialogInterface.OnClickListener btnlisten) {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    final CharSequence[] menuList = { "View", "Delete", "Rename" };
-    builder.setTitle(mCurrent.getName());
-    builder.setItems(menuList, new DialogInterface.OnClickListener() {
-
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-        Intent intent;
-        Uri uri;
-        switch (which) {
-        case 0:
-          intent = new Intent(Intent.ACTION_VIEW);
-          uri = Uri.fromFile(mCurrent);
-          String mime = URLConnection.guessContentTypeFromName(uri.toString());
-          if (mime == null) {
-            String name = mCurrent.getName();
-            if (name.endsWith(".html")) {
-              mime = "text/html";
-            } else {
-              mime = "text/plain";
-            }
-          }
-          intent.setDataAndType(uri, mime);
-          try {
-            startActivity(intent);
-          } catch (Exception e) {
-            showMessage(e.getMessage());
-          }
-          break;
-        case 1:
-          delete(mCurrent);
-          break;
-        case 2:
-          rename(mCurrent);
-          break;
-
-        }
-      }
-    });
+    builder.setTitle("File Browser");
+    builder.setMessage(message);
+    builder.setNegativeButton("Cancel", btnlisten);
+    builder.setPositiveButton("OK", btnlisten);
     builder.show();
-  }
-
-  /**
-   * Opens the script for editing.
-   * 
-   * @param script
-   *          the name of the script to edit
-   */
-  private void editScript(File script) {
-    Intent i = new Intent(Constants.ACTION_EDIT_SCRIPT);
-    i.putExtra(Constants.EXTRA_SCRIPT_PATH, script.getAbsolutePath());
-    startActivity(i);
   }
 
   private void delete(final File file) {
@@ -505,8 +728,8 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
     private String permRwx(int perm) {
       String result;
       result =
-          ((perm & 01) != 0 ? "r" : "-") + ((perm & 02) != 0 ? "w" : "-")
-              + ((perm & 01) != 0 ? "x" : "-");
+          ((perm & 04) != 0 ? "r" : "-") + ((perm & 02) != 0 ? "w" : "-")
+              + ((perm & 1) != 0 ? "x" : "-");
       return result;
     }
 
