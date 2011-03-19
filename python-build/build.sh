@@ -52,7 +52,7 @@ mkdir -p ${OUT}/usr/include/python2.6
 LIBS='site-packages encodings compiler hotshot
     email email/mime
     json
-    sqlite3
+    sqlite3 
     logging bsddb csv wsgiref
     ctypes ctypes/macholib idlelib idlelib/Icons
     distutils distutils/command

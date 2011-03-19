@@ -1,13 +1,14 @@
 LOCAL_PATH := $(call my-dir)
 PYTHON_SRC_PATH := $(LOCAL_PATH)/../../python-src
+OPENSSL := $(LOCAL_PATH)/../../openssl
 
 include $(CLEAR_VARS)
 
-LOCAL_C_INCLUDES := $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
+LOCAL_C_INCLUDES := $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include $(OPENSSL)/include
 LOCAL_MODULE := python
 LOCAL_SRC_FILES := Modules/python.c
 LOCAL_PATH := $(PYTHON_SRC_PATH)
-LOCAL_SHARED_LIBRARIES := libpython2.6
+LOCAL_SHARED_LIBRARIES := libpython2.6  
 
 build-module = \
       $(eval LOCAL_MODULE := $(strip $1)) \
@@ -76,6 +77,7 @@ $(call build-module,  _codecs_hk ,  Modules/cjkcodecs/_codecs_hk.c )
 $(call build-module,  _codecs_iso2022 ,  Modules/cjkcodecs/_codecs_iso2022.c )
 $(call build-module,  _multiprocessing ,  Modules/_multiprocessing/multiprocessing.c Modules/_multiprocessing/socket_connection.c Modules/_multiprocessing/semaphore.c,,-DHAVE_SEM_OPEN )
 #$(call build-module,  ossaudiodev ,  Modules/ossaudiodev.c )
+#$(call build-module,  _ssl ,  Modules/_ssl.c, ssl crypto )
 
 $(call import-module, bzip2)
 LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
@@ -120,6 +122,18 @@ LOCAL_MODULE := _elementtree
 LOCAL_MODULE_FILENAME := _elementtree
 LOCAL_SRC_FILES := Modules/_elementtree.c
 include $(BUILD_SHARED_LIBRARY)
+
+#$(call build-module,  _ssl ,  Modules/_ssl.c, ssl crypto )
+
+$(call import-module, openssl)
+LOCAL_PATH :=  $(PYTHON_SRC_PATH)
+LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include $(OPENSSL)/include $(OPENSSL)
+LOCAL_MODULE := _ssl
+LOCAL_MODULE_FILENAME := _ssl
+LOCAL_SRC_FILES := Modules/_ssl.c 
+LOCAL_SHARED_LIBRARIES := libpython2.6 libcrypto libssl
+include $(BUILD_SHARED_LIBRARY)
+
 
 $(call import-module, libffi)
 LOCAL_PATH := $(PYTHON_SRC_PATH)

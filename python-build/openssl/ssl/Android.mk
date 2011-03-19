@@ -1,9 +1,9 @@
 LOCAL_PATH:= $(call my-dir)
 
 local_c_includes := \
-	external/openssl \
-	external/openssl/include \
-	external/openssl/crypto
+	$(NDK_MODULE_PATH)/openssl \
+	$(NDK_MODULE_PATH)/openssl/include \
+	$(NDK_MODULE_PATH)/openssl/crypto
 
 include $(CLEAR_VARS)
 

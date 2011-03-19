@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_CFLAGS += -DOPENSSL_BN_ASM_MONT -DAES_ASM -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM
+LOCAL_CFLAGS += -DOPENSSL_BN_ASM_MONT -DAES_ASM -DSHA1_ASM -DSHA256_ASM -DSHA512_ASM -DOPENSSL_NO_STATIC_ENGINE
 LOCAL_SRC_FILES:= 0.9.9-dev/bn/armv4-mont.s \
                   0.9.9-dev/aes/aes-armv4.s \
                   0.9.9-dev/sha/sha1-armv4-large.s \
@@ -199,6 +199,53 @@ LOCAL_SRC_FILES+= \
 	dso/dso_openssl.c \
 	dso/dso_win32.c \
 	dso/dso_vms.c \
+	ec/ec2_mult.c \
+	ec/ecp_smpl.c \
+	ec/ec_asn1.c \
+	ec/ec_cvt.c \
+	ec/ec_check.c \
+	ec/ec_lib.c \
+	ec/ec_mult.c \
+	ec/ecp_nist.c \
+	ec/ec2_smpl.c \
+	ec/ec_print.c \
+	ec/ecp_mont.c \
+	ec/ec_err.c \
+	ec/ec_key.c \
+	ec/ec_curve.c \
+	ecdh/ech_ossl.c \
+	ecdh/ech_key.c \
+	ecdh/ech_err.c \
+	ecdh/ech_lib.c \
+	ecdsa/ecs_vrf.c \
+	ecdsa/ecs_err.c \
+	ecdsa/ecs_ossl.c \
+	ecdsa/ecs_lib.c \
+	ecdsa/ecs_sign.c \
+	ecdsa/ecs_asn1.c \
+	engine/tb_store.c \
+	engine/eng_openssl.c \
+	engine/eng_dyn.c \
+	engine/eng_all.c \
+	engine/tb_digest.c \
+	engine/tb_rand.c \
+	engine/tb_rsa.c \
+	engine/eng_list.c \
+	engine/eng_table.c \
+	engine/eng_lib.c \
+	engine/tb_ecdh.c \
+	engine/eng_cnf.c \
+	engine/eng_padlock.c \
+	engine/eng_pkey.c \
+	engine/eng_fat.c \
+	engine/eng_init.c \
+	engine/eng_ctrl.c \
+	engine/tb_dh.c \
+	engine/tb_dsa.c \
+	engine/eng_err.c \
+	engine/tb_ecdsa.c \
+	engine/tb_cipher.c \
+	engine/eng_cryptodev.c \
 	err/err.c \
 	err/err_bio.c \
 	err/err_def.c \
@@ -220,6 +267,7 @@ LOCAL_SRC_FILES+= \
 	evp/e_xcbc_d.c \
 	evp/e_rc2.c \
 	evp/e_rc5.c \
+	evp/m_ecdsa.c \
 	evp/m_null.c \
 	evp/m_md2.c \
 	evp/m_md4.c \
@@ -430,9 +478,9 @@ LOCAL_SRC_FILES+= \
 LOCAL_CFLAGS += -DNO_WINDOWS_BRAINDEATH
 
 LOCAL_C_INCLUDES += \
-	external/openssl \
-	external/openssl/include \
-	external/zlib
+	$(NDK_MODULE_PATH)/openssl \
+	$(NDK_MODULE_PATH)/openssl/include \
+	$(NDK_MODULE_PATH)/zlib
 
 LOCAL_SHARED_LIBRARIES += libz
 
