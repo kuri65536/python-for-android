@@ -5,6 +5,7 @@ include $(CLEAR_VARS)
 PYTHON_SRC_PATH := $(LOCAL_PATH)/../python-src
 LOCAL_C_INCLUDES := $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
 LOCAL_PATH := $(PYTHON_SRC_PATH)
+LOCAL_CFLAGS := -DPYTHONPATH='""'
 LOCAL_SRC_FILES := \
 		Parser/acceler.c \
 		Parser/grammar1.c \
