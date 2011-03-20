@@ -155,6 +155,7 @@ print 'Removing unecessary files and directories from installation.'
 map(rm, find('output', '\.py$')[0])
 map(rm, find('output', '\.c$')[0])
 map(rm, find('output', '\.pyo$')[0])
+map(rm, find('output','_locale.so$')[0]) # Locale not supported on Android.
 
 rm('output/usr/share')
 rm('output/usr/include')
