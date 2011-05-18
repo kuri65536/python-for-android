@@ -80,9 +80,8 @@ ${CWD}/host/pgen ${CWD}/python-src/Grammar/Grammar \
 ndk-build
 
 # copy out all the needed files
-mv obj/local/armeabi/python	${OUT}/usr/bin
-mv obj/local/armeabi/lib*.so	${OUT}/usr/lib
-mv obj/local/armeabi/*.so	${OUT}/usr/lib/python2.6/lib-dynload
+mv obj/local/armeabi/python	 ${OUT}/lib_bin_pymain.so
+mv obj/local/armeabi/lib*.so ${OUT}/
 popd
 
 ${CWD}/host/bin/python ${OUT}/usr/lib/python2.6/compileall.py ${OUT}/usr/lib/python2.6

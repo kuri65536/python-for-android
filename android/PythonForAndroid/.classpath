@@ -8,7 +8,7 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="lib" path="libs/common.jar" sourcepath="/Common"/>
-	<classpathentry kind="lib" path="libs/interpreter.jar" sourcepath="/InterpreterForAndroid"/>
+	<classpathentry kind="lib" path="libs/interpreter.jar" sourcepath="/home/manuel/AptanaStudio3Workspace/python-for-android/android/InterpreterForAndroid/src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Utils"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

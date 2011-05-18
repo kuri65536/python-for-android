@@ -53,7 +53,7 @@ if sys.platform == 'win32':
         mods.append (mod2)
     
 elif sys.platform == 'linux2':
-    mod1 = Extension('_bluetooth',
+    mod1 = Extension('bluetooth._bluetooth',
                          sources = ['bluez/bluetooth/hci.c', 
                             'bluez/bluetooth/bluetooth.c',
                             'bluez/bluetooth/sdp.c',
