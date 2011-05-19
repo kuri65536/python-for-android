@@ -19,7 +19,6 @@ package com.googlecode.pythonforandroid;
 import android.content.Context;
 
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
-import com.googlecode.android_scripting.interpreter.InterpreterUtils;
 import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
 
 import java.io.BufferedReader;
@@ -37,8 +36,10 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private static final String ENV_TEMP = "TEMP";
   private static final String ENV_LD = "LD_LIBRARY_PATH";
   private static final String ENV_EXTRAS = "PY4A_EXTRAS";
+  private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   private static final String BASE_URL = "http://python-for-android.googlecode.com/";
   private static final int LATEST_VERSION = -1;
+  private boolean offline = false;
   private int cache_version = -1;
   private int cache_extras_version = -1;
   private int cache_scripts_version = -1;
@@ -61,19 +62,19 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   public boolean hasInterpreterArchive() {
-    return true;
+    return false;
   }
 
   public boolean hasExtrasArchive() {
-    return true;
+    return false;
   }
 
   public boolean hasScriptsArchive() {
-    return true;
+    return !offline;
   }
 
   private int __resolve_version(String what) {
-    // try resolving latest version
+    // try resolving latest version from server
     URL url;
     try {
       url = new URL(BASE_URL + "hg/python-build/LATEST_VERSION" + what.toUpperCase());
@@ -82,9 +83,9 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     } catch (Exception e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
-      return LATEST_VERSION;
-    }
 
+    }
+    return LATEST_VERSION;
   }
 
   public int getVersion() {
@@ -127,7 +128,8 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
 
   @Override
   public File getBinary(Context context) {
-    return new File(getExtrasPath(context), PYTHON_BIN);
+    return new File(context.getFilesDir(), PYTHON_BIN);
+    // return new File(getExtrasPath(context), PYTHON_BIN);
   }
 
   private String getExtrasRoot() {
@@ -136,8 +138,9 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   private String getHome(Context context) {
-    File file = InterpreterUtils.getInterpreterRoot(context, getName());
-    return file.getAbsolutePath();
+    return context.getFilesDir().getAbsolutePath();
+    // File file = InterpreterUtils.getInterpreterRoot(context, "");
+    // return file.getAbsolutePath();
   }
 
   public String getExtras() {
@@ -157,11 +160,21 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   public Map<String, String> getEnvironmentVariables(Context context) {
     Map<String, String> values = new HashMap<String, String>();
     values.put(ENV_HOME, getHome(context));
-    values.put(ENV_LD, getHome(context) + "/lib");
-    values.put(ENV_PATH, getExtras() + ":" + getHome(context) + "/lib/python2.6/lib-dynload" + ":"
-        + getHome(context) + "/lib/python2.6");
+    values.put(ENV_LD, new File(getHome(context), "python/lib").getAbsolutePath());
+    values.put(ENV_PATH, new File(getHome(context), "python/lib/python2.6/python.zip/python") + ":"
+        + new File(getHome(context), "python/lib/python2.6/lib-dynload"));
+    values.put(ENV_EGGS,
+        new File(getHome(context), "python/lib/python2.6/lib-dynload").getAbsolutePath());
     values.put(ENV_EXTRAS, getExtrasRoot());
     values.put(ENV_TEMP, getTemp());
     return values;
+  }
+
+  public void setOffline(boolean offline) {
+    this.offline = offline;
+  }
+
+  public boolean getOffline() {
+    return offline;
   }
 }
