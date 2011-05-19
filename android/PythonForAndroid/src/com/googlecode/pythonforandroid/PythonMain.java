@@ -250,6 +250,18 @@ public class PythonMain extends Main {
         doDeleteModule();
       }
     });
+    if (getInstalledVersion("interpreter") == -1) {
+      /*
+       * mDescriptor.setOffline(true); install();
+       */
+    }
+
+  }
+
+  @Override
+  protected boolean checkInstalled() {
+    broadcastInstallationStateChange(true);
+    return true;
   }
 
   @Override
