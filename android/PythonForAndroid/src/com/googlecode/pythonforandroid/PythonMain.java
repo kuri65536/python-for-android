@@ -19,26 +19,31 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup.MarginLayoutParams;
+import android.view.Window;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.InterpreterInstaller;
 import com.googlecode.android_scripting.InterpreterUninstaller;
+import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.activity.Main;
 import com.googlecode.android_scripting.exception.Sl4aException;
 import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 import com.googlecode.android_scripting.interpreter.InterpreterUtils;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -58,6 +63,9 @@ import java.util.zip.ZipFile;
  * Typically, these will be /data/data/com.googlecode.pythonforandroid/files/python/lib/python2.6
  * and /sdcard/com.googlecode.pythonforandroid/extras respectively.
  * 
+ * Egg files are just copied into
+ * /data/data/com.googlecode.pythonforandroid/files/python/lib/python2.6
+ * 
  * @author Damon
  * @author Robbie Matthews (rjmatthews62@gmail.com)
  * @author Manuel Naranjo (manuel@aircable.net)
@@ -67,6 +75,7 @@ import java.util.zip.ZipFile;
 // process. Needs some means of checking that these are properly formatted zip files, and probably a
 // means of uninstalling as well. Import handling could well be a separate activity, too.
 public class PythonMain extends Main {
+  Button mButtonInstallScripts;
   Button mButtonInstallModules;
   Button mButtonUninstallModule;
   File mDownloads;
@@ -133,7 +142,6 @@ public class PythonMain extends Main {
   private File mSoPath;
   private File mPythonPath;
   private File mEggPath;
-  private TextView mHostVersion, mOfficialVersion;
   private PythonDescriptor mDescriptor;
 
   private int getInstalledVersion(String key) {
@@ -174,21 +182,10 @@ public class PythonMain extends Main {
     }
   }
 
-  private String createVersionString(String header, int version, int extras, int scripts) {
-    String out = header;
-    out += " Versions, interpreter: ";
-    out += version > -1 ? version : " ND";
-    out += ", extras: ";
-    out += extras > -1 ? extras : " ND";
-    out += ", scripts: ";
-    out += scripts > -1 ? scripts : " ND";
-
-    return out;
-  }
-
   @Override
   protected void initializeViews() {
     super.initializeViews();
+    mButton.setVisibility(View.GONE);
 
     mDownloads = FileUtils.getExternalDownload();
     if (!mDownloads.exists()) {
@@ -209,17 +206,28 @@ public class PythonMain extends Main {
     int marginPixels = (int) (MARGIN_DIP * scale + 0.5f);
     marginParams.setMargins(marginPixels, marginPixels, marginPixels, marginPixels);
 
-    mOfficialVersion = new TextView(this);
-    mOfficialVersion.setLayoutParams(marginParams);
-    mOfficialVersion.setText(createVersionString("Latest", mDescriptor.getVersion(),
-        mDescriptor.getExtrasVersion(), mDescriptor.getScriptsVersion()));
-    mLayout.addView(mOfficialVersion);
-
-    mHostVersion = new TextView(this);
-    mHostVersion.setLayoutParams(marginParams);
-    mHostVersion.setText(createVersionString("Installed", getInstalledVersion("interpreter"),
-        getInstalledVersion("extras"), getInstalledVersion("scripts")));
-    mLayout.addView(mHostVersion);
+    mButtonInstallScripts = new Button(this);
+    mButtonInstallScripts.setLayoutParams(marginParams);
+    mButtonInstallScripts.setText("Install Example Scripts");
+    mLayout.addView(mButtonInstallScripts);
+    mButtonInstallScripts.setOnClickListener(new OnClickListener() {
+      public void onClick(View v) {
+        if (mCurrentTask != null) {
+          return;
+        }
+        getWindow().setFeatureInt(Window.FEATURE_INDETERMINATE_PROGRESS,
+            Window.PROGRESS_VISIBILITY_ON);
+        mCurrentTask = RunningTask.INSTALL;
+        InterpreterInstaller installTask;
+        try {
+          installTask = getInterpreterInstaller(mDescriptor, PythonMain.this, mTaskListener);
+        } catch (Sl4aException e) {
+          Log.e(PythonMain.this, e.getMessage(), e);
+          return;
+        }
+        installTask.execute();
+      }
+    });
 
     mButtonInstallModules = new Button(this);
     mButtonInstallModules.setLayoutParams(marginParams);
@@ -250,25 +258,12 @@ public class PythonMain extends Main {
         doDeleteModule();
       }
     });
-    if (getInstalledVersion("interpreter") == -1) {
-      /*
-       * mDescriptor.setOffline(true); install();
-       */
-    }
-
   }
 
   @Override
   protected boolean checkInstalled() {
     broadcastInstallationStateChange(true);
     return true;
-  }
-
-  @Override
-  protected void setInstalled(boolean isInstalled) {
-    mHostVersion.setText(createVersionString("Installed", getInstalledVersion("interpreter"),
-        getInstalledVersion("extras"), getInstalledVersion("scripts")));
-    super.setInstalled(isInstalled);
   }
 
   protected void doBrowseModule() {
@@ -380,7 +375,29 @@ public class PythonMain extends Main {
       @Override
       public void onClick(DialogInterface dialog, int which) {
         if (which == AlertDialog.BUTTON_POSITIVE) {
-          extract("Extracting " + mModule, mFrom, mPythonPath, mSoPath, mEggPath);
+          if (mModule.toLowerCase().endsWith(".egg")) {
+            copy(new File(mSoPath, mModule), mFrom);
+            try {
+              File out =
+                  new File(InterpreterUtils.getInterpreterRoot(PythonMain.this),
+                      "lib/python2.6/site-packages/" + mModule + ".pth");
+              FileOutputStream fout = new FileOutputStream(out);
+              fout.write(new File(mSoPath, mModule).getAbsolutePath().getBytes());
+              fout.close();
+              FileUtils.chmod(out, 0755);
+            } catch (FileNotFoundException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            } catch (IOException e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            } catch (Exception e) {
+              // TODO Auto-generated catch block
+              e.printStackTrace();
+            }
+          } else {
+            extract("Extracting " + mModule, mFrom, mPythonPath, mSoPath, mEggPath);
+          }
         }
       }
     });
@@ -410,6 +427,33 @@ public class PythonMain extends Main {
     mProgress = showProgress(caption);
     Thread t = new RunExtract(caption, from, pypath, sopath, mModuleHandler, egginfo);
     t.start();
+  }
+
+  protected void copy(File target, File from) {
+    try {
+      InputStream input = new BufferedInputStream(new FileInputStream(from));
+      target.getParentFile().mkdirs();
+      OutputStream output = new BufferedOutputStream(new FileOutputStream(target));
+      byte[] buf = new byte[1024];
+      int len;
+
+      while ((len = input.read(buf)) > 0) {
+        output.write(buf, 0, len);
+      }
+      output.close();
+      input.close();
+      FileUtils.recursiveChmod(target.getParentFile(), 0777);
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
   }
 
   protected void remove(String caption, File from, File pypath, File sopath, File egginfo) {
