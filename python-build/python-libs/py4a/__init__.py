@@ -24,7 +24,7 @@ def patch_distutils():
 	cpp = "arm-linux-androideabi-cpp"
 	ldshared= "%s -shared" % cxx
 	ldshared+=" -lc -lstdc++ -lm -Wl,--no-undefined -Wl,-z,noexecstack -lsupc++ -lpython2.6"
-	ldshared+=" -L%s" % os.environ["PY4A_LIB"]
+	ldshared+=" -L%s " % os.environ["PY4A_LIB"]
 	ccshared = sysconfig.get_config_vars("CCSHARED")
 	so_ext = "so"
 
