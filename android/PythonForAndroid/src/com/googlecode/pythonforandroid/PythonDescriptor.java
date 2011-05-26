@@ -1,4 +1,6 @@
 /*
+ * Copyright (C) 2010-2011 Naranjo Manuel Francisco <manuel@aircable.net>
+ * Copyright (C) 2010-2011 Robbie Matthews <rjmatthews62@gmail.com>
  * Copyright (C) 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -37,7 +39,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private static final String ENV_LD = "LD_LIBRARY_PATH";
   private static final String ENV_EXTRAS = "PY4A_EXTRAS";
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
-  private static final String ENV_USERBASE="PYTHONUSERBASE";
+  private static final String ENV_USERBASE = "PYTHONUSERBASE";
   private static final String BASE_URL = "http://python-for-android.googlecode.com/";
   private static final int LATEST_VERSION = -1;
   private int cache_scripts_version = -1;
@@ -140,6 +142,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     values.put(ENV_HOME, getHome(context));
     values.put(ENV_LD, new File(getHome(context), "lib").getAbsolutePath());
     values.put(ENV_PATH, new File(getHome(context), "lib/python2.6/python.zip/python") + ":"
+        + new File(getHome(context), "lib/python2.6/python.zip/python/site-packages") + ":"
         + new File(getHome(context), "lib/python2.6/lib-dynload"));
     values.put(ENV_EGGS, new File(getHome(context), "lib/python2.6/lib-dynload").getAbsolutePath());
     values.put(ENV_EXTRAS, getExtrasRoot());
