@@ -135,11 +135,11 @@ print 'Installing setuptools.'
 setuptools_path = os.path.join(pwd, 'python-libs', 'setuptools')
 compileall.compile_dir(setuptools_path)
 for i in os.listdir(setuptools_path):
-    if os.path.isfile(os.path.join(setuptools_path, i)) and i.endswith("pyc"):
-	shutil.copy(os.path.join(setuptools_path, i), 
-	    os.path.join('output/usr/lib/python2.6/', i))
+    i = os.path.join(setuptools_path, i)
+    if os.path.isfile(i) and i.endswith(".pyc"):
+	shutil.copy(i, 'output/usr/lib/python2.6/site-packages')
 shutil.copytree(os.path.join(setuptools_path, "setuptools"), 
-    'output/usr/lib/python2.6/setuptools')
+	'output/usr/lib/python2.6/setuptools')
 
 # Remove any existing zip files.
 for p in glob.glob(os.path.join(pwd, '*.zip')):

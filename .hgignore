@@ -28,6 +28,7 @@ python-build/*.apk
 python-build/python-src
 python-build/python-libs/setuptools
 python-build/python-libs/setuptools-*.tar.gz
+python-build/python-libs/*/build/
 
 syntax: regexp
 (python|lua)/.*\.o
