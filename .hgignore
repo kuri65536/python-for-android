@@ -17,11 +17,17 @@ lua/build/*
 lua/log
 android/PythonForAndroid/obj/*
 android/PythonForAndroid/libs/armeabi/*
+android/PythonForAndroid/libs/*.jar
+android/PythonForAndroid/jni/*.so
+android/PythonForAndroid/res/raw/files.xml
+android/*/dist/*.jar
 android/DocumentationGenerator/doc/*
 python-build/*.tar.bz2
 python-build/*.zip
 python-build/*.apk
 python-build/python-src
+python-build/python-libs/setuptools
+python-build/python-libs/setuptools-*.tar.gz
 
 syntax: regexp
 (python|lua)/.*\.o
