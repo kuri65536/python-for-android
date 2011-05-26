@@ -25,7 +25,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -161,11 +160,6 @@ public class PythonMain extends Main {
   private File mPythonPath;
   private File mEggPath;
   private PythonDescriptor mDescriptor;
-
-  private int getInstalledVersion(String key) {
-    SharedPreferences storage = getSharedPreferences("python-installer", 0);
-    return storage.getInt(key, -1);
-  }
 
   @Override
   protected InterpreterDescriptor getDescriptor() {
@@ -402,7 +396,10 @@ public class PythonMain extends Main {
               FileOutputStream fout = new FileOutputStream(out);
               fout.write(new File(mSoPath, mModule).getAbsolutePath().getBytes());
               fout.close();
-              FileUtils.chmod(out, 0755);
+              FileUtils.recursiveChmod(
+                  new File(InterpreterUtils.getInterpreterRoot(PythonMain.this), "lib"), 0777);
+              showMessage("Success", "Sucessfully installed");
+              return;
             } catch (FileNotFoundException e) {
               // TODO Auto-generated catch block
               e.printStackTrace();
@@ -413,6 +410,8 @@ public class PythonMain extends Main {
               // TODO Auto-generated catch block
               e.printStackTrace();
             }
+
+            showMessage("Failure", "Failed while installing");
           } else {
             extract("Extracting " + mModule, mFrom, mPythonPath, mSoPath, mEggPath);
           }
