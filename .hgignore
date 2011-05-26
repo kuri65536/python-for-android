@@ -29,6 +29,10 @@ python-build/python-src
 python-build/python-libs/setuptools
 python-build/python-libs/setuptools-*.tar.gz
 python-build/python-libs/*/build/
+python-modules/PyCrypto/pycrypto-*/
+python-modules/PyCrypto/pycrypto-*.tar.gz
+android/Utils/libs/common.jar
+android/InterpreterForAndroid/libs/common.jar
 
 syntax: regexp
 (python|lua)/.*\.o
