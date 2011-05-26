@@ -45,10 +45,13 @@ public class PythonProvider extends InterpreterProvider {
     File files = getContext().getFilesDir().getAbsoluteFile();
     File flibs = new File(files, "lib");
     File fbin = new File(files, "bin");
+
     if (flibs.isDirectory() && flibs.list().length > 0 && fbin.isDirectory()
         && fbin.list().length > 0) {
       return;
     }
+    
+    new File(files, "lib/python2.6/site-packages/").mkdirs();
 
     File libs = new File(files.getParentFile(), "lib");
 
@@ -92,6 +95,8 @@ public class PythonProvider extends InterpreterProvider {
   protected InterpreterDescriptor getDescriptor() {
     try {
       sanitizeEnvironment();
+      File files = getContext().getFilesDir().getAbsoluteFile();
+      FileUtils.recursiveChmod(files, 0777);
     } catch (NotFoundException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -102,6 +107,9 @@ public class PythonProvider extends InterpreterProvider {
       // TODO Auto-generated catch block
       e.printStackTrace();
     } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (Exception e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
