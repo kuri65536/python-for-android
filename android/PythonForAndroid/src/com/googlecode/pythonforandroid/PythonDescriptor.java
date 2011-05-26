@@ -37,12 +37,15 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private static final String ENV_LD = "LD_LIBRARY_PATH";
   private static final String ENV_EXTRAS = "PY4A_EXTRAS";
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
+  private static final String ENV_USERBASE="PYTHONUSERBASE";
   private static final String BASE_URL = "http://python-for-android.googlecode.com/";
   private static final int LATEST_VERSION = -1;
-  private boolean offline = false;
-  private int cache_version = -1;
-  private int cache_extras_version = -1;
   private int cache_scripts_version = -1;
+
+  @Override
+  public int getVersion() {
+    return 16;
+  }
 
   @Override
   public String getBaseInstallUrl() {
@@ -70,7 +73,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   public boolean hasScriptsArchive() {
-    return !offline;
+    return true;
   }
 
   private int __resolve_version(String what) {
@@ -86,31 +89,6 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
 
     }
     return LATEST_VERSION;
-  }
-
-  public int getVersion() {
-    cache_version = __resolve_version("");
-    return cache_version;
-  }
-
-  public int getVersion(boolean usecache) {
-    if (usecache && cache_version > -1) {
-      return cache_version;
-    }
-    return this.getVersion();
-  }
-
-  @Override
-  public int getExtrasVersion() {
-    cache_extras_version = __resolve_version("_extra");
-    return cache_extras_version;
-  }
-
-  public int getExtrasVersion(boolean usecache) {
-    if (usecache && cache_extras_version > -1) {
-      return cache_extras_version;
-    }
-    return this.getExtrasVersion();
   }
 
   @Override
@@ -160,21 +138,13 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   public Map<String, String> getEnvironmentVariables(Context context) {
     Map<String, String> values = new HashMap<String, String>();
     values.put(ENV_HOME, getHome(context));
-    values.put(ENV_LD, new File(getHome(context), "python/lib").getAbsolutePath());
-    values.put(ENV_PATH, new File(getHome(context), "python/lib/python2.6/python.zip/python") + ":"
-        + new File(getHome(context), "python/lib/python2.6/lib-dynload"));
-    values.put(ENV_EGGS,
-        new File(getHome(context), "python/lib/python2.6/lib-dynload").getAbsolutePath());
+    values.put(ENV_LD, new File(getHome(context), "lib").getAbsolutePath());
+    values.put(ENV_PATH, new File(getHome(context), "lib/python2.6/python.zip/python") + ":"
+        + new File(getHome(context), "lib/python2.6/lib-dynload"));
+    values.put(ENV_EGGS, new File(getHome(context), "lib/python2.6/lib-dynload").getAbsolutePath());
     values.put(ENV_EXTRAS, getExtrasRoot());
+    values.put(ENV_USERBASE, getHome(context));
     values.put(ENV_TEMP, getTemp());
     return values;
-  }
-
-  public void setOffline(boolean offline) {
-    this.offline = offline;
-  }
-
-  public boolean getOffline() {
-    return offline;
   }
 }
