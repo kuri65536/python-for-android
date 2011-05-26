@@ -7,4 +7,7 @@ is stored.
 
 Authors: Naranjo Manuel Francisco <naranjo.manuel@gmail.com> (c) 2010, 2011
 
+Note: In Ubuntu please make sure you have all build-deps for python2.6:
+sudo apt-get build-dep python2.6
+
 [1] http://developer.android.com/sdk/ndk/index.html

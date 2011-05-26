@@ -19,11 +19,12 @@ fi
 if [ ! -d host ]; then
     # we need to build the host python and host pgen so we can
     # generate the correct grammar and some other stuff
-    mkdir -p ${CWD}/host
-    tar -xvjf ${CWD}/Python-${VERSION}.tar.bz2
-    pushd Python-${VERSION}
+    echo "Decompressing Python-${VERSION}"
+    tar -xjf ${CWD}/Python-${VERSION}.tar.bz2
+    pushd Python-${VERSION}/
     ./configure --prefix=${CWD}/host/
     make
+    mkdir -p ${CWD}/host
     make install
     cp Parser/pgen ${CWD}/host/
     popd
@@ -36,7 +37,7 @@ if [ ! -d ${PYTHONSRC} ]; then
     tar -xvjf ${CWD}/Python-${VERSION}.tar.bz2
     mv Python-${VERSION} ${PYTHONSRC}
     pushd ${PYTHONSRC}
-    patch -p1 < ${CWD}/Python-${VERSION}-android.patch
+    patch -p1 -i ${CWD}/Python-${VERSION}-android.patch
     popd
 fi
 

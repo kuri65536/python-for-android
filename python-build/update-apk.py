@@ -28,6 +28,8 @@ def work():
 
     BIN_VERSION=open("LATEST_VERSION").read().strip()
     EXTRA_VERSION=open("LATEST_VERSION_EXTRA").read().strip()
+    os.system("mkdir -p ../android/PythonForAndroid/res/raw/")
+    os.system("mkdir -p ../android/PythonForAndroid/libs/armeabi")
     XML=open("../android/PythonForAndroid/res/raw/files.xml", "w")
     ARMEABI="../android/PythonForAndroid/libs/armeabi/"
     
