@@ -1393,14 +1393,13 @@ diff --ignore-file-name-case -wuprN Python-2.6.2/Python/pystrtod.c python-src//P
 diff --ignore-file-name-case -wuprN Python-2.6.2/Lib/ctypes/__init__.py python-src/Lib/ctypes/__init__.py
 --- Python-2.6.2/Lib/ctypes/__init__.py	2008-08-14 16:10:48.000000000 -0300
 +++ python-src//Lib/ctypes/__init__.py	2011-01-18 13:02:13.000000000 -0300
-@@ -7,6 +7,15 @@ import os as _os, sys as _sys
+@@ -7,6 +7,14 @@ import os as _os, sys as _sys
  
  __version__ = "1.1.0"
  
 +import _ctypes
 +odlopen = getattr(_ctypes, 'dlopen')
 +def __dlopen(name, flag=_ctypes.RTLD_GLOBAL|_ctypes.RTLD_LOCAL):
-+  print "dlopen", name
 +  if name:
 +    return odlopen(name, flag)
 +  return 0L
