@@ -398,6 +398,8 @@ public class PythonMain extends Main {
               fout.close();
               FileUtils.recursiveChmod(
                   new File(InterpreterUtils.getInterpreterRoot(PythonMain.this), "lib"), 0777);
+              FileUtils.recursiveChmod(
+                  new File(InterpreterUtils.getInterpreterRoot(PythonMain.this), "python"), 0777);
               showMessage("Success", "Sucessfully installed");
               return;
             } catch (FileNotFoundException e) {
