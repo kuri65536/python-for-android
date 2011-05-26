@@ -7,3 +7,7 @@ In order to build this project first you need to ant build this projects:
 
 Copy the generated jar files (<project>/dist) into PythonForAndroid/libs each time
 any of them is upgraded
+
+You also need to build ../python-build by running build.sh in that folder and
+then running standalone_python.sh once it ended the build process
+
