@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:orientation="vertical" android:layout_height="wrap_content">
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/LinearLayout03" android:layout_height="wrap_content">
+        <TextView android:layout_width="wrap_content" android:id="@+id/TextView02" android:text="Owner" android:layout_height="wrap_content"></TextView>
+    </LinearLayout>
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/LinearLayout04" android:layout_height="wrap_content">
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckOwnRead" android:text="Read" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckOwnWrite" android:text="Write" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckOwnExec" android:text="Exec" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+    </LinearLayout>
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/LinearLayout01" android:layout_height="wrap_content">
+        <TextView android:layout_width="wrap_content" android:id="@+id/TextView01" android:layout_height="wrap_content" android:text="Group"></TextView>
+    </LinearLayout>
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/LinearLayout02" android:layout_height="wrap_content">
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckGrpRead" android:text="Read" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckGrpWrite" android:text="Write" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckGrpExec" android:text="Exec" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+    </LinearLayout>
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/linearLayout2" android:layout_height="wrap_content">
+        <TextView android:id="@+id/textView1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Other"></TextView>
+    </LinearLayout>
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/linearLayout1" android:layout_height="wrap_content">
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckOthRead" android:text="Read" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckOthWrite" android:text="Write" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+        <CheckBox android:layout_width="wrap_content" android:id="@+id/ckOthExec" android:text="Exec" android:layout_height="wrap_content" android:layout_weight="0.3"></CheckBox>
+    </LinearLayout>
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/linearLayout3" android:layout_height="wrap_content">
+        <Button android:text="Ok" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/btnOk" android:layout_weight="0.5"></Button>
+        <Button android:layout_width="wrap_content" android:text="Cancel" android:layout_height="wrap_content" android:id="@+id/btnCancel" android:layout_weight="0.5"></Button>
+    </LinearLayout>
+    <LinearLayout android:layout_width="fill_parent" android:id="@+id/linearLayout4" android:layout_height="wrap_content">
+        <TextView android:layout_width="wrap_content" android:text="TextView" android:layout_height="wrap_content" android:id="@+id/permInfo"></TextView>
+    </LinearLayout>
+</LinearLayout>

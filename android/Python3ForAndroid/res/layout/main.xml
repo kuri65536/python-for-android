@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+  <Button
+    android:id="@+id/button"
+    android:layout_margin="3dip"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" />
+
+<Button android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_margin="3dip" android:id="@+id/btnModule" android:text="Import Module"></Button>
+<TextView android:layout_width="fill_parent" android:layout_height="wrap_content" android:editable="false" android:id="@+id/tvHostVersion" android:text="@string/host_version"></TextView>
+<TextView android:editable="false" android:layout_width="fill_parent" android:layout_height="wrap_content" android:id="@+id/txServerVersion" android:text="@string/server_version"></TextView>
+</LinearLayout>
