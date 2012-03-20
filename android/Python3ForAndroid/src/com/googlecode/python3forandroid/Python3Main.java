@@ -272,12 +272,6 @@ public class Python3Main extends Main {
     });
   }
 
-  @Override
-  protected boolean checkInstalled() {
-    broadcastInstallationStateChange(true);
-    return true;
-  }
-
   protected void doBrowseModule() {
     Intent intent =
         new Intent(Intent.ACTION_VIEW,

@@ -692,7 +692,7 @@ class PyBuildExt(build_ext):
                                depends = ['socketmodule.h']) )
         # Detect SSL support for the socket module (via _ssl)
         if cross_compile:
-          search_for_ssl_incs_in = [os.path.join(third_party_dir,'openssl/include')]
+          search_for_ssl_incs_in = [os.path.join(third_party_dir,'include')]
         else:  
           search_for_ssl_incs_in = [
                                 '/usr/local/ssl/include',
@@ -707,7 +707,7 @@ class PyBuildExt(build_ext):
             if krb5_h:
                 ssl_incs += krb5_h
         if cross_compile:
-          search_for_ssl_libs_in = [os.path.join(third_party_dir,'openssl/lib')]
+          search_for_ssl_libs_in = [os.path.join(third_party_dir,'lib')]
         else:
           search_for_ssl_libs_in = ['/usr/local/ssl/lib',
                                       '/usr/contrib/ssl/lib/'
@@ -985,7 +985,7 @@ class PyBuildExt(build_ext):
         # We need to find >= sqlite version 3.0.8
         sqlite_incdir = sqlite_libdir = None
         if cross_compile:
-          sqlite_inc_paths=[os.path.join(third_party_dir,'sqlite3/include')]
+          sqlite_inc_paths=[os.path.join(third_party_dir,'include')]
         else:  
           sqlite_inc_paths = [ '/usr/include',
                              '/usr/include/sqlite',
@@ -1036,7 +1036,7 @@ class PyBuildExt(build_ext):
         if sqlite_incdir:
           print("sqlite: incdir=",sqlite_incdir)
           if cross_compile:
-            sqlite_dirs_to_check = [os.path.join(third_party_dir,'sqlite3/lib')]
+            sqlite_dirs_to_check = [os.path.join(third_party_dir,'lib')]
           else:
             sqlite_dirs_to_check = [
                 os.path.join(sqlite_incdir, '..', 'lib64'),
@@ -1049,7 +1049,7 @@ class PyBuildExt(build_ext):
           print("sqlite_libfile=",sqlite_libfile,lib_dirs)                                
           if sqlite_libfile:
                 sqlite_libdir = [os.path.abspath(os.path.dirname(sqlite_libfile))]
-        print("Sqlite: ",sqlite_incdir,sqlite_libdir) 
+        print("Sqlite: ",sqlite_incdir,sqlite_libdir,third_party_dir) 
         if sqlite_incdir and sqlite_libdir:
             sqlite_srcs = ['_sqlite/cache.c',
                 '_sqlite/connection.c',

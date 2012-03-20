@@ -20,6 +20,7 @@ package com.googlecode.python3forandroid;
 
 import android.content.Context;
 
+import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
 
@@ -38,7 +39,7 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   private static final String ENV_USERBASE = "PYTHONUSERBASE";
   private static final String BASE_URL = "http://python-for-android.googlecode.com/files";
-  private static final int LATEST_VERSION = 1;
+  private static final int LATEST_VERSION = 2;
   private int cache_scripts_version = -1;
 
   @Override
@@ -137,6 +138,9 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
     values.put(ENV_EXTRAS, getExtrasRoot());
     values.put(ENV_USERBASE, home);
     values.put(ENV_TEMP, getTemp());
+    for (String k : values.keySet()) {
+      Log.d(k + " : " + values.get(k));
+    }
     return values;
   }
 }

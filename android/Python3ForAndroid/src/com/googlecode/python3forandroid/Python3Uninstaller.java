@@ -19,10 +19,12 @@ package com.googlecode.python3forandroid;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.preference.PreferenceManager;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.InterpreterUninstaller;
 import com.googlecode.android_scripting.exception.Sl4aException;
+import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 
 public class Python3Uninstaller extends InterpreterUninstaller {
@@ -40,7 +42,9 @@ public class Python3Uninstaller extends InterpreterUninstaller {
     editor.remove("extras");
     editor.remove("scripts");
     editor.commit();
-
+    SharedPreferences def = PreferenceManager.getDefaultSharedPreferences(mContext);
+    editor = def.edit();
+    editor.putBoolean(InterpreterConstants.INSTALLED_PREFERENCE_KEY, false);
     return true;
   }
 }

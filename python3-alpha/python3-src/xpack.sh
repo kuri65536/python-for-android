@@ -5,7 +5,7 @@ ZIPSCRIPTS=python3_scripts_r${VERSION}.zip
 echo "Packing $ZIPMAIN"
 rm $ZIPMAIN
 pushd _install
-cp ../../thirdparty/sqlite3/lib/libsqlite3.so.0 python3/lib
+cp ../../thirdparty/lib/libsqlite3.so.0 python3/lib
 zip -g ../$ZIPMAIN python3/bin/python3
 zip -gri"*.so" -i"*.so.0" ../$ZIPMAIN python3/lib
 popd
@@ -15,7 +15,7 @@ rm ${ZIPEXTRA}.zip
 rm -r android
 mkdir android
 mkdir android/python3
-cp android.py _install/lib/python3.2
+cp android.py _install/python3/lib/python3.2
 cp -r _install/python3/lib/python3.2/* android/python3
 pushd android
 zip -grx"*.so" -x"*.so.0" ../$ZIPEXTRA python3
