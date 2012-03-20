@@ -77,11 +77,11 @@ import java.util.zip.ZipFile;
  * the module contains shared libraries (*.so) then the module is unpacked into data, other installs
  * in extras.
  * 
- * Typically, these will be /data/data/com.googlecode.pythonforandroid/files/python/lib/python2.6
+ * Typically, these will be /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.2
  * and /sdcard/com.googlecode.pythonforandroid/extras respectively.
  * 
  * Egg files are just copied into
- * /data/data/com.googlecode.pythonforandroid/files/python/lib/python2.6
+ * /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.2
  * 
  * @author Damon
  * @author Robbie Matthews (rjmatthews62@gmail.com)
@@ -323,7 +323,7 @@ public class Python3Main extends Main {
   }
 
   public void doDeleteModule() {
-    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
+    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python3/egg-info");
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     DialogInterface.OnClickListener buttonListener = new DialogInterface.OnClickListener() {
 
@@ -372,9 +372,9 @@ public class Python3Main extends Main {
     mModule = module;
     mFrom = sourceFile;
     mSoPath =
-        new File(InterpreterUtils.getInterpreterRoot(this), "python/lib/python2.6/lib-dynload");
-    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
-    mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"), "python");
+        new File(InterpreterUtils.getInterpreterRoot(this), "python3/lib/python3.2/lib-dynload");
+    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python3/egg-info");
+    mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"), "python3");
 
     prompt("Install module " + module, new DialogInterface.OnClickListener() {
 
@@ -386,14 +386,14 @@ public class Python3Main extends Main {
             try {
               File out =
                   new File(InterpreterUtils.getInterpreterRoot(Python3Main.this),
-                      "lib/python2.6/site-packages/" + mModule + ".pth");
+                      "lib/python3.2/site-packages/" + mModule + ".pth");
               FileOutputStream fout = new FileOutputStream(out);
               fout.write(new File(mSoPath, mModule).getAbsolutePath().getBytes());
               fout.close();
               FileUtils.recursiveChmod(
                   new File(InterpreterUtils.getInterpreterRoot(Python3Main.this), "lib"), 0777);
               FileUtils.recursiveChmod(
-                  new File(InterpreterUtils.getInterpreterRoot(Python3Main.this), "python"), 0777);
+                  new File(InterpreterUtils.getInterpreterRoot(Python3Main.this), "python3"), 0777);
               showMessage("Success", "Sucessfully installed");
               return;
             } catch (FileNotFoundException e) {
@@ -418,10 +418,10 @@ public class Python3Main extends Main {
 
   protected void performUninstall(String module) {
     mModule = module;
-    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python/egg-info");
+    mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python3/egg-info");
     mFrom = new File(mEggPath, module + ".egg");
     mSoPath =
-        new File(InterpreterUtils.getInterpreterRoot(this), "python/lib/python2.6/lib-dynload");
+        new File(InterpreterUtils.getInterpreterRoot(this), "python3/lib/python3.2/lib-dynload");
 
     mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"));
 
