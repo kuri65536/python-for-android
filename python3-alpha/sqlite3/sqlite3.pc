@@ -1,0 +1,13 @@
+# Package Information for pkg-config
+
+prefix=/home/robbie/python-for-android/python3-alpha/thirdparty
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: SQLite
+Description: SQL database engine
+Version: 3.7.5
+Libs: -L${libdir} -lsqlite3
+Libs.private: 
+Cflags: -I${includedir}

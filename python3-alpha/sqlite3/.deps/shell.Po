@@ -1,0 +1,154 @@
+shell.o: shell.c \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/stdlib.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/cdefs.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/cdefs_elf.h \
+ /home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include/stddef.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/string.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/malloc.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/alloca.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/strings.h \
+ /home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/sys/types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/stdint.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/_types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/_types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/posix_types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/stddef.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/compiler.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/posix_types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/kernel.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/sysmacros.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/memory.h \
+ /home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/stdio.h \
+ /home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include/stdarg.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/assert.h \
+ sqlite3.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/ctype.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/signal.h \
+ /home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/limits.h \
+ /home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/syslimits.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/limits.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/limits.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/limits.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/internal_types.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/limits.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/syslimits.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/signal.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm-generic/signal.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/siginfo.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm-generic/siginfo.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/pwd.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/unistd.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/select.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/time.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/time.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/sysconf.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/capability.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/pathconf.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/resource.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/resource.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/resource.h \
+ /home/robbie/android-toolchain/bin/../sysroot/usr/include/asm-generic/resource.h
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/stdlib.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/cdefs.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/cdefs_elf.h:
+
+/home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include/stddef.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/string.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/malloc.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/alloca.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/strings.h:
+
+/home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/sys/types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/stdint.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/_types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/_types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/posix_types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/stddef.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/compiler.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/posix_types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/kernel.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/sysmacros.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/memory.h:
+
+/home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/stdio.h:
+
+/home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include/stdarg.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/assert.h:
+
+sqlite3.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/ctype.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/signal.h:
+
+/home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/limits.h:
+
+/home/robbie/android-toolchain/bin/../lib/gcc/arm-linux-androideabi/4.4.3/include-fixed/syslimits.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/limits.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/limits.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/limits.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/internal_types.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/machine/limits.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/syslimits.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/signal.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm-generic/signal.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/siginfo.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm-generic/siginfo.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/pwd.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/unistd.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/select.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/time.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/time.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/sysconf.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/capability.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/pathconf.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/sys/resource.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/linux/resource.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm/resource.h:
+
+/home/robbie/android-toolchain/bin/../sysroot/usr/include/asm-generic/resource.h:

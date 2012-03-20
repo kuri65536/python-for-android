@@ -26,10 +26,10 @@ HERE=.
 # for, say, /usr/ and yet have everything installed to /tmp/somedir/usr/.
 # Normally it is left empty.
 INSTALL_PREFIX=
-INSTALLTOP=/home/robbie/android-openssl/openssl-1.0.1/compiled/arm-linux-androideabi
+INSTALLTOP=${TARGET_DIR}
 
 # Do not edit this manually. Use Configure --openssldir=DIR do change this!
-OPENSSLDIR=/home/robbie/android-openssl/openssl-1.0.1/compiled/arm-linux-androideabi
+OPENSSLDIR=${TARGET_DIR}
 
 # NO_IDEA - Define to build without the IDEA algorithm
 # NO_RC4  - Define to build without the RC4 algorithm
