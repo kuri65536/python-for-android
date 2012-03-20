@@ -1,0 +1,12 @@
+export CC=arm-linux-androideabi-gcc
+export CXX=arm-linux-androideabi-g++ 
+export AR=arm-linux-androideabi-ar 
+export RANLIB=arm-linux-androideabi-ranlib
+export HOSTPYTHON=./hostpython 
+export HOSTPGEN=./Parser/hostpgen 
+export BLDSHARED="arm-linux-androideabi-gcc -shared" 
+export CROSS_export COMPILE=arm-linux-androideabi- 
+export CROSS_COMPILE_TARGET=yes 
+export HOSTARCH=ppc-linux 
+export BUILDARCH=x86_64-linux-gnu
+export prefix=~/Python-3.2.2/_install
