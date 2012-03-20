@@ -18,6 +18,10 @@ from distutils.command.build_scripts import build_scripts
 from distutils.spawn import find_executable
 
 cross_compile=(os.environ.get('CROSS_COMPILE_TARGET') == 'yes')
+third_party_dir=os.getenv('THIRD_PARTY_DIR')
+if third_party_dir is None: 
+  third_party_dir='.'
+
 
 # Were we compiled --with-pydebug or with #define Py_DEBUG?
 COMPILED_WITH_PYDEBUG = hasattr(sys, 'gettotalrefcount')
@@ -459,7 +463,7 @@ class PyBuildExt(build_ext):
         # if a file is found in one of those directories, it can
         # be assumed that no additional -I,-L directives are needed.
         if cross_compile:
-          lib_dirs = self.compiler.library_dirs;
+          lib_dirs = self.compiler.library_dirs
         else:
           lib_dirs = self.compiler.library_dirs + [
             '/lib64', '/usr/lib64',
@@ -688,7 +692,7 @@ class PyBuildExt(build_ext):
                                depends = ['socketmodule.h']) )
         # Detect SSL support for the socket module (via _ssl)
         if cross_compile:
-          search_for_ssl_incs_in = ['openssl/include']
+          search_for_ssl_incs_in = [os.path.join(third_party_dir,'openssl/include')]
         else:  
           search_for_ssl_incs_in = [
                                 '/usr/local/ssl/include',
@@ -703,7 +707,7 @@ class PyBuildExt(build_ext):
             if krb5_h:
                 ssl_incs += krb5_h
         if cross_compile:
-          search_for_ssl_libs_in = ['openssl/lib']
+          search_for_ssl_libs_in = [os.path.join(third_party_dir,'openssl/lib')]
         else:
           search_for_ssl_libs_in = ['/usr/local/ssl/lib',
                                       '/usr/contrib/ssl/lib/'
@@ -981,7 +985,7 @@ class PyBuildExt(build_ext):
         # We need to find >= sqlite version 3.0.8
         sqlite_incdir = sqlite_libdir = None
         if cross_compile:
-          sqlite_inc_paths=['sqlite3/include']
+          sqlite_inc_paths=[os.path.join(third_party_dir,'sqlite3/include')]
         else:  
           sqlite_inc_paths = [ '/usr/include',
                              '/usr/include/sqlite',
@@ -1032,7 +1036,7 @@ class PyBuildExt(build_ext):
         if sqlite_incdir:
           print("sqlite: incdir=",sqlite_incdir)
           if cross_compile:
-            sqlite_dirs_to_check = ['sqlite3/lib']
+            sqlite_dirs_to_check = [os.path.join(third_party_dir,'sqlite3/lib')]
           else:
             sqlite_dirs_to_check = [
                 os.path.join(sqlite_incdir, '..', 'lib64'),
