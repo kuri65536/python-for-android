@@ -463,14 +463,14 @@ class PyBuildExt(build_ext):
         # if a file is found in one of those directories, it can
         # be assumed that no additional -I,-L directives are needed.
         if cross_compile:
-          lib_dirs = self.compiler.library_dirs
+          lib_dirs = [os.path.join(third_party_dir,'lib')] + self.compiler.library_dirs
         else:
           lib_dirs = self.compiler.library_dirs + [
             '/lib64', '/usr/lib64',
             '/lib', '/usr/lib',
             ]
         if cross_compile:
-          inc_dirs= self.compiler.include_dirs
+          inc_dirs= [os.path.join(third_party_dir,'include')] + self.compiler.include_dirs
         else:      
           inc_dirs = self.compiler.include_dirs + ['/usr/include']
         exts = []
@@ -1225,7 +1225,7 @@ class PyBuildExt(build_ext):
             exts.append( Extension('_curses_panel', ['_curses_panel.c'],
                                    libraries = [panel_library] + curses_libs) )
         else:
-            missing.append('_curses_panel')
+            missing.append('_curses_panel') 	
 
         # Andrew Kuchling's zlib module.  Note that some versions of zlib
         # 1.1.3 have security problems.  See CERT Advisory CA-2002-07:
@@ -1239,7 +1239,9 @@ class PyBuildExt(build_ext):
         #
         # You can upgrade zlib to version 1.1.4 yourself by going to
         # http://www.gzip.org/zlib/
+        print("zlib ",inc_dirs,lib_dirs)
         zlib_inc = find_file('zlib.h', [], inc_dirs)
+        print("zlib_inc: ",zlib_inc)
         have_zlib = False
         if zlib_inc is not None:
             zlib_h = zlib_inc[0] + '/zlib.h'
