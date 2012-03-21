@@ -1,4 +1,4 @@
-VERSION=2
+VERSION=3
 ZIPMAIN=python3_r${VERSION}.zip
 ZIPEXTRA=python3_extras_r${VERSION}.zip
 ZIPSCRIPTS=python3_scripts_r${VERSION}.zip
@@ -16,6 +16,7 @@ rm -r android
 mkdir android
 mkdir android/python3
 cp android.py _install/python3/lib/python3.2
+cp -r ../extra_modules/* _install/python3/lib/python3.2
 cp -r _install/python3/lib/python3.2/* android/python3
 pushd android
 zip -grx"*.so" -x"*.so.0" ../$ZIPEXTRA python3
