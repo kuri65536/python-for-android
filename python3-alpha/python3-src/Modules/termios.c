@@ -224,7 +224,6 @@ termios_tcsendbreak(PyObject *self, PyObject *args)
     Py_INCREF(Py_None);
     return Py_None;
 }
-
 PyDoc_STRVAR(termios_tcdrain__doc__,
 "tcdrain(fd) -> None\n\
 \n\
@@ -238,13 +237,13 @@ termios_tcdrain(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O&:tcdrain",
                           fdconv, &fd))
         return NULL;
+#ifndef ANDROID // No actual tcdrain in Android. Just return a None        
     if (tcdrain(fd) == -1)
         return PyErr_SetFromErrno(TermiosError);
-
+#endif
     Py_INCREF(Py_None);
     return Py_None;
 }
-
 PyDoc_STRVAR(termios_tcflush__doc__,
 "tcflush(fd, queue) -> None\n\
 \n\

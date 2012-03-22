@@ -690,6 +690,13 @@ class PyBuildExt(build_ext):
         # socket(2)
         exts.append( Extension('_socket', ['socketmodule.c'],
                                depends = ['socketmodule.h']) )
+        if cross_compile:
+          search_standard_path_incs = []
+          search_standard_path_libs = []
+        else:
+          search_standard_path_incs = inc_dirs
+          search_standard_path_libs = lib_dirs                     
+          
         # Detect SSL support for the socket module (via _ssl)
         if cross_compile:
           search_for_ssl_incs_in = [os.path.join(third_party_dir,'include')]
@@ -698,7 +705,7 @@ class PyBuildExt(build_ext):
                                 '/usr/local/ssl/include',
                                 '/usr/contrib/ssl/include/'
                                ]
-        ssl_incs = find_file('openssl/ssl.h', inc_dirs,
+        ssl_incs = find_file('openssl/ssl.h', search_standard_path_incs,
                              search_for_ssl_incs_in
                              )
         if ssl_incs is not None:
@@ -712,7 +719,7 @@ class PyBuildExt(build_ext):
           search_for_ssl_libs_in = ['/usr/local/ssl/lib',
                                       '/usr/contrib/ssl/lib/'
                                    ]
-        ssl_libs = find_library_file(self.compiler, 'ssl',lib_dirs,search_for_ssl_libs_in )
+        ssl_libs = find_library_file(self.compiler, 'ssl',search_standard_path_libs,search_for_ssl_libs_in )
         print("openssl: ",ssl_incs,ssl_libs,inc_dirs)
 
         if (ssl_incs is not None and
