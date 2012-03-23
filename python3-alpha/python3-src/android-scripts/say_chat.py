@@ -5,7 +5,7 @@ __copyright__ = 'Copyright (c) 2009, Google Inc.'
 __license__ = 'Apache License, Version 2.0'
 
 import android
-import xmpp
+import pyxmpp2 as xmpp
 
 _SERVER = 'talk.google.com', 5223
 

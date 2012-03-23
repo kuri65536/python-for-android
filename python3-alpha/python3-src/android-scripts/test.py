@@ -1,27 +1,35 @@
 import sys
-import types
-
-# Test imports.
-import android
-import BeautifulSoup
-import gdata.docs.service
-import sqlite3
-import termios
 import time
-import xmpp
+import types
+import android
+try:  
+  import gdata.docs.service
+except ImportError:
+  gdata = None
 
 droid = android.Android()
 
 
 def event_loop():
   for i in range(10):
+    time.sleep(1)
+    droid.eventClearBuffer()
+    time.sleep(1)
     e = droid.eventPoll(1)
     if e.result is not None:
       return True
-    time.sleep(2)
   return False
 
-
+def test_imports():
+  try:
+    import termios
+    import bs4 as BeautifulSoup
+    import pyxmpp2 as xmpp
+    from xml.dom import minidom
+  except ImportError:
+    return False
+  return True
+  
 def test_clipboard():
   previous = droid.getClipboard().result
   msg = 'Hello, world!'
@@ -32,6 +40,9 @@ def test_clipboard():
 
 
 def test_gdata():
+  if gdata is None:
+    return False
+    
   # Create a client class which will make HTTP requests with Google Docs server.
   client = gdata.docs.service.DocsService()
 
@@ -57,8 +68,17 @@ def test_gps():
     droid.stopLocating()
 
 
+def test_battery():
+  droid.batteryStartMonitoring()
+  time.sleep(1)
+  try:
+    return bool(droid.batteryGetStatus())
+  finally:
+    droid.batteryStopMonitoring()
+
 def test_sensors():
-  droid.startSensing()
+  # Accelerometer, once per second.
+  droid.startSensingTimed(2, 1000)
   try:
     return event_loop()
   finally:
@@ -103,12 +123,6 @@ def test_get_last_known_location():
 def test_geocode():
   result = droid.geocode(0.0, 0.0, 1)
   return result.error is None
-
-
-def test_wifi():
-  result1 = droid.toggleWifiState()
-  result2 = droid.toggleWifiState()
-  return result1.error is None and result2.error is None
 
 
 def test_make_toast():
@@ -204,6 +218,11 @@ def test_alert_dialog_with_multi_choice_list():
   response = droid.dialogGetResponse().result
   return True
 
+def test_wifi():
+  result1 = droid.toggleWifiState()
+  result2 = droid.toggleWifiState()
+  droid.toggleWifiState(True)  # Make sure wifi ends up ON, as it interferes with other tests
+  return result1.error is None and result2.error is None
 
 if __name__ == '__main__':
   for name, value in list(globals().items()):

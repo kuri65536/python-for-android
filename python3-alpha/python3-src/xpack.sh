@@ -1,7 +1,7 @@
-VERSION=3
-ZIPMAIN=python3_r${VERSION}.zip
-ZIPEXTRA=python3_extras_r${VERSION}.zip
-ZIPSCRIPTS=python3_scripts_r${VERSION}.zip
+. ../VERSIONS
+ZIPMAIN=python3_r${PY34A_VERSION}.zip
+ZIPEXTRA=python3_extras_r${PY34A_EXTRAS_VERSION}.zip
+ZIPSCRIPTS=python3_scripts_r${PY34A_SCRIPTS_VERSION}.zip
 echo "Packing $ZIPMAIN"
 rm $ZIPMAIN
 pushd _install
