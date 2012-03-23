@@ -19,6 +19,9 @@
 package com.googlecode.python3forandroid;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.preference.PreferenceManager;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.InterpreterInstaller;
@@ -30,14 +33,26 @@ import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 import java.io.File;
 
 public class Python3Installer extends InterpreterInstaller {
+  private SharedPreferences mPreferences;
+
   public Python3Installer(InterpreterDescriptor descriptor, Context context,
       AsyncTaskListener<Boolean> listener) throws Sl4aException {
     super(descriptor, context, listener);
+    mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    if (descriptor instanceof Python3Descriptor) {
+      ((Python3Descriptor) descriptor).setSharedPreferences(mPreferences);
+    }
   }
 
   @Override
   protected boolean isInstalled() {
-    return false;
+    if (mPreferences == null) {
+      mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+      if (mDescriptor instanceof Python3Descriptor) {
+        ((Python3Descriptor) mDescriptor).setSharedPreferences(mPreferences);
+      }
+    }
+    return mPreferences.getBoolean(InterpreterConstants.INSTALLED_PREFERENCE_KEY, false);
   }
 
   @Override
@@ -52,7 +67,16 @@ public class Python3Installer extends InterpreterInstaller {
         Log.e(mContext, "Setup failed.", e);
         return false;
       }
+      if (mDescriptor instanceof Python3Descriptor) {
+        Python3Descriptor descriptor = (Python3Descriptor) mDescriptor;
+        Editor editor = mPreferences.edit();
+        editor.putInt(Python3Constants.INSTALLED_VERSION_KEY, descriptor.getVersion());
+        editor.putInt(Python3Constants.INSTALLED_EXTRAS_KEY, descriptor.getExtrasVersion());
+        editor.putInt(Python3Constants.INSTALLED_SCRIPTS_KEY, descriptor.getScriptsVersion());
+        editor.commit();
+      }
     }
+
     return true;
   }
 }

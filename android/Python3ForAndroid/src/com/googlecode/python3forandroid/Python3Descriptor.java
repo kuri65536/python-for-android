@@ -19,6 +19,7 @@
 package com.googlecode.python3forandroid;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
@@ -38,13 +39,27 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   private static final String ENV_EXTRAS = "PY4A_EXTRAS";
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   private static final String ENV_USERBASE = "PYTHONUSERBASE";
-  private static final String BASE_URL = "http://python-for-android.googlecode.com/files";
-  private static final int LATEST_VERSION = 4;
+  static final String BASE_URL = "http://python-for-android.googlecode.com/files";
+  private static final int LATEST_VERSION = 5;
   private int cache_scripts_version = -1;
+  private SharedPreferences mPreferences;
 
   @Override
   public int getVersion() {
-    return LATEST_VERSION;
+    if (mPreferences != null) {
+      return mPreferences.getInt(Python3Constants.AVAIL_VERSION_KEY, LATEST_VERSION);
+    } else {
+      return LATEST_VERSION;
+    }
+  }
+
+  @Override
+  public int getExtrasVersion() {
+    if (mPreferences != null) {
+      return mPreferences.getInt(Python3Constants.AVAIL_EXTRAS_KEY, LATEST_VERSION);
+    } else {
+      return super.getExtrasVersion();
+    }
   }
 
   @Override
@@ -76,14 +91,12 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
     return true;
   }
 
-  private int __resolve_version(String what) {
-    return LATEST_VERSION;
-  }
-
   @Override
   public int getScriptsVersion() {
-    cache_scripts_version = __resolve_version("_scripts");
-    return cache_scripts_version;
+    if (mPreferences != null) {
+      return mPreferences.getInt(Python3Constants.AVAIL_SCRIPTS_KEY, LATEST_VERSION);
+    }
+    return super.getScriptsVersion();
   }
 
   public int getScriptsVersion(boolean usecache) {
@@ -142,5 +155,9 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
       Log.d(k + " : " + values.get(k));
     }
     return values;
+  }
+
+  void setSharedPreferences(SharedPreferences preferences) {
+    mPreferences = preferences;
   }
 }

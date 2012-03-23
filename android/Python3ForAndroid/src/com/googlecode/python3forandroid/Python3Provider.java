@@ -18,29 +18,12 @@
 
 package com.googlecode.python3forandroid;
 
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.preference.PreferenceManager;
-
-import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 import com.googlecode.android_scripting.interpreter.InterpreterProvider;
 
 public class Python3Provider extends InterpreterProvider {
 
   static String TAG = "PY34A-PROVIDER";
-
-  @Override
-  public boolean onCreate() {
-    SharedPreferences mPreferences;
-    mPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-    if (!mPreferences.getBoolean(InterpreterConstants.INSTALLED_PREFERENCE_KEY, false)) {
-      Editor editor = mPreferences.edit();
-      editor.putBoolean(InterpreterConstants.INSTALLED_PREFERENCE_KEY, true);
-      editor.commit();
-    }
-    return super.onCreate();
-  }
 
   @Override
   protected InterpreterDescriptor getDescriptor() {
