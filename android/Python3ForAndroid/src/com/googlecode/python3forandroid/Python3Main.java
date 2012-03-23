@@ -804,6 +804,9 @@ public class Python3Main extends Main {
 
   class CheckVersion extends AsyncTask<Integer, String, Boolean> {
     Python3Main parent;
+    int version;
+    int extras;
+    int scripts;
 
     CheckVersion(Python3Main parent) {
       super();
@@ -812,8 +815,14 @@ public class Python3Main extends Main {
 
     @Override
     protected void onPostExecute(Boolean result) {
-      // TODO Auto-generated method stub
-      parent.updateVersions();
+      if (result) {
+        Editor e = parent.mPreferences.edit();
+        e.putInt(Python3Constants.AVAIL_VERSION_KEY, version);
+        e.putInt(Python3Constants.AVAIL_EXTRAS_KEY, extras);
+        e.putInt(Python3Constants.AVAIL_SCRIPTS_KEY, scripts);
+        e.commit();
+        parent.updateVersions();
+      }
       super.onPostExecute(result);
     }
 
@@ -826,14 +835,9 @@ public class Python3Main extends Main {
         Properties p = new Properties();
         p.load(url.openStream());
         if (p.containsKey("PY34A_VERSION")) {
-          int version = Integer.valueOf(p.getProperty("PY34A_VERSION"));
-          int extras = Integer.valueOf(p.getProperty("PY34A_EXTRAS_VERSION"));
-          int scripts = Integer.valueOf(p.getProperty("PY34A_SCRIPTS_VERSION"));
-          Editor e = mPreferences.edit();
-          e.putInt(Python3Constants.AVAIL_VERSION_KEY, version);
-          e.putInt(Python3Constants.AVAIL_EXTRAS_KEY, extras);
-          e.putInt(Python3Constants.AVAIL_SCRIPTS_KEY, scripts);
-          e.commit();
+          version = Integer.valueOf(p.getProperty("PY34A_VERSION"));
+          extras = Integer.valueOf(p.getProperty("PY34A_EXTRAS_VERSION"));
+          scripts = Integer.valueOf(p.getProperty("PY34A_SCRIPTS_VERSION"));
           publishProgress("Versions Updated");
           return true;
         }
