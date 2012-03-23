@@ -39,7 +39,7 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   private static final String ENV_USERBASE = "PYTHONUSERBASE";
   private static final String BASE_URL = "http://python-for-android.googlecode.com/files";
-  private static final int LATEST_VERSION = 3;
+  private static final int LATEST_VERSION = 4;
   private int cache_scripts_version = -1;
 
   @Override
