@@ -33,12 +33,15 @@ python-modules/PyCrypto/pycrypto-*/
 python-modules/PyCrypto/pycrypto-*.tar.gz
 android/Utils/libs/common.jar
 android/InterpreterForAndroid/libs/common.jar
-
+python3-alpha/python3-src/python3*.zip
+python3-alpha/python3-src/_install/
+python3-alpha/python3-src/build
+python3-alpha/thirdparty/
 syntax: regexp
-(python|lua)/.*\.o
+(python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
-(python|lua)/.*\.so
-(python|lua)/.*\.a
+(python|lua|python3-alpha)/.*\.so
+(python|lua|python3-alpha)/.*\.a
 android/.*/(bin|gen)/.*
 python-modules/.*/(libs|obj|out)
 python-modules/.*/.*\.zip
