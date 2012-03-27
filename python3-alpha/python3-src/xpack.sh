@@ -6,12 +6,13 @@ echo "Packing $ZIPMAIN"
 rm $ZIPMAIN
 pushd _install
 cp ../../thirdparty/lib/libsqlite3.so.0 python3/lib
+cp ../../thirdparty/lib/libreadline.so.6 python3/lib
 zip -g ../$ZIPMAIN python3/bin/python3
-zip -gri"*.so" -i"*.so.0" ../$ZIPMAIN python3/lib
+zip -gri"*.so" -i"*.so.0" -i"*.so.6" ../$ZIPMAIN python3/lib
 popd
 
 echo "Packing $ZIPEXTRA"
-rm ${ZIPEXTRA}.zip
+rm ${ZIPEXTRA}
 rm -r android
 mkdir android
 mkdir android/python3
@@ -19,7 +20,7 @@ cp android.py _install/python3/lib/python3.2
 cp -r ../extra_modules/* _install/python3/lib/python3.2
 cp -r _install/python3/lib/python3.2/* android/python3
 pushd android
-zip -grx"*.so" -x"*.so.0" ../$ZIPEXTRA python3
+zip -grx"*.so" -x"*.so.0" -x"*.so.6" ../$ZIPEXTRA python3
 zip -d ../$ZIPEXTRA "*.pc" "*pkgconfig*" "*lib/libpython3.2m.a" "*/test/*" "*.a"
 popd
 

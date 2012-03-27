@@ -413,6 +413,10 @@ class PyBuildExt(build_ext):
           add_dir_to_list(self.compiler.library_dirs, '/usr/local/lib')
           add_dir_to_list(self.compiler.include_dirs, '/usr/local/include')
           self.add_multiarch_paths()
+        else:
+          add_dir_to_list(self.compiler.library_dirs,os.path.join(third_party_dir,'lib'))
+          add_dir_to_list(self.compiler.include_dirs,os.path.join(third_party_dir,'include'))
+          
 
         # Add paths specified in the environment variables LDFLAGS and
         # CPPFLAGS for header and library files.
@@ -599,7 +603,8 @@ class PyBuildExt(build_ext):
         # According to #993173, this one should actually work fine on
         # 64-bit platforms.
         exts.append( Extension('audioop', ['audioop.c']) )
-
+        
+#        import pdb; pdb.set_trace()
         # readline
         do_readline = self.compiler.find_library_file(lib_dirs, 'readline')
         readline_termcap_library = ""

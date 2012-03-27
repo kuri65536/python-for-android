@@ -1,0 +1,15 @@
+s,@DATADIR@,/home/robbie/ncurses-5.9/share,g
+s,@TERMINFO@,/home/robbie/ncurses-5.9/share/terminfo,g
+s,@NCURSES_MAJOR@,5,g
+s,@NCURSES_MINOR@,9,g
+s,@NCURSES_PATCH@,20110404,g
+s,@NCURSES_OSPEED@,short,g
+s,@CAPTOINFO@,arm-linux-androideabi-captoinfo,g
+s,@CLEAR@,arm-linux-androideabi-clear,g
+s,@INFOCMP@,arm-linux-androideabi-infocmp,g
+s,@INFOTOCAP@,arm-linux-androideabi-infotocap,g
+s,@TABS@,arm-linux-androideabi-tabs,g
+s,@TIC@,arm-linux-androideabi-tic,g
+s,@TOE@,arm-linux-androideabi-toe,g
+s,@TPUT@,arm-linux-androideabi-tput,g
+s,@TSET@,arm-linux-androideabi-tset,g

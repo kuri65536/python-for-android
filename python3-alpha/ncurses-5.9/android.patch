@@ -1,0 +1,11 @@
+--- a/include/ncurses_cfg.h	2012-03-27 15:38:21.000000000 +1100
++++ b/include/ncurses_cfg.h	2012-03-27 15:39:49.000000000 +1100
+@@ -105,7 +105,7 @@
+ #define HAVE_FCNTL_H 1
+ #define HAVE_GETOPT_H 1
+ #define HAVE_LIMITS_H 1
+-#define HAVE_LOCALE_H 1
++#define HAVE_LOCALE_H 0
+ #define HAVE_MATH_H 1
+ #define HAVE_POLL_H 1
+ #define HAVE_SYS_IOCTL_H 1
