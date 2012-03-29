@@ -19,7 +19,7 @@ xmpp_trace  = False
 
 class SayChat(EventHandler, XMPPFeatureHandler):
   def __init__(self):
-      droid = android.Android()
+      self.droid = android.Android()
       settings = XMPPSettings({"software_name": "Say Chat"})
       settings["jid"] = self.droid.getInput("Google Talk Username").result
       settings["password"] = self.droid.getInput("Google Talk Password").result
