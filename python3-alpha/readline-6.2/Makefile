@@ -71,14 +71,14 @@ DESTDIR =
 ETAGS = etags
 CTAGS = ctags -tw
 
-CFLAGS = -g -O
+CFLAGS = -I/home/robbie/python-for-android/python3-alpha/thirdparty/include -I/home/robbie/python-for-android/python3-alpha/thirdparty/include/ncurses
 LOCAL_CFLAGS =  -DRL_LIBRARY_VERSION='"$(RL_LIBRARY_VERSION)"'
 CPPFLAGS = 
 
 DEFS = -DHAVE_CONFIG_H 
 LOCAL_DEFS = 
 
-TERMCAP_LIB = -ltermcap
+TERMCAP_LIB = -lncurses
 
 # For libraries which include headers from other libraries.
 INCLUDES = -I. -I$(srcdir)
@@ -90,7 +90,7 @@ CCFLAGS = $(XCCFLAGS) $(LOCAL_CFLAGS) $(CFLAGS)
 GCC_LINT_FLAGS = -ansi -Wall -Wshadow -Wpointer-arith -Wcast-qual \
 		 -Wwrite-strings -Wstrict-prototypes \
 		 -Wmissing-prototypes -Wno-implicit -pedantic
-GCC_LINT_CFLAGS = $(XCCFLAGS) $(GCC_LINT_FLAGS) -g -O 
+GCC_LINT_CFLAGS = $(XCCFLAGS) $(GCC_LINT_FLAGS) -I/home/robbie/python-for-android/python3-alpha/thirdparty/include -I/home/robbie/python-for-android/python3-alpha/thirdparty/include/ncurses 
 
 .c.o:
 	${RM} $@

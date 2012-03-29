@@ -47,21 +47,21 @@ DESTDIR =
 
 DEFS = -DHAVE_CONFIG_H
 CC = arm-linux-androideabi-gcc
-CFLAGS = -g -O
+CFLAGS = -I/home/robbie/python-for-android/python3-alpha/thirdparty/include -I/home/robbie/python-for-android/python3-alpha/thirdparty/include/ncurses
 LOCAL_CFLAGS =  -DREADLINE_LIBRARY -DRL_LIBRARY_VERSION='"$(RL_LIBRARY_VERSION)"'
 CPPFLAGS = 
 
 INCLUDES = -I$(srcdir) -I$(top_srcdir) -I..
 
 CCFLAGS  = $(DEFS) $(LOCAL_CFLAGS) $(CPPFLAGS) $(INCLUDES) $(CFLAGS)
-LDFLAGS = -g -L..  -L./lib/termcap
+LDFLAGS = -g -L.. -L/home/robbie/python-for-android/python3-alpha/thirdparty/lib
 
 PURIFY = 
 
 READLINE_LIB = ../libreadline.a
 HISTORY_LIB = ../libhistory.a
 
-TERMCAP_LIB = -ltermcap
+TERMCAP_LIB = -lncurses
 
 .c.o:
 	${RM} $@

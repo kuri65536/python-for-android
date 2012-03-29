@@ -186,7 +186,7 @@
 /* #undef HAVE_SYS_STREAM_H */
 
 /* Define if you have the <termcap.h> header file.  */
-/* #undef HAVE_TERMCAP_H */
+#define HAVE_TERMCAP_H 1
 
 /* Define if you have the <termio.h> header file.  */
 #define HAVE_TERMIO_H 1

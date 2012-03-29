@@ -74,7 +74,7 @@ then
 			;;
 		esac
 		export PATH
-		if test normal = shared
+		if test shared = shared
 		then
 			SHLIB="sh $srcdir/shlib"
 			TIC_PATH="$SHLIB tic"

@@ -691,7 +691,7 @@ configure:20683: $? = 0
 configure:20705: result: yes
 configure:20620: checking for fullfsync
 configure:20676: arm-linux-androideabi-gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/ccRnKFn2.o: In function `main':
+/tmp/ccjaPBfE.o: In function `main':
 /home/robbie/python-for-android/python3-alpha/sqlite3/conftest.c:57: undefined reference to `fullfsync'
 collect2: ld returned 1 exit status
 configure:20683: $? = 1
@@ -767,7 +767,7 @@ configure:20683: $? = 0
 configure:20705: result: yes
 configure:20734: checking for library containing tgetent
 configure:20775: arm-linux-androideabi-gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/ccq5uqtf.o: In function `main':
+/tmp/ccpC2XwR.o: In function `main':
 /home/robbie/python-for-android/python3-alpha/sqlite3/conftest.c:36: undefined reference to `tgetent'
 collect2: ld returned 1 exit status
 configure:20782: $? = 1
@@ -946,7 +946,7 @@ configure: failed program was:
 configure:20813: result: no
 configure:20821: checking for library containing readline
 configure:20862: arm-linux-androideabi-gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/ccQGNtkv.o: In function `main':
+/tmp/cc15uyK9.o: In function `main':
 /home/robbie/python-for-android/python3-alpha/sqlite3/conftest.c:36: undefined reference to `readline'
 collect2: ld returned 1 exit status
 configure:20869: $? = 1
@@ -1037,7 +1037,7 @@ configure: failed program was:
 configure:20900: result: no
 configure:20914: checking for readline
 configure:20970: arm-linux-androideabi-gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/cccUCLiJ.o: In function `main':
+/tmp/cctYujoh.o: In function `main':
 /home/robbie/python-for-android/python3-alpha/sqlite3/conftest.c:59: undefined reference to `readline'
 collect2: ld returned 1 exit status
 configure:20977: $? = 1

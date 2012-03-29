@@ -1,4 +1,4 @@
-prefix=/home/robbie/python-for-android/python3-alpha/thirdparty
+prefix=/usr/local
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 sharedlibdir=${libdir}

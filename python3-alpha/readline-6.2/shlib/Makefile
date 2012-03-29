@@ -63,10 +63,10 @@ localedir = ${datarootdir}/locale
 # Support an alternate destination root directory for package building
 DESTDIR =
 
-CFLAGS = -g -O
+CFLAGS = -I/home/robbie/python-for-android/python3-alpha/thirdparty/include -I/home/robbie/python-for-android/python3-alpha/thirdparty/include/ncurses
 LOCAL_CFLAGS =  -DRL_LIBRARY_VERSION='"$(RL_LIBRARY_VERSION)"'
 CPPFLAGS = 
-LDFLAGS =  -L./lib/termcap  -g -O
+LDFLAGS = -L/home/robbie/python-for-android/python3-alpha/thirdparty/lib  -I/home/robbie/python-for-android/python3-alpha/thirdparty/include -I/home/robbie/python-for-android/python3-alpha/thirdparty/include/ncurses
 
 DEFS = -DHAVE_CONFIG_H 
 LOCAL_DEFS = 
@@ -85,8 +85,9 @@ SHOBJ_LDFLAGS = -shared -Wl,-soname,$@
 SHOBJ_XLDFLAGS = 
 SHOBJ_LIBS = 
 
-SHLIB_XLDFLAGS =  -L./lib/termcap -Wl,-rpath,$(libdir) -Wl,-soname,`basename $@ $(SHLIB_MINOR)`
-SHLIB_LIBS = 
+TERMCAP_LIB = -lncurses
+SHLIB_XLDFLAGS = -L/home/robbie/python-for-android/python3-alpha/thirdparty/lib -Wl,-rpath,$(libdir) -Wl,-soname,`basename $@ $(SHLIB_MINOR)`
+SHLIB_LIBS =  $(TERMCAP_LIB)
 
 SHLIB_DOT = .
 SHLIB_LIBPREF = lib
@@ -97,7 +98,6 @@ SHLIB_DLLVERSION = $(SHLIB_MAJOR)
 
 SHLIB_STATUS = supported
 
-TERMCAP_LIB = -ltermcap
 
 # shared library versioning
 SHLIB_MAJOR=		6

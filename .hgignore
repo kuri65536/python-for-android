@@ -36,12 +36,14 @@ android/InterpreterForAndroid/libs/common.jar
 python3-alpha/python3-src/python3*.zip
 python3-alpha/python3-src/_install/
 python3-alpha/python3-src/build
+python3-alpha/python3-src/android
 python3-alpha/thirdparty/
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
 (python|lua|python3-alpha)/.*\.so
 (python|lua|python3-alpha)/.*\.a
+(python3-alpha)/.*\.lo
 android/.*/(bin|gen)/.*
 python-modules/.*/(libs|obj|out)
 python-modules/.*/.*\.zip
@@ -52,5 +54,6 @@ python-build/output
 python-build/host
 python-build/python/libs
 python-modules/python-lib
+python-for-android/python3-alpha/googlecode_upload.py
 
 glob:*~
