@@ -64,7 +64,8 @@ MAKESETUP=      $(srcdir)/Modules/makesetup
 
 # Compiler options
 #OPT=		-DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes
-OPT=		-DNDEBUG -g -fwrapv -Wall -Wstrict-prototypes
+OPT=		-DNDEBUG -fwrapv -O3 -Wall -Wstrict-prototypes
+#OPT=		-DNDEBUG -g -fwrapv -Wall -Wstrict-prototypes
 BASECFLAGS=	
 CONFIGURE_CFLAGS=	
 CONFIGURE_CPPFLAGS=	
@@ -76,7 +77,7 @@ PY_CFLAGS=	$(BASECFLAGS) $(OPT) $(CONFIGURE_CFLAGS) $(CFLAGS) $(EXTRA_CFLAGS)
 # Both CPPFLAGS and LDFLAGS need to contain the shell's value for setup.py to
 # be able to build extension modules using the directories specified in the
 # environment variables
-# PY_CPPFLAGS=	-I. -IInclude -I$(srcdir)/Include $(CONFIGURE_CPPFLAGS) $(CPPFLAGS)
+#PY_CPPFLAGS=	-I. -IInclude -I$(srcdir)/Include $(CONFIGURE_CPPFLAGS) $(CPPFLAGS)
 PY_CPPFLAGS=	-I. -IInclude -I$(srcdir)/Include
 PY_LDFLAGS=	$(CONFIGURE_LDFLAGS) $(LDFLAGS)
 NO_AS_NEEDED=	-Wl,--no-as-needed
@@ -86,7 +87,7 @@ CCSHARED=	-fPIC
 LINKFORSHARED=	-Xlinker -export-dynamic
 ARFLAGS=	rc
 # Extra C flags added for building the interpreter object files.
-CFLAGSFORSHARED=
+CFLAGSFORSHARED=$(CCSHARED)
 # C flags used for building the interpreter object files
 PY_CORE_CFLAGS=	$(PY_CFLAGS) $(PY_CPPFLAGS) $(CFLAGSFORSHARED) -DPy_BUILD_CORE
 
@@ -145,7 +146,7 @@ MACOSX_DEPLOYMENT_TARGET=
 OTHER_LIBTOOL_OPT=
 
 # Environment to run shared python without installed libraries
-RUNSHARED=       
+RUNSHARED=       LD_LIBRARY_PATH=/home/robbie/python-for-android/python3-alpha/python3-src:
 
 # Modes for directories, executables and data files created by the
 # install process.  Default to user-only-writable for all file types.
@@ -154,7 +155,7 @@ EXEMODE=	755
 FILEMODE=	644
 
 # configure script arguments
-CONFIG_ARGS=	 '--host=ppc-linux' '--build=x86_64-linux-gnu' '--prefix=/python' 'build_alias=x86_64-linux-gnu' 'host_alias=ppc-linux' 'CC=arm-linux-androideabi-gcc'
+CONFIG_ARGS=	 '--host=arm-linux-androideabi' '--build=x86_64-linux-gnu' '--prefix=/python' '--enable-shared' 'build_alias=x86_64-linux-gnu' 'host_alias=arm-linux-androideabi' 'CC=arm-linux-androideabi-gcc'
 
 
 # Subdirectories with code
@@ -171,12 +172,12 @@ DIST=		$(DISTFILES) $(DISTDIRS)
 
 
 LIBRARY=	libpython$(VERSION)$(ABIFLAGS).a
-LDLIBRARY=      libpython$(VERSION)$(ABIFLAGS).a
-BLDLIBRARY=     $(LDLIBRARY)
-PY3LIBRARY=     
+LDLIBRARY=      libpython$(LDVERSION).so
+BLDLIBRARY=     -L. -lpython$(LDVERSION)
+PY3LIBRARY=     libpython3.so
 DLLLIBRARY=	
 LDLIBRARYDIR=   
-INSTSONAME=	$(LDLIBRARY)
+INSTSONAME=	libpython$(LDVERSION).so.1.0
 
 
 LIBS=		-ldl 

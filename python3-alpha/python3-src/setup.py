@@ -27,7 +27,7 @@ if third_party_dir is None:
 COMPILED_WITH_PYDEBUG = hasattr(sys, 'gettotalrefcount')
 
 # This global variable is used to hold the list of modules to be disabled.
-disabled_module_list = ['ossaudiodev','_curses','_curses_panel','_ctypes','_multiprocessing','nis']
+disabled_module_list = ['ossaudiodev','_ctypes','_multiprocessing','nis']
 
 # File which contains the directory for shared mods (for sys.path fixup
 # when running from the build dir, see Modules/getpath.c)
@@ -416,6 +416,7 @@ class PyBuildExt(build_ext):
         else:
           add_dir_to_list(self.compiler.library_dirs,os.path.join(third_party_dir,'lib'))
           add_dir_to_list(self.compiler.include_dirs,os.path.join(third_party_dir,'include'))
+          add_dir_to_list(self.compiler.include_dirs,os.path.join(third_party_dir,'include','ncurses'))
           
 
         # Add paths specified in the environment variables LDFLAGS and
@@ -474,7 +475,8 @@ class PyBuildExt(build_ext):
             '/lib', '/usr/lib',
             ]
         if cross_compile:
-          inc_dirs= [os.path.join(third_party_dir,'include')] + self.compiler.include_dirs
+          third_include=os.path.join(third_party_dir,'include')
+          inc_dirs= [third_include,os.path.join(third_include,'ncurses')] + self.compiler.include_dirs
         else:      
           inc_dirs = self.compiler.include_dirs + ['/usr/include']
         exts = []
@@ -609,6 +611,7 @@ class PyBuildExt(build_ext):
         do_readline = self.compiler.find_library_file(lib_dirs, 'readline')
         readline_termcap_library = ""
         curses_library = ""
+#        import pdb; pdb.set_trace()
         # Determine if readline is already linked against curses or tinfo.
         if do_readline and find_executable('ldd'):
             # Cannot use os.popen here in py3k.

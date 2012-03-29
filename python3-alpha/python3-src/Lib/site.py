@@ -525,6 +525,12 @@ def main():
     execsitecustomize()
     if ENABLE_USER_SITE:
         execusercustomize()
+    # Android specific stuff. Support for curses variables    
+    if ('PY4A_EXTRAS' in os.environ): 
+        if not('TERM') in os.environ:
+            os.environ['TERM']='xterm'
+        if not('TERMINFO' in os.environ):
+            os.environ['TERMINFO']=os.path.join(os.environ['PY4A_EXTRAS'],'python3','terminfo')     
 
 main()
 

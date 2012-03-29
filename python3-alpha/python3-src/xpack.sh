@@ -7,20 +7,31 @@ rm $ZIPMAIN
 pushd _install
 cp ../../thirdparty/lib/libsqlite3.so.0 python3/lib
 cp ../../thirdparty/lib/libreadline.so.6 python3/lib
+cp ../../thirdparty/lib/libncurses.so.5 python3/lib
+cp ../../thirdparty/lib/libz.so.1 python3/lib
+#Symbolic linked libs just take up space
+find python3/lib -type l -exec rm -f {} \;
 zip -g ../$ZIPMAIN python3/bin/python3
-zip -gri"*.so" -i"*.so.0" -i"*.so.6" ../$ZIPMAIN python3/lib
+zip -gri"*.so" -i"*.so.*" ../$ZIPMAIN python3/lib
 popd
 
 echo "Packing $ZIPEXTRA"
 rm ${ZIPEXTRA}
-rm -r android
+rm -rf android
 mkdir android
 mkdir android/python3
 cp android.py _install/python3/lib/python3.2
 cp -r ../extra_modules/* _install/python3/lib/python3.2
 cp -r _install/python3/lib/python3.2/* android/python3
+mkdir -p android/python3/terminfo/x
+mkdir -p android/python3/terminfo/v
+mkdir -p android/python3/terminfo/a
+cp ../thirdparty/share/terminfo/x/xterm android/python3/terminfo/x
+cp ../thirdparty/share/terminfo/a/ansi android/python3/terminfo/a
+cp ../thirdparty/share/terminfo/v/vt320 android/python3/terminfo/v
+sleep 2
 pushd android
-zip -grx"*.so" -x"*.so.0" -x"*.so.6" ../$ZIPEXTRA python3
+zip -grx"*.so" -x"*.so.*" ../$ZIPEXTRA python3
 zip -d ../$ZIPEXTRA "*.pc" "*pkgconfig*" "*lib/libpython3.2m.a" "*/test/*" "*.a"
 popd
 
