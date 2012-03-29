@@ -1,51 +1,73 @@
-"""Say chat messages aloud as they are received."""
+__author__ = "Brian Lenihan <brian.lenihan@gmail.com"
+__copyright__ = "Copyright (c) 2012 Python for Android Project"
+__license__ = "Apache License, Version 2.0"
 
-__author__ = 'Damon Kohler <damonkohler@gmail.com>'
-__copyright__ = 'Copyright (c) 2009, Google Inc.'
-__license__ = 'Apache License, Version 2.0'
-
+import logging
 import android
-import pyxmpp2 as xmpp
 
-_SERVER = 'talk.google.com', 5223
+from pyxmpp2.jid import JID
+from pyxmpp2.client import Client
+from pyxmpp2.settings import XMPPSettings
+from pyxmpp2.interfaces import XMPPFeatureHandler
+from pyxmpp2.interfaces import EventHandler, event_handler, QUIT
+from pyxmpp2.interfaces import message_stanza_handler
+from pyxmpp2.streamevents import DisconnectedEvent
+from pyxmpp2.ext.version import VersionProvider
 
-def log(droid, message):
-  print(message)
-  self.droid.ttsSpeak(message)
+logging.basicConfig(level = logging.INFO)
+xmpp_trace  = False
 
-
-class SayChat(object):
-
+class SayChat(EventHandler, XMPPFeatureHandler):
   def __init__(self):
-    self.droid = android.Android()
-    username = self.droid.dialogGetInput('Username').result
-    password = self.droid.dialogGetInput('Password').result
-    jid = xmpp.protocol.JID(username)
-    self.client = xmpp.Client(jid.getDomain(), debug=[])
-    self.client.connect(server=_SERVER)
-    self.client.RegisterHandler('message', self.message_cb)
-    if not self.client:
-      log('Connection failed!')
-      return
-    auth = self.client.auth(jid.getNode(), password, 'botty')
-    if not auth:
-      log('Authentication failed!')
-      return
-    self.client.sendInitPresence()
+      droid = android.Android()
+      settings = XMPPSettings({"software_name": "Say Chat"})
+      settings["jid"] = self.droid.getInput("Google Talk Username").result
+      settings["password"] = self.droid.getInput("Google Talk Password").result
+      settings["server"] = "talk.google.com"
+      settings["starttls"] = True
+      self.client = Client(
+        JID(settings["jid"]),
+        [self, VersionProvider(settings)],
+        settings)
+      
+  def connect(self):
+    self.client.connect()
+    self.client.run()
 
-  def message_cb(self, session, message):
-    jid = xmpp.protocol.JID(message.getFrom())
-    username = jid.getNode()
-    text = message.getBody()
-    self.droid.ttsSpeak('%s says %s' % (username, text))
+  def disconnect(self):
+    self.client.disconnect()
+    self.client.run(timeout = 2)
+
+  @message_stanza_handler()
+  def handle_message(self, stanza):
+    self.droid.ttsSpeak(
+      "{!s} says {!s}".format(stanza.from_jid.as_unicode(),
+      stanza.body))
+    return ""
+    
+  @event_handler(DisconnectedEvent)
+  def handle_disconnected(self, event):
+    return QUIT
+    
+  @event_handler()
+  def handle_all(self, event):
+    """If it's not logged, it didn't happen."""
+    logging.info("-- {}".format(event))
 
   def run(self):
     try:
-      while True:
-        self.client.Process(1)
+      self.connect()
     except KeyboardInterrupt:
-      pass
+      self.disconnect()
 
+if xmpp_trace:
+  handler = logging.StreamHandler()
+  handler.setLevel(logging.DEBUG)
+  for logger in ("pyxmpp2.IN", "pyxmpp2.OUT"):
+    logger = logging.getLogger(logger)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    logger.propagate = False
 
 saychat = SayChat()
-saychat.run()
+saychat.run()    

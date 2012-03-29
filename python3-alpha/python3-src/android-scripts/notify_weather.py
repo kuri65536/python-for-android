@@ -10,20 +10,18 @@ import weather
 
 def notify_weather(droid):
   """Display the weather at the current location in a notification."""
-  print('Finding ZIP code.')
+
+  msg = 'Failed to find location.'
   location = droid.getLastKnownLocation().result
-  if location['gps'] is not None:
-    location = location['gps']
-  else:
-    location = location['network']
-  addresses = droid.geocode(location['latitude'], location['longitude'])
-  zip = addresses.result[0]['postal_code']
-  if zip is None:
-    msg = 'Failed to find location.'
-  else:
-    print('Fetching weather report.')
-    result = weather.fetch_weather(zip)
-    msg = '%(temperature)s degrees and %(conditions)s, in %(city)s.' % result
+  location = location.get('gps') or location.get('network')
+  if location is not None:
+    print('Finding ZIP code.')
+    addresses = droid.geocode(location['latitude'], location['longitude'])
+    zip = addresses.result[0]['postal_code']
+    if zip is not None:
+      print('Fetching weather report.')
+      result = weather.fetch_weather(zip)
+      msg = '%(temperature)s degrees and %(conditions)s, in %(city)s.' % result
   droid.notify('Weather Report', msg)
 
 
