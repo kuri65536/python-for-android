@@ -21,8 +21,8 @@ class SayChat(EventHandler, XMPPFeatureHandler):
   def __init__(self):
       self.droid = android.Android()
       settings = XMPPSettings({"software_name": "Say Chat"})
-      settings["jid"] = self.droid.getInput("Google Talk Username").result
-      settings["password"] = self.droid.getInput("Google Talk Password").result
+      settings["jid"] = self.droid.dialogGetInput("Google Talk Username").result
+      settings["password"] = self.droid.dialogGetInput("Google Talk Password").result
       settings["server"] = "talk.google.com"
       settings["starttls"] = True
       self.client = Client(
