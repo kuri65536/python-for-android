@@ -1149,7 +1149,7 @@ class Popen(object):
                 args = list(args)
 
             if shell:
-                args = ["/bin/sh", "-c"] + args
+                args = ["/system/bin/sh", "-c"] + args # Android Hack 5-Apr-2012 ... there should be a more elegant approach.
                 if executable:
                     args[0] = executable
 
