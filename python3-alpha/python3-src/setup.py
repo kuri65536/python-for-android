@@ -27,7 +27,7 @@ if third_party_dir is None:
 COMPILED_WITH_PYDEBUG = hasattr(sys, 'gettotalrefcount')
 
 # This global variable is used to hold the list of modules to be disabled.
-disabled_module_list = ['ossaudiodev','_ctypes','_multiprocessing','nis']
+disabled_module_list = ['ossaudiodev', '_multiprocessing', 'nis']
 
 # File which contains the directory for shared mods (for sys.path fixup
 # when running from the build dir, see Modules/getpath.c)
@@ -1716,20 +1716,15 @@ class PyBuildExt(build_ext):
                 from distutils.dir_util import mkpath
                 mkpath(ffi_builddir)
                 if cross_compile:
-                   config_args=[]
-                   cmd = "cd %s && env CFLAGS='' %s/configure --host=%s --build=%s %s" \
-                          % (ffi_builddir, ffi_srcdir,
-                             os.environ.get('HOSTARCH'),
-                             os.environ.get('BUILDARCH'),
-                             " ".join(config_args))
+                    config_args = sysconfig.get_config_var("CONFIG_ARGS")
                 else:
-                  config_args =  sysconfig.get_config_var("CONFIG_ARGS").split(" ")
+                    # Pass empty CFLAGS because we'll just append the resulting
+                    # CFLAGS to Python's; -g or -O2 is to be avoided.
+                    config_args = ""
 
-                  # Pass empty CFLAGS because we'll just append the resulting
-                  # CFLAGS to Python's; -g or -O2 is to be avoided.
-                  cmd = "cd %s && env CFLAGS='' '%s/configure' %s" \
-                        % (ffi_builddir, ffi_srcdir, " ".join(config_args))
-                print(cmd)
+                cmd = "cd %s && env CFLAGS='' '%s/configure' %s" \
+                    % (ffi_builddir, ffi_srcdir, config_args)
+
                 res = os.system(cmd)
                 if res or not os.path.exists(ffi_configfile):
                     print("Failed to configure _ctypes module")
@@ -1741,18 +1736,12 @@ class PyBuildExt(build_ext):
 
             # Add .S (preprocessed assembly) to C compiler source extensions.
             self.compiler.src_extensions.append('.S')
-            if cross_compile:
-              include_dirs = [os.path.join(ffi_builddir, 'include'),
-                             ffi_builddir, ffi_srcdir]            
-            else:
-              include_dirs = [os.path.join(ffi_builddir, 'include'),
+            include_dirs = [os.path.join(ffi_builddir, 'include'),
                             ffi_builddir,
                             os.path.join(ffi_srcdir, 'src')]
             extra_compile_args = fficonfig['ffi_cflags'].split()
-            if cross_compile:
-              ext.sources.extend(fficonfig['ffi_sources'])
-            else:
-              cext.sources.extend(os.path.join(ffi_srcdir, f) for f in
+
+            ext.sources.extend(os.path.join(ffi_srcdir, f) for f in
                                fficonfig['ffi_sources'])
             ext.include_dirs.extend(include_dirs)
             ext.extra_compile_args.extend(extra_compile_args)

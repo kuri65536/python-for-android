@@ -344,7 +344,7 @@ extern PyObject *PyExc_ArgError;
 extern char *_ctypes_conversion_encoding;
 extern char *_ctypes_conversion_errors;
 
-#if defined(HAVE_WCHAR_H) && !defined(ANDROID)
+#if defined(HAVE_WCHAR_H)
 #  define CTYPES_UNICODE
 #endif
 
