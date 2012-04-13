@@ -27,7 +27,7 @@ if third_party_dir is None:
 COMPILED_WITH_PYDEBUG = hasattr(sys, 'gettotalrefcount')
 
 # This global variable is used to hold the list of modules to be disabled.
-disabled_module_list = ['ossaudiodev', '_multiprocessing', 'nis']
+disabled_module_list = ['ossaudiodev', 'nis']
 
 # File which contains the directory for shared mods (for sys.path fixup
 # when running from the build dir, see Modules/getpath.c)
