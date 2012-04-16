@@ -7,8 +7,8 @@
 			<accessrule kind="accessible" pattern="**/internal/**"/>
 		</accessrules>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/common.jar"/>
-	<classpathentry kind="lib" path="libs/interpreter.jar"/>
-	<classpathentry kind="lib" path="libs/utils.jar" sourcepath="/Utils"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Common"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/InterpreterForAndroid"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Utils"/>
+	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

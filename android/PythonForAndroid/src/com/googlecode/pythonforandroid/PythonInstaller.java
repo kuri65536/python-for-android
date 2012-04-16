@@ -1,24 +1,9 @@
-/*
- * Copyright (C) 2010-2011 Naranjo Manuel Francisco <manuel@aircable.net>
- * Copyright (C) 2010-2011 Robbie Matthews <rjmatthews62@gmail.com>
- * Copyright (C) 2009 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
-
 package com.googlecode.pythonforandroid;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.os.AsyncTask;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.InterpreterInstaller;
@@ -30,14 +15,10 @@ import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 import java.io.File;
 
 public class PythonInstaller extends InterpreterInstaller {
+
   public PythonInstaller(InterpreterDescriptor descriptor, Context context,
       AsyncTaskListener<Boolean> listener) throws Sl4aException {
     super(descriptor, context, listener);
-  }
-
-  @Override
-  protected boolean isInstalled() {
-    return false;
   }
 
   @Override
@@ -54,5 +35,30 @@ public class PythonInstaller extends InterpreterInstaller {
       }
     }
     return true;
+  }
+
+  private void saveVersionSetting(String key, int value) {
+    SharedPreferences storage = mContext.getSharedPreferences("python-installer", 0);
+    Editor editor = storage.edit();
+    editor.putInt(key, value);
+    editor.commit();
+  }
+
+  @Override
+  protected AsyncTask<Void, Integer, Long> extractInterpreter() throws Sl4aException {
+    saveVersionSetting("interpreter", ((PythonDescriptor) mDescriptor).getVersion(true));
+    return super.extractInterpreter();
+  }
+
+  @Override
+  protected AsyncTask<Void, Integer, Long> extractInterpreterExtras() throws Sl4aException {
+    saveVersionSetting("extras", ((PythonDescriptor) mDescriptor).getExtrasVersion(true));
+    return super.extractInterpreterExtras();
+  }
+
+  @Override
+  protected AsyncTask<Void, Integer, Long> extractScripts() throws Sl4aException {
+    saveVersionSetting("scripts", ((PythonDescriptor) mDescriptor).getScriptsVersion(true));
+    return super.extractScripts();
   }
 }

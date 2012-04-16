@@ -82,7 +82,7 @@ def rm(path):
 
 
 def strip(path):
-  run('arm-eabi-strip %s' % path)
+  run('arm-linux-androideabi-strip %s' % path)
 
 
 def zipup(out_path, in_path, top, exclude=None, prefix=''):

@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 2010-2011 Naranjo Manuel Francisco <manuel@aircable.net>
  * Copyright (C) 2010-2011 Robbie Matthews <rjmatthews62@gmail.com>
  * Copyright (C) 2009 Google Inc.
  *
@@ -36,7 +35,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup.MarginLayoutParams;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -44,7 +42,6 @@ import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.InterpreterInstaller;
 import com.googlecode.android_scripting.InterpreterUninstaller;
-import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.activity.Main;
 import com.googlecode.android_scripting.exception.Sl4aException;
 import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
@@ -197,8 +194,6 @@ public class PythonMain extends Main {
   @Override
   protected void initializeViews() {
     super.initializeViews();
-    mButton.setVisibility(View.GONE);
-
     mDownloads = FileUtils.getExternalDownload();
     if (!mDownloads.exists()) {
       for (File file : new File(Environment.getExternalStorageDirectory().getAbsolutePath())
@@ -217,29 +212,6 @@ public class PythonMain extends Main {
     final float scale = getResources().getDisplayMetrics().density;
     int marginPixels = (int) (MARGIN_DIP * scale + 0.5f);
     marginParams.setMargins(marginPixels, marginPixels, marginPixels, marginPixels);
-
-    mButtonInstallScripts = new Button(this);
-    mButtonInstallScripts.setLayoutParams(marginParams);
-    mButtonInstallScripts.setText("Install Example Scripts");
-    mLayout.addView(mButtonInstallScripts);
-    mButtonInstallScripts.setOnClickListener(new OnClickListener() {
-      public void onClick(View v) {
-        if (mCurrentTask != null) {
-          return;
-        }
-        getWindow().setFeatureInt(Window.FEATURE_INDETERMINATE_PROGRESS,
-            Window.PROGRESS_VISIBILITY_ON);
-        mCurrentTask = RunningTask.INSTALL;
-        InterpreterInstaller installTask;
-        try {
-          installTask = getInterpreterInstaller(mDescriptor, PythonMain.this, mTaskListener);
-        } catch (Sl4aException e) {
-          Log.e(PythonMain.this, e.getMessage(), e);
-          return;
-        }
-        installTask.execute();
-      }
-    });
 
     mButtonInstallModules = new Button(this);
     mButtonInstallModules.setLayoutParams(marginParams);
@@ -270,12 +242,6 @@ public class PythonMain extends Main {
         doDeleteModule();
       }
     });
-  }
-
-  @Override
-  protected boolean checkInstalled() {
-    broadcastInstallationStateChange(true);
-    return true;
   }
 
   protected void doBrowseModule() {
