@@ -530,7 +530,9 @@ def main():
         if not('TERM') in os.environ:
             os.environ['TERM']='xterm'
         if not('TERMINFO' in os.environ):
-            os.environ['TERMINFO']=os.path.join(os.environ['PY4A_EXTRAS'],'python3','terminfo')     
+            os.environ['TERMINFO']=os.path.join(os.environ['PY4A_EXTRAS'],'python3','terminfo')
+        if not('HOME' in os.environ):
+            os.environ['HOME']='/sdcard'         
 
 main()
 

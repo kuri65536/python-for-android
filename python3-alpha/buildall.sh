@@ -11,6 +11,10 @@ echo "zlip"
 pushd zlib-1.2.6
 ./xbuild.sh
 popd
+echo "bz2"
+pushd bzip2-1.0.6
+./xbuild.sh
+popd
 echo "ncurses"
 pushd ncurses-5.9
 ./xbuild.sh

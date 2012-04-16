@@ -328,8 +328,6 @@ def get_makefile_filename():
 
 def _init_posix(vars):
     """Initialize the module as appropriate for POSIX systems."""
-    if sys.platform[:10]=="linux-armv": # Currently android. Don't know if it will stay that way.
-      return # Doesn't seem to cope on android.
     # load the installed Makefile:
     makefile = get_makefile_filename()
     try:

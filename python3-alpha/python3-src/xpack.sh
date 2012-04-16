@@ -13,6 +13,7 @@ cp ../../thirdparty/lib/libz.so.1 python3/lib
 find python3/lib -type l -exec rm -f {} \;
 zip -g ../$ZIPMAIN python3/bin/python3
 zip -gri"*.so" -i"*.so.*" ../$ZIPMAIN python3/lib
+zip -g ../$ZIPMAIN python3/lib/python3.2/config-3.2m/Makefile python3/include/python3.2m/pyconfig.h
 popd
 
 echo "Packing $ZIPEXTRA"
@@ -29,7 +30,6 @@ mkdir -p android/python3/terminfo/a
 cp ../thirdparty/share/terminfo/x/xterm android/python3/terminfo/x
 cp ../thirdparty/share/terminfo/a/ansi android/python3/terminfo/a
 cp ../thirdparty/share/terminfo/v/vt320 android/python3/terminfo/v
-sleep 2
 pushd android
 zip -grx"*.so" -x"*.so.*" ../$ZIPEXTRA python3
 zip -d ../$ZIPEXTRA "*.pc" "*pkgconfig*" "*lib/libpython3.2m.a" "*/test/*" "*.a"

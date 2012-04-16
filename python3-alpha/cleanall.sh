@@ -11,6 +11,10 @@ echo "zlip"
 pushd zlib-1.2.6
 make clean
 popd
+echo "bz2"
+pushd bzip2-1.0.6
+make clean
+popd
 echo "ncurses"
 pushd ncurses-5.9
 make clean

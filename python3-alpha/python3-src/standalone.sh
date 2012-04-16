@@ -5,9 +5,8 @@ PYTHONPATH=$EXTERNAL_STORAGE/extras/python3
 PYTHONPATH=${PYTHONPATH}:$PY34A/lib/python3.2/lib-dynload
 export PYTHONPATH
 export TEMP=$EXTERNAL_STORAGE/extras/python3/tmp
+export HOME=/sdcard
 export PYTHON_EGG_CACHE=$TEMP
 export PYTHONHOME=$PY34A
 export LD_LIBRARY_PATH=$PY34A/lib
-#export TERMINFO=$EXTERNAL_STORAGE/extras/python3/terminfo
-#export TERM=xterm
 $PYTHONHOME/bin/python3 "$@"

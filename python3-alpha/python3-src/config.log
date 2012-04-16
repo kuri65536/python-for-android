@@ -12445,7 +12445,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for accept4
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccAOr3yO.o: In function `main':
+/tmp/ccg5AZ4H.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `accept4'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -12594,7 +12594,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for bind_textdomain_codeset
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccyoGtu4.o: In function `main':
+/tmp/ccyYGsIU.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `bind_textdomain_codeset'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -12745,7 +12745,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for confstr
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/cc1UsQb9.o: In function `main':
+/tmp/cc0axZd9.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `confstr'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -12890,7 +12890,7 @@ configure: failed program was:
 configure:9421: result: no
 configure:9421: checking for ctermid
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccF5RVxa.o: In function `main':
+/tmp/cc6nAQ9c.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `ctermid'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -13077,7 +13077,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for getloadavg
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccPSDVBX.o: In function `main':
+/tmp/cczFGuTN.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `getloadavg'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -13256,7 +13256,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for getpwent
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccOsGYDh.o: In function `main':
+/tmp/ccnLT3Ff.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `getpwent'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -13417,7 +13417,7 @@ configure: failed program was:
 configure:9421: result: no
 configure:9421: checking for getspnam
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/cc0GHw0l.o: In function `main':
+/tmp/cchEmNoh.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `getspnam'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -13578,7 +13578,7 @@ configure: failed program was:
 configure:9421: result: no
 configure:9421: checking for getspent
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/cckf0eHs.o: In function `main':
+/tmp/cc7yjjKl.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `getspent'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -13739,7 +13739,7 @@ configure: failed program was:
 configure:9421: result: no
 configure:9421: checking for getsid
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccyE6Zax.o: In function `main':
+/tmp/cc1LPbps.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `getsid'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -13900,7 +13900,7 @@ configure: failed program was:
 configure:9421: result: no
 configure:9421: checking for getwd
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccuYmzgz.o: In function `main':
+/tmp/ccqkA8Ik.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `getwd'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -14073,7 +14073,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for lchmod
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/cciDTPGQ.o: In function `main':
+/tmp/cc8JFixA.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `lchmod'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -14249,7 +14249,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for mkfifo
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccW4gS18.o: In function `main':
+/tmp/cc8KvGNQ.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `mkfifo'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -14440,7 +14440,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for plock
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccTxLsEw.o: In function `main':
+/tmp/ccmKnxbj.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `plock'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -14617,7 +14617,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for pthread_init
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccrSGncE.o: In function `main':
+/tmp/ccWxcqKt.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `pthread_init'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -14883,7 +14883,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for sigrelse
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccyIKYb7.o: In function `main':
+/tmp/ccUZSuqJ.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `sigrelse'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -15110,7 +15110,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for timegm
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccZ457ny.o: In function `main':
+/tmp/ccabIdmg.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `timegm'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -15326,7 +15326,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for tmpnam_r
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccZ8QWdO.o: In function `main':
+/tmp/ccKwQnxt.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `tmpnam_r'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -15557,7 +15557,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for wait4
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccTZdzrj.o: In function `main':
+/tmp/cc7T2SoO.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `wait4'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -15782,7 +15782,7 @@ configure:9421: $? = 0
 configure:9421: result: yes
 configure:9421: checking for _getpty
 configure:9421: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccI2FAdq.o: In function `main':
+/tmp/cclG6dr5.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `_getpty'
 collect2: ld returned 1 exit status
 configure:9421: $? = 1
@@ -16437,7 +16437,7 @@ configure:9921: checking for chflags
 configure:9953: result: cross
 configure:9956: checking for chflags
 configure:9956: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccGTXSSb.o: In function `main':
+/tmp/ccopLzcG.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `chflags'
 collect2: ld returned 1 exit status
 configure:9956: $? = 1
@@ -16664,7 +16664,7 @@ configure:9970: checking for lchflags
 configure:10002: result: cross
 configure:10005: checking for lchflags
 configure:10005: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccKreNjd.o: In function `main':
+/tmp/ccSoZxDH.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `lchflags'
 collect2: ld returned 1 exit status
 configure:10005: $? = 1
@@ -16909,7 +16909,7 @@ configure:10189: $? = 0
 configure:10193: result: yes
 configure:10206: checking for openpty
 configure:10206: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccHLOdis.o: In function `main':
+/tmp/ccy0In5d.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `openpty'
 collect2: ld returned 1 exit status
 configure:10206: $? = 1
@@ -17551,7 +17551,7 @@ configure: failed program was:
 configure:10287: result: no
 configure:10303: checking for forkpty
 configure:10303: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/cch0kryC.o: In function `main':
+/tmp/ccQj2cLq.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `forkpty'
 collect2: ld returned 1 exit status
 configure:10303: $? = 1
@@ -18198,7 +18198,7 @@ configure:10402: $? = 0
 configure:10402: result: yes
 configure:10416: checking for fseek64
 configure:10416: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccXpi0bR.o: In function `main':
+/tmp/cc0U6fGF.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `fseek64'
 collect2: ld returned 1 exit status
 configure:10416: $? = 1
@@ -18433,7 +18433,7 @@ configure:10416: $? = 0
 configure:10416: result: yes
 configure:10416: checking for fstatvfs
 configure:10416: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccdzkeFX.o: In function `main':
+/tmp/cc24eP4N.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `fstatvfs'
 collect2: ld returned 1 exit status
 configure:10416: $? = 1
@@ -18665,7 +18665,7 @@ configure: failed program was:
 configure:10416: result: no
 configure:10416: checking for ftell64
 configure:10416: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccD0c2U1.o: In function `main':
+/tmp/ccHlpYTG.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `ftell64'
 collect2: ld returned 1 exit status
 configure:10416: $? = 1
@@ -18901,7 +18901,7 @@ configure:10416: $? = 0
 configure:10416: result: yes
 configure:10416: checking for statvfs
 configure:10416: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccrhG2Q9.o: In function `main':
+/tmp/cc7Ldv5R.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `statvfs'
 collect2: ld returned 1 exit status
 configure:10416: $? = 1
@@ -21840,7 +21840,7 @@ configure:11457: $? = 0
 configure:11464: result: yes
 configure:11580: checking for __fpu_control
 configure:11580: arm-linux-androideabi-gcc -o conftest    conftest.c -ldl  >&5
-/tmp/ccR74K13.o: In function `main':
+/tmp/cco78r4J.o: In function `main':
 conftest.c:(.text+0x8): undefined reference to `__fpu_control'
 collect2: ld returned 1 exit status
 configure:11580: $? = 1
@@ -22342,9 +22342,9 @@ configure:11800: checking whether C doubles are ARM mixed-endian IEEE 754 binary
 configure:11833: result: no
 configure:11852: checking whether we can use gcc inline assembler to get and set x87 control word
 configure:11869: arm-linux-androideabi-gcc -c   conftest.c >&5
-/tmp/ccAtlTiY.s: Assembler messages:
-/tmp/ccAtlTiY.s:25: Error: bad instruction `fnstcw [fp,#-6]'
-/tmp/ccAtlTiY.s:28: Error: bad instruction `fldcw [fp,#-6]'
+/tmp/ccpRE59w.s: Assembler messages:
+/tmp/ccpRE59w.s:25: Error: bad instruction `fnstcw [fp,#-6]'
+/tmp/ccpRE59w.s:28: Error: bad instruction `fldcw [fp,#-6]'
 configure:11869: $? = 1
 configure: failed program was:
 | /* confdefs.h */
@@ -29571,6 +29571,7 @@ config.status:1125: creating Modules/Setup.config
 config.status:1125: creating Misc/python.pc
 config.status:1125: creating Modules/ld_so_aix
 config.status:1125: creating pyconfig.h
+config.status:1300: pyconfig.h is unchanged
 
 ## ---------------- ##
 ## Cache variables. ##
