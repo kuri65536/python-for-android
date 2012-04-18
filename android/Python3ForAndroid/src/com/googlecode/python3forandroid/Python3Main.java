@@ -832,6 +832,7 @@ public class Python3Main extends Main {
       URL url;
       try {
         url = new URL("http://python-for-android.googlecode.com/hg/python3-alpha/VERSIONS");
+        // url = new URL("http://www.mithril.com.au/android/VERSIONS");
         Properties p = new Properties();
         p.load(url.openStream());
         if (p.containsKey("PY34A_VERSION")) {

@@ -34,6 +34,9 @@ pushd android
 zip -grx"*.so" -x"*.so.*" ../$ZIPEXTRA python3
 zip -d ../$ZIPEXTRA "*.pc" "*pkgconfig*" "*lib/libpython3.2m.a" "*/test/*" "*.a"
 popd
+pushd _install
+zip -g ../$ZIPEXTRA python3/lib/python3.2/config-3.2m/Makefile python3/lib/python3.2/site-packages/*
+popd
 
 echo "Packing $ZIPSCRIPTS"
 rm $ZIPSCRIPTS

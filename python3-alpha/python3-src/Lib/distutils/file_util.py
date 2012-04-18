@@ -147,9 +147,15 @@ def copy_file(src, dst, preserve_mode=1, preserve_times=1, update=0,
             # According to David Ascher <da@ski.org>, utime() should be done
             # before chmod() (at least under NT).
             if preserve_times:
+              try:
                 os.utime(dst, (st[ST_ATIME], st[ST_MTIME]))
+              except:
+                pass # Does not cope well with android's /sdcard fat32 partition.  
             if preserve_mode:
+              try:
                 os.chmod(dst, S_IMODE(st[ST_MODE]))
+              except:
+                pass # Does not cope well with android's /sdcard fat32 partition.  
 
     return (dst, 1)
 

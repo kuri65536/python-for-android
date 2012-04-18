@@ -20,7 +20,9 @@ package com.googlecode.python3forandroid;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Environment;
 
+import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
@@ -40,6 +42,7 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   private static final String ENV_USERBASE = "PYTHONUSERBASE";
   static final String BASE_URL = "http://python-for-android.googlecode.com/files";
+  // static final String BASE_URL = "http://www.mithril.com.au/android";
   private static final int LATEST_VERSION = 5;
   private int cache_scripts_version = -1;
   private SharedPreferences mPreferences;
@@ -141,8 +144,8 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   public Map<String, String> getEnvironmentVariables(Context context) {
     Map<String, String> values = new HashMap<String, String>();
     String home = getHome(context);
-    String libs = getExtrasRoot() + "/python3";
-    values.put(ENV_HOME, home);
+    String libs = new File(getExtrasRoot(), "python3").getAbsolutePath();
+    values.put(ENV_HOME, libs + ":" + new File(home, "python3").getAbsolutePath());
     values.put(ENV_LD, new File(home, "python3/lib").getAbsolutePath());
     values.put(ENV_PATH, new File(home, "python3/lib/python3.2") + ":"
         + new File(home, "python3/lib/python3.2/lib-dynload") + ":" + libs);
@@ -150,7 +153,13 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
         new File(getHome(context), "python3/lib/python3.2/lib-dynload").getAbsolutePath());
     values.put(ENV_EXTRAS, getExtrasRoot());
     values.put(ENV_USERBASE, home);
-    values.put(ENV_TEMP, getTemp());
+    String temp = context.getCacheDir().getAbsolutePath();
+    values.put(ENV_TEMP, temp);
+    try {
+      FileUtils.chmod(context.getCacheDir(), 0777); // Make sure this is writable.
+    } catch (Exception e) {
+    }
+    values.put("HOME", Environment.getExternalStorageDirectory().getAbsolutePath());
     for (String k : values.keySet()) {
       Log.d(k + " : " + values.get(k));
     }
