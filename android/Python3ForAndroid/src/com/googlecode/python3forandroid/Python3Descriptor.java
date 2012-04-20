@@ -41,8 +41,8 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   private static final String ENV_EXTRAS = "PY4A_EXTRAS";
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   private static final String ENV_USERBASE = "PYTHONUSERBASE";
-  static final String BASE_URL = "http://python-for-android.googlecode.com/files";
-  // static final String BASE_URL = "http://www.mithril.com.au/android";
+  // static final String BASE_URL = "http://python-for-android.googlecode.com/files";
+  static final String BASE_URL = "http://www.mithril.com.au/android";
   private static final int LATEST_VERSION = 5;
   private int cache_scripts_version = -1;
   private SharedPreferences mPreferences;

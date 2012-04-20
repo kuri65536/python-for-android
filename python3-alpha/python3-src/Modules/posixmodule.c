@@ -2007,6 +2007,9 @@ posix_chmod(PyObject *self, PyObject *args)
     Py_BEGIN_ALLOW_THREADS
     res = chmod(path, i);
     Py_END_ALLOW_THREADS
+#ifdef ANDROID
+    if (res<0 && errno==1) res=0; // fuse file systems just refuse to allow this to work.This is a workaround.
+#endif
     if (res < 0)
         return posix_error_with_allocated_filename(opath);
     Py_DECREF(opath);
@@ -3418,6 +3421,9 @@ done:
         Py_END_ALLOW_THREADS
 #endif /* HAVE_UTIMES */
     }
+#ifdef ANDROID
+    if (res<0 && errno==1) res=0; // fuse file systems just refuse to allow this to work.This is a workaround.
+#endif
     if (res < 0) {
         return posix_error_with_allocated_filename(opath);
     }
