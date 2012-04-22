@@ -564,6 +564,10 @@ else:
             by looking at environment variables."""
             res = getdefaultlocale()[1]
             if res is None:
+              import os; 
+              if 'ANDROID_ROOT' in os.environ: #Android fix
+                res='utf-8'
+              else:	  
                 # LANG not set, default conservatively to ASCII
                 res = 'ascii'
             return res
