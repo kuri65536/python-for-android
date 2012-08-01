@@ -1,7 +1,6 @@
 '''
-Created on Aug 1, 2012
-
-@author: Admin
+@copyright: Hariharan Srinath, 2012
+@license: This work is licensed under a Creative Commons Attribution 3.0 Unported License. http://creativecommons.org/licenses/by/3.0/
 '''
 
 xmldata = """<?xml version="1.0" encoding="utf-8"?>
