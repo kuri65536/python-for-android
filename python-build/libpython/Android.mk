@@ -5,7 +5,7 @@ include $(CLEAR_VARS)
 PYTHON_SRC_PATH := $(LOCAL_PATH)/../python-src
 LOCAL_C_INCLUDES := $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
 LOCAL_PATH := $(PYTHON_SRC_PATH)
-LOCAL_CFLAGS := -DPYTHONPATH='""' -DVERSION='"2.6"' -DENABLE_IPV6
+LOCAL_CFLAGS := -DPYTHONPATH='""' -DVERSION='"2.7"' -DENABLE_IPV6
 LOCAL_SRC_FILES := \
 		Parser/acceler.c \
 		Parser/grammar1.c \
@@ -37,7 +37,10 @@ LOCAL_SRC_FILES := \
 		Python/getargs.c \
 		Python/getcompiler.c \
 		Python/getcopyright.c \
-		Python/getmtime.c \
+		Python/pyctype.c \
+		Python/random.c \
+		Objects/capsule.c \
+		Objects/memoryobject.c \
 		Python/getplatform.c \
 		Python/getversion.c \
 		Python/graminit.c \
@@ -116,10 +119,10 @@ LOCAL_SRC_FILES := \
 		Modules/gcmodule.c \
 		Modules/getbuildinfo.c
 
-LOCAL_MODULE := python2.6
+LOCAL_MODULE := python2.7
 #LOCAL_MODULE_FILENAME := 
 
-$(call __ndk_info, Building libpython2.6)
+$(call __ndk_info, Building libpython2.7)
 $(call __ndk_info, PATH: $(LOCAL_PATH))
 $(call __ndk_info, MODULE: $(LOCAL_MODULE))
 $(call __ndk_info, FILENAME: $(LOCAL_MODULE_FILENAME))

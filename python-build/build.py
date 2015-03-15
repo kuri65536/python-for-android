@@ -82,7 +82,11 @@ def rm(path):
 
 
 def strip(path):
-  run('arm-linux-androideabi-strip %s' % path)
+    toolchain = os.environ["NDK_PATH"]
+    toolchain = os.path.join(
+        toolchain, "toolchains/arm-linux-androideabi-4.9/prebuilt/"
+                   "linux-x86_64/arm-linux-androideabi")
+    run('%s/bin/strip %s' % (toolchain, path))
 
 
 def zipup(out_path, in_path, top, exclude=None, prefix=''):
@@ -100,13 +104,13 @@ pwd = os.getcwd()
 print 'Installing xmppy.'
 xmpppy_path = os.path.join(pwd, 'python-libs', 'xmpppy', 'xmpp')
 compileall.compile_dir(xmpppy_path)
-shutil.copytree(xmpppy_path, 'output/usr/lib/python2.6/xmpp')
+shutil.copytree(xmpppy_path, 'output/usr/lib/python2.7/xmpp')
 
 print 'Installing BeautifulSoup.'
 beautifulsoup_path = os.path.join(pwd, 'python-libs','BeautifulSoup')
 compileall.compile_dir(beautifulsoup_path)
 shutil.copy(os.path.join(beautifulsoup_path, 'BeautifulSoup.pyc'),
-            'output/usr/lib/python2.6/BeautifulSoup.pyc')
+            'output/usr/lib/python2.7/BeautifulSoup.pyc')
 
 print 'Installing gdata.'
 gdata_path = os.path.join(pwd, 'python-libs', 'gdata')
@@ -116,20 +120,20 @@ gdata_result_path = os.path.join(gdata_build_path,
                                  os.listdir(gdata_build_path)[0])
 compileall.compile_dir(gdata_result_path)
 shutil.copytree(os.path.join(gdata_result_path, 'gdata'),
-                'output/usr/lib/python2.6/gdata')
+                'output/usr/lib/python2.7/gdata')
 shutil.copytree(os.path.join(gdata_result_path, 'atom'),
-                'output/usr/lib/python2.6/atom')
+                'output/usr/lib/python2.7/atom')
 
 print 'Installing python-twitter.'
 twitter_path = os.path.join(pwd, 'python-libs', 'python-twitter')
 compileall.compile_dir(twitter_path)
 shutil.copy(os.path.join(twitter_path, 'twitter.pyc'),
-            'output/usr/lib/python2.6/twitter.pyc')
+            'output/usr/lib/python2.7/twitter.pyc')
 
 print 'Installing simplejson.'
 simplejson_path = os.path.join(pwd, 'python-libs', 'python-twitter', 'simplejson')
 compileall.compile_dir(simplejson_path)
-shutil.copytree(simplejson_path, 'output/usr/lib/python2.6/simplejson')
+shutil.copytree(simplejson_path, 'output/usr/lib/python2.7/simplejson')
 
 print 'Installing setuptools.'
 setuptools_path = os.path.join(pwd, 'python-libs', 'setuptools')
@@ -137,9 +141,9 @@ compileall.compile_dir(setuptools_path)
 for i in os.listdir(setuptools_path):
     i = os.path.join(setuptools_path, i)
     if os.path.isfile(i) and i.endswith(".pyc"):
-	shutil.copy(i, 'output/usr/lib/python2.6/site-packages')
+	shutil.copy(i, 'output/usr/lib/python2.7/site-packages')
 shutil.copytree(os.path.join(setuptools_path, "setuptools"), 
-	'output/usr/lib/python2.6/setuptools')
+	'output/usr/lib/python2.7/setuptools')
 
 # Remove any existing zip files.
 for p in glob.glob(os.path.join(pwd, '*.zip')):
@@ -149,7 +153,7 @@ print 'Zipping up Python Libs for deployment.'
 output=os.path.join(pwd, 'output')
 shutil.copytree(output, 'output.temp')
 map(rm, find('output.temp', '\.py$', exclude=['setuptools', 'distutils'])[0])
-map(rm, find('output.temp/usr/lib/python2.6', '.*', exclude=['setuptools', 'distutils'])[0])
+map(rm, find('output.temp/usr/lib/python2.7', '.*', exclude=['setuptools', 'distutils'])[0])
 map(rm, find('output.temp', 'python$', exclude=['setuptools', 'distutils'])[0])
 run("mkdir python", cwd="output.temp/usr")
 run("cp -r %s/python-libs/py4a python" % pwd, cwd="output.temp/usr")
@@ -174,10 +178,10 @@ map(strip, find('output', '\.so$')[0])
 strip('output/usr/bin/python')
 
 print 'Zipping up standard library.'
-libs = os.path.join(pwd, 'output/usr/lib/python2.6')
+libs = os.path.join(pwd, 'output/usr/lib/python2.7')
 # Copy in ASE's Android module.
 shutil.copy(os.path.join(pwd, 'python-libs', 'ase', 'android.py'),
-            'output/usr/lib/python2.6')
+            'output/usr/lib/python2.7')
 zipup(os.path.join(pwd, 'python_extras%s.zip' % VERSION["extra"]), libs, libs,
       exclude=['lib-dynload'], prefix='python/')
 
@@ -186,7 +190,7 @@ map(rm, find('output', '\.pyc$')[0])
 map(rm, find('output', '\.doc$')[0])
 map(rm, find('output', '\.egg-info$')[0])
 def clean_library(lib):
-    rm(os.path.join(pwd, 'output', 'usr', 'lib', 'python2.6', lib))
+    rm(os.path.join(pwd, 'output', 'usr', 'lib', 'python2.7', lib))
 map (clean_library, ['ctypes', 'distutils', 'idlelib', 'plat-linux2', 'site-packages'])
 
 print 'Zipping up Python interpreter for deployment.'

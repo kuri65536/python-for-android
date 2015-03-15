@@ -13,7 +13,7 @@ def patch_distutils():
     setattr(sysconfig, 'get_python_inc', get_python_inc)
 
     def customize_compiler(compiler):
-	cflags = "-I%s/python2.6" % os.environ["PY4A_INC"]
+	cflags = "-I%s/python2.7" % os.environ["PY4A_INC"]
 	cflags+=" -MMD -MP -MF -fpic -ffunction-sections -funwind-tables -fstack-protector"
 	cflags+=" -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__"
 	cflags+=" -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os"
@@ -23,7 +23,7 @@ def patch_distutils():
 	cxx = "arm-linux-androideabi-g++"
 	cpp = "arm-linux-androideabi-cpp"
 	ldshared= "%s -shared" % cxx
-	ldshared+=" -lc -lstdc++ -lm -Wl,--no-undefined -Wl,-z,noexecstack -lsupc++ -lpython2.6"
+	ldshared+=" -lc -lstdc++ -lm -Wl,--no-undefined -Wl,-z,noexecstack -lsupc++ -lpython2.7"
 	ldshared+=" -L%s " % os.environ["PY4A_LIB"]
 	ccshared = sysconfig.get_config_vars("CCSHARED")
 	so_ext = "so"
@@ -51,7 +51,7 @@ def patch_distutils():
     setattr(sysconfig, 'customize_compiler', customize_compiler)
 
     def get_config_h_filename():
-	inc_dir = os.path.join(os.environ["PY4A_INC"], "python2.6")
+	inc_dir = os.path.join(os.environ["PY4A_INC"], "python2.7")
 	config_h = 'pyconfig.h'
 	return os.path.join(inc_dir, config_h)
     setattr(sysconfig, 'get_config_h_filename', get_config_h_filename)

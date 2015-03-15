@@ -8,13 +8,13 @@ LOCAL_C_INCLUDES := $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include $(OPENSSL)/inc
 LOCAL_MODULE := python
 LOCAL_SRC_FILES := Modules/python.c
 LOCAL_PATH := $(PYTHON_SRC_PATH)
-LOCAL_SHARED_LIBRARIES := libpython2.6  
+LOCAL_SHARED_LIBRARIES := libpython2.7
 
 build-module = \
       $(eval LOCAL_MODULE := $(strip $1)) \
       $(eval LOCAL_MODULE_FILENAME := $(strip $1)) \
       $(eval LOCAL_SRC_FILES := $(strip $2) ) \
-      $(eval LOCAL_SHARED_LIBRARIES := libpython2.6 $(strip $3) ) \
+      $(eval LOCAL_SHARED_LIBRARIES := libpython2.7 $(strip $3) ) \
       $(eval LOCAL_CFLAGS := $(strip $4) ) \
       $(eval LOCAL_LDFLAGS := $(strip $5) ) \
       $(call __ndk_info, building $(LOCAL_MODULE_FILENAME )) \
@@ -25,8 +25,8 @@ $(call build-module,  _struct ,  Modules/_struct.c )
 $(call build-module,  _ctypes_test ,  Modules/_ctypes/_ctypes_test.c )
 $(call build-module,  _weakref ,  Modules/_weakref.c )
 $(call build-module,  array ,  Modules/arraymodule.c )
-$(call build-module,  cmath ,  Modules/cmathmodule.c ,  m )
-$(call build-module,  math ,  Modules/mathmodule.c ,  m )
+$(call build-module, cmath, Modules/cmathmodule.c Modules/_math.c,  m)
+$(call build-module, math, Modules/mathmodule.c Modules/_math.c,  m)
 $(call build-module,  strop ,  Modules/stropmodule.c )
 $(call build-module,  time ,  Modules/timemodule.c ,  m )
 $(call build-module,  datetime ,  Modules/datetimemodule.c Modules/timemodule.c ,  m )
@@ -37,8 +37,8 @@ $(call build-module,  _collections ,  Modules/_collectionsmodule.c )
 $(call build-module,  _bisect ,  Modules/_bisectmodule.c )
 $(call build-module,  _heapq ,  Modules/_heapqmodule.c )
 $(call build-module,  operator ,  Modules/operator.c )
-$(call build-module,  _fileio ,  Modules/_fileio.c )
-$(call build-module,  _bytesio ,  Modules/_bytesio.c )
+$(call build-module, _fileio, Modules/_io/fileio.c Modules/_io/iobase.c Modules/_io/_iomodule.c Modules/_io/bufferedio.c Modules/_io/textio.c Modules/_io/bytesio.c Modules/_io/stringio.c)
+$(call build-module, _bytesio ,  Modules/_io/bytesio.c )
 $(call build-module,  _functools ,  Modules/_functoolsmodule.c )
 $(call build-module,  _json ,  Modules/_json.c )
 $(call build-module,  _testcapi ,  Modules/_testcapimodule.c )
@@ -58,7 +58,7 @@ $(call build-module,  syslog ,  Modules/syslogmodule.c )
 $(call build-module,  audioop ,  Modules/audioop.c )
 $(call build-module,  imageop ,  Modules/imageop.c )
 $(call build-module,  _csv ,  Modules/_csv.c )
-$(call build-module,  _socket ,  Modules/socketmodule.c, libc, -lc, -nostdlib )
+$(call build-module, _socket, Modules/socketmodule.c Modules/timemodule.c, libc, -lc, -nostdlib )
 $(call build-module,  _sha ,  Modules/shamodule.c )
 $(call build-module,  _md5 ,  Modules/md5module.c Modules/md5.c )
 $(call build-module,  _sha256 ,  Modules/sha256module.c )
@@ -85,14 +85,14 @@ LOCAL_PATH := $(PYTHON_SRC_PATH)
 LOCAL_MODULE := bz2
 LOCAL_MODULE_FILENAME := bz2
 LOCAL_SRC_FILES := Modules/bz2module.c
-LOCAL_SHARED_LIBRARIES := libpython2.6 libbz
+LOCAL_SHARED_LIBRARIES := libpython2.7 libbz
 include $(BUILD_SHARED_LIBRARY)
 
 # build zlib
 LOCAL_MODULE := zlib
 LOCAL_MODULE_FILENAME := zlib
 LOCAL_SRC_FILES := Modules/zlibmodule.c
-LOCAL_SHARED_LIBRARIES := libpython2.6 libz
+LOCAL_SHARED_LIBRARIES := libpython2.7 libz
 LOCAL_CFLAGS := -lz
 LOCAL_LDFLAGS := -lz
 LOCAL_LDLIBS := -lz
@@ -105,7 +105,7 @@ LOCAL_PATH := $(PYTHON_SRC_PATH)
 LOCAL_MODULE := crypt
 LOCAL_MODULE_FILENAME := crypt
 LOCAL_SRC_FILES := Modules/cryptmodule.c
-LOCAL_SHARED_LIBRARIES := libpython2.6 _crypt
+LOCAL_SHARED_LIBRARIES := libpython2.7 _crypt
 include $(BUILD_SHARED_LIBRARY)
 
 
@@ -115,7 +115,7 @@ LOCAL_PATH := $(PYTHON_SRC_PATH)
 LOCAL_MODULE := pyexpat
 LOCAL_MODULE_FILENAME := pyexpat
 LOCAL_SRC_FILES := Modules/pyexpat.c
-LOCAL_SHARED_LIBRARIES := libpython2.6 libexpat
+LOCAL_SHARED_LIBRARIES := libpython2.7 libexpat
 include $(BUILD_SHARED_LIBRARY)
 
 LOCAL_MODULE := _elementtree
@@ -131,7 +131,7 @@ LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include $(OPENSSL)/inc
 LOCAL_MODULE := _ssl
 LOCAL_MODULE_FILENAME := _ssl
 LOCAL_SRC_FILES := Modules/_ssl.c 
-LOCAL_SHARED_LIBRARIES := libpython2.6 libcrypto libssl
+LOCAL_SHARED_LIBRARIES := libpython2.7 libcrypto libssl
 include $(BUILD_SHARED_LIBRARY)
 
 
@@ -141,7 +141,7 @@ LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
 LOCAL_MODULE := _ctypes
 LOCAL_MODULE_FILENAME := _ctypes
 LOCAL_SRC_FILES := Modules/_ctypes/_ctypes.c Modules/_ctypes/callbacks.c Modules/_ctypes/callproc.c Modules/_ctypes/stgdict.c Modules/_ctypes/cfield.c Modules/_ctypes/malloc_closure.c 
-LOCAL_SHARED_LIBRARIES := libpython2.6 libffi
+LOCAL_SHARED_LIBRARIES := libpython2.7 libffi
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module, sqlite3)
@@ -159,7 +159,7 @@ LOCAL_SRC_FILES := Modules/_sqlite/cache.c \
 	Modules/_sqlite/row.c \
 	Modules/_sqlite/statement.c \
 	Modules/_sqlite/util.c
-LOCAL_SHARED_LIBRARIES := libpython2.6 libsqlite
+LOCAL_SHARED_LIBRARIES := libpython2.7 libsqlite
 include $(BUILD_SHARED_LIBRARY)
 
 #$(call import-module, pwd_grp)
@@ -168,7 +168,7 @@ include $(BUILD_SHARED_LIBRARY)
 #LOCAL_MODULE := grp
 #LOCAL_MODULE_FILENAME := grp
 #LOCAL_SRC_FILES := Modules/grpmodule.c
-#LOCAL_SHARED_LIBRARIES := libpython2.6 libpwd_grp
+#LOCAL_SHARED_LIBRARIES := libpython2.7 libpwd_grp
 #include $(BUILD_SHARED_LIBRARY)
 
 #LOCAL_MODULE := spwd

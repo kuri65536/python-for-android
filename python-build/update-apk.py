@@ -46,7 +46,7 @@ def work():
         print z.extract(f, ARMEABI)
         i=i+1
 
-    XML.write('<file src="lib%04i.so" target="lib/python2.6/python.zip"/>\n' % i)
+    XML.write('<file src="lib%04i.so" target="lib/python2.7/python.zip"/>\n' % i)
     XML.write('</files>\n')
     os.system("cp python_extras_%s.zip %s/lib%04i.so" % ( EXTRA_VERSION, ARMEABI, i ) )
     XML.close()
