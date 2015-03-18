@@ -38,6 +38,7 @@ python3-alpha/python3-src/_install/
 python3-alpha/python3-src/build
 python3-alpha/python3-src/android
 python3-alpha/thirdparty/
+build
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
