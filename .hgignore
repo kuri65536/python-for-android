@@ -41,6 +41,9 @@ python3-alpha/thirdparty/
 build
 *.iml
 .gradle
+.idea
+gradlew{,.bat}
+android/PythonForAndroid/gradle
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc

@@ -39,7 +39,6 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   public static final String ENV_EXTRAS = "PY4A_EXTRAS";
   public static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   public static final String ENV_USERBASE = "PYTHONUSERBASE";
-  public static final String BASE_URL = "http://python-for-android.googlecode.com/";
   private static final int LATEST_VERSION = -1;
   private int cache_version = -1;
   private int cache_extras_version = -1;
@@ -47,7 +46,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
 
   @Override
   public String getBaseInstallUrl() {
-    return BASE_URL + "/files/";
+    return PythonUrls.URL_BIN;
   }
 
   public String getExtension() {
@@ -59,7 +58,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   public String getNiceName() {
-    return "Python 2.6.2";
+    return "Python 2.7.8";
   }
 
   public boolean hasInterpreterArchive() {
@@ -78,7 +77,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     // try resolving latest version
     URL url;
     try {
-      url = new URL(BASE_URL + "hg/python-build/LATEST_VERSION" + what.toUpperCase());
+      url = new URL(PythonUrls.URL_SRC + "python-build/LATEST_VERSION" + what.toUpperCase());
       BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
       return Integer.parseInt(reader.readLine().substring(1).trim());
     } catch (Exception e) {
@@ -162,14 +161,14 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     values.put(ENV_LD, getHome(context) + "/lib");
     // values.put(ENV_PATH, getExtras() + ":" + getHome(context) + "/lib/python2.6/lib-dynload" +
     // ":"
-    // + getHome(context) + "/lib/python2.6");
+    // + getHome(context) + "/lib/python2.7");
     values.put(ENV_PATH, getExtras() + ":"
-        + new File(getHome(context), "lib/python2.6/python.zip/python") + ":"
-        + new File(getHome(context), "lib/python2.6/python.zip/python/site-packages") + ":"
-        + new File(getHome(context), "lib/python2.6/lib-dynload"));
+        + new File(getHome(context), "lib/python2.7/python.zip/python") + ":"
+        + new File(getHome(context), "lib/python2.7/python.zip/python/site-packages") + ":"
+        + new File(getHome(context), "lib/python2.7/lib-dynload"));
     values.put(ENV_EXTRAS, getExtrasRoot());
     values.put(ENV_TEMP, getTemp());
-    values.put(ENV_EGGS, new File(getHome(context), "lib/python2.6/lib-dynload").getAbsolutePath());
+    values.put(ENV_EGGS, new File(getHome(context), "lib/python2.7/lib-dynload").getAbsolutePath());
     return values;
   }
 }

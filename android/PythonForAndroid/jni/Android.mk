@@ -21,6 +21,6 @@ LOCAL_SRC_FILES := pythonInProcess.c
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../../../python/src/Include \
     $(LOCAL_PATH)/../../../python/src
-LOCAL_LDLIBS := -L$(LOCAL_PATH) -lpython2.6 -llog
+LOCAL_LDLIBS := -L$(LOCAL_PATH) -lpython2.7 -llog
 
 include $(BUILD_SHARED_LIBRARY)

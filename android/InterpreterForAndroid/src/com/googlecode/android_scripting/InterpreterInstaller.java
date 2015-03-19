@@ -265,20 +265,22 @@ public abstract class InterpreterInstaller extends AsyncTask<Void, Void, Boolean
   }
 
   protected AsyncTask<Void, Integer, Long> extractInterpreter() throws Sl4aException {
-    String in =
-        new File(mInterpreterRoot, mDescriptor.getInterpreterArchiveName()).getAbsolutePath();
+    String in = new File(mDescriptor.getInterpreterArchiveName()).getName();
+    in = new File(mInterpreterRoot, in).getAbsolutePath();
     String out = InterpreterUtils.getInterpreterRoot(mContext).getAbsolutePath();
     return extract(in, out, true);
   }
 
   protected AsyncTask<Void, Integer, Long> extractInterpreterExtras() throws Sl4aException {
-    String in = new File(mInterpreterRoot, mDescriptor.getExtrasArchiveName()).getAbsolutePath();
+    String in = new File(mDescriptor.getExtrasArchiveName()).getName();
+    in = new File(mInterpreterRoot, in).getAbsolutePath();
     String out = mInterpreterRoot + InterpreterConstants.INTERPRETER_EXTRAS_ROOT;
     return extract(in, out, true);
   }
 
   protected AsyncTask<Void, Integer, Long> extractScripts() throws Sl4aException {
-    String in = new File(mInterpreterRoot, mDescriptor.getScriptsArchiveName()).getAbsolutePath();
+    String in = new File(mDescriptor.getScriptsArchiveName()).getName();
+    in = new File(mInterpreterRoot, in).getAbsolutePath();
     String out = InterpreterConstants.SCRIPTS_ROOT;
     return extract(in, out, false);
   }
