@@ -1,3 +1,11 @@
+task genURL << {
+    def root = System.getProperty("user.dir")
+    exec {
+        executable "python"
+        args "${root}/../../tools/gitbase.py", "${root}"
+    }
+}
+
 buildscript {
     repositories {
         mavenCentral()
@@ -51,4 +59,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_6
     }
 }
+
+preBuild.dependsOn genURL
 
