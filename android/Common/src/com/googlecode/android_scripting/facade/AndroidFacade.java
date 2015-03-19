@@ -21,6 +21,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,7 +29,10 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.StatFs;
 import android.os.Vibrator;
 import android.text.ClipboardManager;
 import android.text.InputType;
@@ -49,6 +53,8 @@ import com.googlecode.android_scripting.rpc.RpcDeprecated;
 import com.googlecode.android_scripting.rpc.RpcOptional;
 import com.googlecode.android_scripting.rpc.RpcParameter;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +65,20 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Some general purpose Android routines.
+ * Some general purpose Android routines.<br>
+ * <h2>Intents</h2> Intents are returned as a map, in the following form:<br>
+ * <ul>
+ * <li><b>action</b> - action.
+ * <li><b>data</b> - url
+ * <li><b>type</b> - mime type
+ * <li><b>packagename</b> - name of package. If used, requires classname to be useful (optional)
+ * <li><b>classname</b> - name of class. If used, requires packagename to be useful (optional)
+ * <li><b>categories</b> - list of categories
+ * <li><b>extras</b> - map of extras
+ * <li><b>flags</b> - integer flags.
+ * </ul>
+ * <br>
+ * An intent can be built using the {@see #makeIntent} call, but can also be constructed exterally.
  * 
  */
 public class AndroidFacade extends RpcReceiver {
@@ -80,6 +99,7 @@ public class AndroidFacade extends RpcReceiver {
   private final NotificationManager mNotificationManager;
 
   private final Resources mResources;
+  private ClipboardManager mClipboard = null;
 
   @Override
   public void shutdown() {
@@ -96,6 +116,24 @@ public class AndroidFacade extends RpcReceiver {
     mNotificationManager =
         (NotificationManager) mService.getSystemService(Context.NOTIFICATION_SERVICE);
     mResources = manager.getAndroidFacadeResources();
+
+  }
+
+  ClipboardManager getClipboardManager() {
+    Object clipboard = null;
+    if (mClipboard == null) {
+      try {
+        clipboard = mService.getSystemService(Context.CLIPBOARD_SERVICE);
+      } catch (Exception e) {
+        Looper.prepare(); // Clipboard manager won't work without this on higher SDK levels...
+        clipboard = mService.getSystemService(Context.CLIPBOARD_SERVICE);
+      }
+      mClipboard = (ClipboardManager) clipboard;
+      if (mClipboard == null) {
+        Log.w("Clipboard managed not accessible.");
+      }
+    }
+    return mClipboard;
   }
 
   /**
@@ -107,16 +145,13 @@ public class AndroidFacade extends RpcReceiver {
 
   @Rpc(description = "Put text in the clipboard.")
   public void setClipboard(@RpcParameter(name = "text") String text) {
-    ClipboardManager clipboard =
-        (ClipboardManager) mService.getSystemService(Context.CLIPBOARD_SERVICE);
-    clipboard.setText(text);
+    getClipboardManager().setText(text);
   }
 
   @Rpc(description = "Read text from the clipboard.", returns = "The text in the clipboard.")
   public String getClipboard() {
-    ClipboardManager clipboard =
-        (ClipboardManager) mService.getSystemService(Context.CLIPBOARD_SERVICE);
-    return clipboard.getText().toString();
+    CharSequence text = getClipboardManager().getText();
+    return text == null ? null : text.toString();
   }
 
   Intent startActivityForResult(final Intent intent) {
@@ -124,7 +159,12 @@ public class AndroidFacade extends RpcReceiver {
       @Override
       public void onCreate() {
         super.onCreate();
-        startActivityForResult(intent, 0);
+        try {
+          startActivityForResult(intent, 0);
+        } catch (Exception e) {
+          intent.putExtra("EXCEPTION", e.getMessage());
+          setResult(intent);
+        }
       }
 
       @Override
@@ -143,28 +183,9 @@ public class AndroidFacade extends RpcReceiver {
     }
   }
 
-  // TODO(damonkohler): It's unnecessary to add the complication of choosing between startActivity
-  // and startActivityForResult. It's probably better to just always use the ForResult version.
-  // However, this makes the call always blocking. We'd need to add an extra boolean parameter to
-  // indicate if we should wait for a result.
-  @Rpc(description = "Starts an activity and returns the result.", returns = "A Map representation of the result Intent.")
-  public Intent startActivityForResult(
-      @RpcParameter(name = "action") String action,
-      @RpcParameter(name = "uri") @RpcOptional String uri,
-      @RpcParameter(name = "type", description = "MIME type/subtype of the URI") @RpcOptional String type,
-      @RpcParameter(name = "extras", description = "a Map of extras to add to the Intent") @RpcOptional JSONObject extras)
-      throws JSONException {
-    Intent intent = new Intent(action);
-    intent.setDataAndType(uri != null ? Uri.parse(uri) : null, type);
-    if (extras != null) {
-      putExtrasFromJsonObject(extras, intent);
-    }
-    return startActivityForResult(intent);
-  }
-
   // TODO(damonkohler): Pull this out into proper argument deserialization and support
   // complex/nested types being passed in.
-  private void putExtrasFromJsonObject(JSONObject extras, Intent intent) throws JSONException {
+  public static void putExtrasFromJsonObject(JSONObject extras, Intent intent) throws JSONException {
     JSONArray names = extras.names();
     for (int i = 0; i < names.length(); i++) {
       String name = names.getString(i);
@@ -190,6 +211,146 @@ public class AndroidFacade extends RpcReceiver {
       if (data instanceof Boolean) {
         intent.putExtra(name, (Boolean) data);
       }
+      // Nested JSONObject
+      if (data instanceof JSONObject) {
+        Bundle nestedBundle = new Bundle();
+        intent.putExtra(name, nestedBundle);
+        putNestedJSONObject((JSONObject) data, nestedBundle);
+      }
+      // Nested JSONArray. Doesn't support mixed types in single array
+      if (data instanceof JSONArray) {
+        // Empty array. No way to tell what type of data to pass on, so skipping
+        if (((JSONArray) data).length() == 0) {
+          Log.e("Empty array not supported in JSONObject, skipping");
+          continue;
+        }
+        // Integer
+        if (((JSONArray) data).get(0) instanceof Integer) {
+          Integer[] integerArrayData = new Integer[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            integerArrayData[j] = ((JSONArray) data).getInt(j);
+          }
+          intent.putExtra(name, integerArrayData);
+        }
+        // Double
+        if (((JSONArray) data).get(0) instanceof Double) {
+          Double[] doubleArrayData = new Double[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            doubleArrayData[j] = ((JSONArray) data).getDouble(j);
+          }
+          intent.putExtra(name, doubleArrayData);
+        }
+        // Long
+        if (((JSONArray) data).get(0) instanceof Long) {
+          Long[] longArrayData = new Long[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            longArrayData[j] = ((JSONArray) data).getLong(j);
+          }
+          intent.putExtra(name, longArrayData);
+        }
+        // String
+        if (((JSONArray) data).get(0) instanceof String) {
+          String[] stringArrayData = new String[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            stringArrayData[j] = ((JSONArray) data).getString(j);
+          }
+          intent.putExtra(name, stringArrayData);
+        }
+        // Boolean
+        if (((JSONArray) data).get(0) instanceof Boolean) {
+          Boolean[] booleanArrayData = new Boolean[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            booleanArrayData[j] = ((JSONArray) data).getBoolean(j);
+          }
+          intent.putExtra(name, booleanArrayData);
+        }
+      }
+    }
+  }
+
+  // Contributed by Emmanuel T
+  // Nested Array handling contributed by Sergey Zelenev
+  private static void putNestedJSONObject(JSONObject jsonObject, Bundle bundle)
+      throws JSONException {
+    JSONArray names = jsonObject.names();
+    for (int i = 0; i < names.length(); i++) {
+      String name = names.getString(i);
+      Object data = jsonObject.get(name);
+      if (data == null) {
+        continue;
+      }
+      if (data instanceof Integer) {
+        bundle.putInt(name, ((Integer) data).intValue());
+      }
+      if (data instanceof Float) {
+        bundle.putFloat(name, ((Float) data).floatValue());
+      }
+      if (data instanceof Double) {
+        bundle.putDouble(name, ((Double) data).doubleValue());
+      }
+      if (data instanceof Long) {
+        bundle.putLong(name, ((Long) data).longValue());
+      }
+      if (data instanceof String) {
+        bundle.putString(name, (String) data);
+      }
+      if (data instanceof Boolean) {
+        bundle.putBoolean(name, ((Boolean) data).booleanValue());
+      }
+      // Nested JSONObject
+      if (data instanceof JSONObject) {
+        Bundle nestedBundle = new Bundle();
+        bundle.putBundle(name, nestedBundle);
+        putNestedJSONObject((JSONObject) data, nestedBundle);
+      }
+      // Nested JSONArray. Doesn't support mixed types in single array
+      if (data instanceof JSONArray) {
+        // Empty array. No way to tell what type of data to pass on, so skipping
+        if (((JSONArray) data).length() == 0) {
+          Log.e("Empty array not supported in nested JSONObject, skipping");
+          continue;
+        }
+        // Integer
+        if (((JSONArray) data).get(0) instanceof Integer) {
+          int[] integerArrayData = new int[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            integerArrayData[j] = ((JSONArray) data).getInt(j);
+          }
+          bundle.putIntArray(name, integerArrayData);
+        }
+        // Double
+        if (((JSONArray) data).get(0) instanceof Double) {
+          double[] doubleArrayData = new double[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            doubleArrayData[j] = ((JSONArray) data).getDouble(j);
+          }
+          bundle.putDoubleArray(name, doubleArrayData);
+        }
+        // Long
+        if (((JSONArray) data).get(0) instanceof Long) {
+          long[] longArrayData = new long[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            longArrayData[j] = ((JSONArray) data).getLong(j);
+          }
+          bundle.putLongArray(name, longArrayData);
+        }
+        // String
+        if (((JSONArray) data).get(0) instanceof String) {
+          String[] stringArrayData = new String[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            stringArrayData[j] = ((JSONArray) data).getString(j);
+          }
+          bundle.putStringArray(name, stringArrayData);
+        }
+        // Boolean
+        if (((JSONArray) data).get(0) instanceof Boolean) {
+          boolean[] booleanArrayData = new boolean[((JSONArray) data).length()];
+          for (int j = 0; j < ((JSONArray) data).length(); ++j) {
+            booleanArrayData[j] = ((JSONArray) data).getBoolean(j);
+          }
+          bundle.putBooleanArray(name, booleanArrayData);
+        }
+      }
     }
   }
 
@@ -202,19 +363,48 @@ public class AndroidFacade extends RpcReceiver {
     }
   }
 
-  @Rpc(description = "Starts an activity.")
-  public void startActivity(
+  private Intent buildIntent(String action, String uri, String type, JSONObject extras,
+      String packagename, String classname, JSONArray categories) throws JSONException {
+    Intent intent = new Intent(action);
+    intent.setDataAndType(uri != null ? Uri.parse(uri) : null, type);
+    if (packagename != null && classname != null) {
+      intent.setComponent(new ComponentName(packagename, classname));
+    }
+    if (extras != null) {
+      putExtrasFromJsonObject(extras, intent);
+    }
+    if (categories != null) {
+      for (int i = 0; i < categories.length(); i++) {
+        intent.addCategory(categories.getString(i));
+      }
+    }
+    return intent;
+  }
+
+  // TODO(damonkohler): It's unnecessary to add the complication of choosing between startActivity
+  // and startActivityForResult. It's probably better to just always use the ForResult version.
+  // However, this makes the call always blocking. We'd need to add an extra boolean parameter to
+  // indicate if we should wait for a result.
+  @Rpc(description = "Starts an activity and returns the result.", returns = "A Map representation of the result Intent.")
+  public Intent startActivityForResult(
       @RpcParameter(name = "action") String action,
       @RpcParameter(name = "uri") @RpcOptional String uri,
       @RpcParameter(name = "type", description = "MIME type/subtype of the URI") @RpcOptional String type,
       @RpcParameter(name = "extras", description = "a Map of extras to add to the Intent") @RpcOptional JSONObject extras,
-      @RpcParameter(name = "wait", description = "block until the user exits the started activity") @RpcOptional Boolean wait)
+      @RpcParameter(name = "packagename", description = "name of package. If used, requires classname to be useful") @RpcOptional String packagename,
+      @RpcParameter(name = "classname", description = "name of class. If used, requires packagename to be useful") @RpcOptional String classname)
       throws JSONException {
-    final Intent intent = new Intent(action);
-    intent.setDataAndType(uri != null ? Uri.parse(uri) : null, type);
-    if (extras != null) {
-      putExtrasFromJsonObject(extras, intent);
-    }
+    final Intent intent = buildIntent(action, uri, type, extras, packagename, classname, null);
+    return startActivityForResult(intent);
+  }
+
+  @Rpc(description = "Starts an activity and returns the result.", returns = "A Map representation of the result Intent.")
+  public Intent startActivityForResultIntent(
+      @RpcParameter(name = "intent", description = "Intent in the format as returned from makeIntent") Intent intent) {
+    return startActivityForResult(intent);
+  }
+
+  private void doStartActivity(final Intent intent, Boolean wait) throws Exception {
     if (wait == null || wait == false) {
       startActivity(intent);
     } else {
@@ -249,6 +439,74 @@ public class AndroidFacade extends RpcReceiver {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  /**
+   * packagename and classname, if provided, are used in a 'setComponent' call.
+   */
+  @Rpc(description = "Starts an activity.")
+  public void startActivity(
+      @RpcParameter(name = "action") String action,
+      @RpcParameter(name = "uri") @RpcOptional String uri,
+      @RpcParameter(name = "type", description = "MIME type/subtype of the URI") @RpcOptional String type,
+      @RpcParameter(name = "extras", description = "a Map of extras to add to the Intent") @RpcOptional JSONObject extras,
+      @RpcParameter(name = "wait", description = "block until the user exits the started activity") @RpcOptional Boolean wait,
+      @RpcParameter(name = "packagename", description = "name of package. If used, requires classname to be useful") @RpcOptional String packagename,
+      @RpcParameter(name = "classname", description = "name of class. If used, requires packagename to be useful") @RpcOptional String classname)
+      throws Exception {
+    final Intent intent = buildIntent(action, uri, type, extras, packagename, classname, null);
+    doStartActivity(intent, wait);
+  }
+
+  @Rpc(description = "Send a broadcast.")
+  public void sendBroadcast(
+      @RpcParameter(name = "action") String action,
+      @RpcParameter(name = "uri") @RpcOptional String uri,
+      @RpcParameter(name = "type", description = "MIME type/subtype of the URI") @RpcOptional String type,
+      @RpcParameter(name = "extras", description = "a Map of extras to add to the Intent") @RpcOptional JSONObject extras,
+      @RpcParameter(name = "packagename", description = "name of package. If used, requires classname to be useful") @RpcOptional String packagename,
+      @RpcParameter(name = "classname", description = "name of class. If used, requires packagename to be useful") @RpcOptional String classname)
+      throws JSONException {
+    final Intent intent = buildIntent(action, uri, type, extras, packagename, classname, null);
+    try {
+      mService.sendBroadcast(intent);
+    } catch (Exception e) {
+      Log.e("Failed to broadcast intent.", e);
+    }
+  }
+
+  @Rpc(description = "Create an Intent.", returns = "An object representing an Intent")
+  public Intent makeIntent(
+      @RpcParameter(name = "action") String action,
+      @RpcParameter(name = "uri") @RpcOptional String uri,
+      @RpcParameter(name = "type", description = "MIME type/subtype of the URI") @RpcOptional String type,
+      @RpcParameter(name = "extras", description = "a Map of extras to add to the Intent") @RpcOptional JSONObject extras,
+      @RpcParameter(name = "categories", description = "a List of categories to add to the Intent") @RpcOptional JSONArray categories,
+      @RpcParameter(name = "packagename", description = "name of package. If used, requires classname to be useful") @RpcOptional String packagename,
+      @RpcParameter(name = "classname", description = "name of class. If used, requires packagename to be useful") @RpcOptional String classname,
+      @RpcParameter(name = "flags", description = "Intent flags") @RpcOptional Integer flags)
+      throws JSONException {
+    Intent intent = buildIntent(action, uri, type, extras, packagename, classname, categories);
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    if (flags != null) {
+      intent.setFlags(flags);
+    }
+    return intent;
+  }
+
+  @Rpc(description = "Start Activity using Intent")
+  public void startActivityIntent(
+      @RpcParameter(name = "intent", description = "Intent in the format as returned from makeIntent") Intent intent,
+      @RpcParameter(name = "wait", description = "block until the user exits the started activity") @RpcOptional Boolean wait)
+      throws Exception {
+    doStartActivity(intent, wait);
+  }
+
+  @Rpc(description = "Send Broadcast Intent")
+  public void sendBroadcastIntent(
+      @RpcParameter(name = "intent", description = "Intent in the format as returned from makeIntent") Intent intent)
+      throws Exception {
+    mService.sendBroadcast(intent);
   }
 
   @Rpc(description = "Vibrates the phone or a specified duration in milliseconds.")
@@ -311,7 +569,7 @@ public class AndroidFacade extends RpcReceiver {
   }
 
   @Rpc(description = "Queries the user for a text input.")
-  @RpcDeprecated("dialogGetInput")
+  @RpcDeprecated(value = "dialogGetInput", release = "r3")
   public String getInput(
       @RpcParameter(name = "title", description = "title of the input box") @RpcDefault("SL4A Input") final String title,
       @RpcParameter(name = "message", description = "message to display above the input box") @RpcDefault("Please enter value:") final String message) {
@@ -319,7 +577,7 @@ public class AndroidFacade extends RpcReceiver {
   }
 
   @Rpc(description = "Queries the user for a password.")
-  @RpcDeprecated("dialogGetPassword")
+  @RpcDeprecated(value = "dialogGetPassword", release = "r3")
   public String getPassword(
       @RpcParameter(name = "title", description = "title of the input box") @RpcDefault("SL4A Password Input") final String title,
       @RpcParameter(name = "message", description = "message to display above the input box") @RpcDefault("Please enter password:") final String message) {
@@ -409,10 +667,29 @@ public class AndroidFacade extends RpcReceiver {
     android.util.Log.v("SCRIPT", message);
   }
 
+  /**
+   * 
+   * Map returned:
+   * 
+   * <pre>
+   *   TZ = Timezone
+   *     id = Timezone ID
+   *     display = Timezone display name
+   *     offset = Offset from UTC (in ms)
+   *   SDK = SDK Version
+   *   download = default download path
+   *   appcache = Location of application cache 
+   *   sdcard = Space on sdcard
+   *     availblocks = Available blocks
+   *     blockcount = Total Blocks
+   *     blocksize = size of block.
+   * </pre>
+   */
   @Rpc(description = "A map of various useful environment details")
   public Map<String, Object> environment() {
     Map<String, Object> result = new HashMap<String, Object>();
     Map<String, Object> zone = new HashMap<String, Object>();
+    Map<String, Object> space = new HashMap<String, Object>();
     TimeZone tz = TimeZone.getDefault();
     zone.put("id", tz.getID());
     zone.put("display", tz.getDisplayName());
@@ -421,6 +698,42 @@ public class AndroidFacade extends RpcReceiver {
     result.put("SDK", android.os.Build.VERSION.SDK);
     result.put("download", FileUtils.getExternalDownload().getAbsolutePath());
     result.put("appcache", mService.getCacheDir().getAbsolutePath());
+    try {
+      StatFs fs = new StatFs("/sdcard");
+      space.put("availblocks", fs.getAvailableBlocks());
+      space.put("blocksize", fs.getBlockSize());
+      space.put("blockcount", fs.getBlockCount());
+    } catch (Exception e) {
+      space.put("exception", e.toString());
+    }
+    result.put("sdcard", space);
+    return result;
+  }
+
+  @Rpc(description = "Get list of constants (static final fields) for a class")
+  public Bundle getConstants(
+      @RpcParameter(name = "classname", description = "Class to get constants from") String classname)
+      throws Exception {
+    Bundle result = new Bundle();
+    int flags = Modifier.FINAL | Modifier.PUBLIC | Modifier.STATIC;
+    Class<?> clazz = Class.forName(classname);
+    for (Field field : clazz.getFields()) {
+      if ((field.getModifiers() & flags) == flags) {
+        Class<?> type = field.getType();
+        String name = field.getName();
+        if (type == int.class) {
+          result.putInt(name, field.getInt(null));
+        } else if (type == long.class) {
+          result.putLong(name, field.getLong(null));
+        } else if (type == double.class) {
+          result.putDouble(name, field.getDouble(null));
+        } else if (type == char.class) {
+          result.putChar(name, field.getChar(null));
+        } else if (type instanceof Object) {
+          result.putString(name, field.get(null).toString());
+        }
+      }
+    }
     return result;
   }
 }

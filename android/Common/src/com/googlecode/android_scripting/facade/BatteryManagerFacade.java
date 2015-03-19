@@ -34,9 +34,12 @@ import com.googlecode.android_scripting.rpc.RpcStopEvent;
 import java.lang.reflect.Field;
 
 /**
- * Exposes Batterymanager API.
+ * Exposes Batterymanager API. Note that in order to use any of the batteryGet* functions, you need
+ * to batteryStartMonitoring, and then wait for a "battery" event. Sleeping for a second will
+ * usually work just as well.
  * 
  * @author Alexey Reznichenko (alexey.reznichenko@gmail.com)
+ * @author Robbie Matthews (rjmatthews62@gmail.com)
  */
 public class BatteryManagerFacade extends RpcReceiver {
 
@@ -94,15 +97,17 @@ public class BatteryManagerFacade extends RpcReceiver {
       data.putInt("status", mBatteryStatus);
       data.putInt("health", mBatteryHealth);
       data.putInt("plugged", mPlugType);
-      data.putBoolean("battery_present", mBatteryPresent);
-      if (mBatteryMaxLevel == null || mBatteryMaxLevel == 100 || mBatteryMaxLevel == 0) {
-        data.putInt("level", mBatteryLevel);
-      } else {
-        data.putInt("level", (int) (mBatteryLevel * 100.0 / mBatteryMaxLevel));
+      if (mSdkVersion >= 5) {
+        data.putBoolean("battery_present", mBatteryPresent);
+        if (mBatteryMaxLevel == null || mBatteryMaxLevel == 100 || mBatteryMaxLevel == 0) {
+          data.putInt("level", mBatteryLevel);
+        } else {
+          data.putInt("level", (int) (mBatteryLevel * 100.0 / mBatteryMaxLevel));
+        }
+        data.putInt("voltage", mBatteryVoltage);
+        data.putInt("temperature", mBatteryTemperature);
+        data.putString("technology", mBatteryTechnology);
       }
-      data.putInt("voltage", mBatteryVoltage);
-      data.putInt("temperature", mBatteryTemperature);
-      data.putString("technology", mBatteryTechnology);
       mBatteryData = data;
       mmEventFacade.postEvent("battery", mBatteryData.clone());
     }
@@ -123,6 +128,9 @@ public class BatteryManagerFacade extends RpcReceiver {
     return mBatteryData;
   }
 
+  /**
+   * throws "battery" events
+   */
   @Rpc(description = "Starts tracking battery state.")
   @RpcStartEvent("battery")
   public void batteryStartMonitoring() {

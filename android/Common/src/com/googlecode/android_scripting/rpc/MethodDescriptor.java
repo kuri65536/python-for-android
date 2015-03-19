@@ -16,7 +16,11 @@
 
 package com.googlecode.android_scripting.rpc;
 
+import android.content.Intent;
+import android.net.Uri;
+
 import com.googlecode.android_scripting.Analytics;
+import com.googlecode.android_scripting.facade.AndroidFacade;
 import com.googlecode.android_scripting.jsonrpc.RpcReceiver;
 import com.googlecode.android_scripting.jsonrpc.RpcReceiverManager;
 import com.googlecode.android_scripting.util.VisibleForTesting;
@@ -34,6 +38,7 @@ import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * An adapter that wraps {@code Method}.
@@ -136,6 +141,8 @@ public final class MethodDescriptor {
         return parameters.getDouble(index);
       } else if (type == Integer.class) {
         return parameters.getInt(index);
+      } else if (type == Intent.class) {
+        return buildIntent(parameters.getJSONObject(index));
       } else {
         // Magically cast the parameter to the right Java type.
         return ((Class<?>) type).cast(parameters.get(index));
@@ -144,6 +151,37 @@ public final class MethodDescriptor {
       throw new RpcError("Argument " + (index + 1) + " should be of type "
           + ((Class<?>) type).getSimpleName() + ".");
     }
+  }
+
+  public static Object buildIntent(JSONObject jsonObject) throws JSONException {
+    Intent intent = new Intent();
+    if (jsonObject.has("action")) {
+      intent.setAction(jsonObject.getString("action"));
+    }
+    if (jsonObject.has("data") && jsonObject.has("type")) {
+      intent.setDataAndType(Uri.parse(jsonObject.optString("data", null)),
+          jsonObject.optString("type", null));
+    } else if (jsonObject.has("data")) {
+      intent.setData(Uri.parse(jsonObject.optString("data", null)));
+    } else if (jsonObject.has("type")) {
+      intent.setType(jsonObject.optString("type", null));
+    }
+    if (jsonObject.has("packagename") && jsonObject.has("classname")) {
+      intent.setClassName(jsonObject.getString("packagename"), jsonObject.getString("classname"));
+    }
+    if (jsonObject.has("flags")) {
+      intent.setFlags(jsonObject.getInt("flags"));
+    }
+    if (!jsonObject.isNull("extras")) {
+      AndroidFacade.putExtrasFromJsonObject(jsonObject.getJSONObject("extras"), intent);
+    }
+    if (!jsonObject.isNull("categories")) {
+      JSONArray categories = jsonObject.getJSONArray("categories");
+      for (int i = 0; i < categories.length(); i++) {
+        intent.addCategory(categories.getString(i));
+      }
+    }
+    return intent;
   }
 
   public Method getMethod() {
@@ -155,6 +193,9 @@ public final class MethodDescriptor {
   }
 
   public String getName() {
+    if (mMethod.isAnnotationPresent(RpcName.class)) {
+      return mMethod.getAnnotation(RpcName.class).name();
+    }
     return mMethod.getName();
   }
 
@@ -204,7 +245,9 @@ public final class MethodDescriptor {
 
     if (mMethod.isAnnotationPresent(RpcDeprecated.class)) {
       String replacedBy = mMethod.getAnnotation(RpcDeprecated.class).value();
-      helpBuilder.append(String.format("\n\nDeprecated! Please use %s instead.", replacedBy));
+      String release = mMethod.getAnnotation(RpcDeprecated.class).release();
+      helpBuilder.append(String.format("\n\nDeprecated in %s! Please use %s instead.", release,
+          replacedBy));
     }
 
     return helpBuilder.toString();
@@ -377,7 +420,7 @@ public final class MethodDescriptor {
     throw new IllegalStateException("No default value for " + parameterType);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   private static Converter<?> converterFor(Type parameterType,
       Class<? extends Converter> converterClass) {
     if (converterClass == Converter.class) {

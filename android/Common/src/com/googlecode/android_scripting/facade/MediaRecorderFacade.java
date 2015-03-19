@@ -22,12 +22,11 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.WindowManager;
-import android.view.SurfaceHolder.Callback;
 
 import com.googlecode.android_scripting.BaseApplication;
-import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.FutureActivityTaskExecutor;
 import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.future.FutureActivityTask;
@@ -46,8 +45,16 @@ import java.util.concurrent.TimeUnit;
 /**
  * A facade for recording media.
  * 
+ * Guidance notes: Use e.g. '/sdcard/file.ext' for your media destination file. A file extension of
+ * mpg will use the default settings for format and codec (often h263 which won't work with common
+ * PC media players). A file extension of mp4 or 3gp will use the appropriate format with the (more
+ * common) h264 codec. A video player such as QQPlayer (from the android market) plays both codecs
+ * and uses the composition matrix (embedded in the video file) to correct for image rotation. Many
+ * PC based media players ignore this matrix. Standard video sizes may be specified.
+ * 
  * @author Felix Arends (felix.arends@gmail.com)
  * @author Damon Kohler (damonkohler@gmail.com)
+ * @author John Karwatzki (jokar49@gmail.com)
  */
 public class MediaRecorderFacade extends RpcReceiver {
 
@@ -65,13 +72,97 @@ public class MediaRecorderFacade extends RpcReceiver {
     startAudioRecording(targetPath, MediaRecorder.AudioSource.MIC);
   }
 
+  @Rpc(description = "Records video from the camera and saves it to the given location. "
+      + "\nDuration specifies the maximum duration of the recording session. "
+      + "\nIf duration is 0 this method will return and the recording will only be stopped "
+      + "\nwhen recorderStop is called or when a scripts exits. "
+      + "\nOtherwise it will block for the time period equal to the duration argument."
+      + "\nvideoSize: 0=160x120, 1=320x240, 2=352x288, 3=640x480, 4=800x480.")
+  public void recorderStartVideo(@RpcParameter(name = "targetPath") String targetPath,
+      @RpcParameter(name = "duration") @RpcDefault("0") Integer duration,
+      @RpcParameter(name = "videoSize") @RpcDefault("1") Integer videoSize) throws Exception {
+    int ms = convertSecondsToMilliseconds(duration);
+    startVideoRecording(new File(targetPath), ms, videoSize);
+  }
+
+  private void startVideoRecording(File file, int milliseconds, int videoSize) throws Exception {
+    mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+    int audioSource = MediaRecorder.AudioSource.MIC;
+    try {
+      Field source = Class.forName("android.media.MediaRecorder$AudioSource").getField("CAMCORDER");
+      source.getInt(null);
+    } catch (Exception e) {
+      Log.e(e);
+    }
+    int xSize;
+    int ySize;
+    switch (videoSize) {
+    case 0:
+      xSize = 160;
+      ySize = 120;
+      break;
+    case 1:
+      xSize = 320;
+      ySize = 240;
+      break;
+    case 2:
+      xSize = 352;
+      ySize = 288;
+      break;
+    case 3:
+      xSize = 640;
+      ySize = 480;
+      break;
+    case 4:
+      xSize = 800;
+      ySize = 480;
+      break;
+    default:
+      xSize = 320;
+      ySize = 240;
+      break;
+    }
+
+    mMediaRecorder.setAudioSource(audioSource);
+    String extension = file.toString().split("\\.")[1];
+    if (extension.equals("mp4")) {
+      mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+      mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+      mMediaRecorder.setVideoSize(xSize, ySize);
+      mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+    } else if (extension.equals("3gp")) {
+      mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+      mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+      mMediaRecorder.setVideoSize(xSize, ySize);
+      mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+    } else {
+
+      mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+      mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+      mMediaRecorder.setVideoSize(xSize, ySize);
+      mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+    }
+
+    mMediaRecorder.setOutputFile(file.getAbsolutePath());
+    if (milliseconds > 0) {
+      mMediaRecorder.setMaxDuration(milliseconds);
+    }
+    FutureActivityTask<Exception> prepTask = prepare();
+    mMediaRecorder.start();
+    if (milliseconds > 0) {
+      new CountDownLatch(1).await(milliseconds, TimeUnit.MILLISECONDS);
+    }
+    prepTask.finish();
+  }
+
   @Rpc(description = "Records video (and optionally audio) from the camera and saves it to the given location. "
       + "\nDuration specifies the maximum duration of the recording session. "
       + "\nIf duration is not provided this method will return immediately and the recording will only be stopped "
       + "\nwhen recorderStop is called or when a scripts exits. "
       + "\nOtherwise it will block for the time period equal to the duration argument.")
   public void recorderCaptureVideo(@RpcParameter(name = "targetPath") String targetPath,
-      @RpcParameter(name = "duration") @RpcOptional Double duration,
+      @RpcParameter(name = "duration") @RpcOptional Integer duration,
       @RpcParameter(name = "recordAudio") @RpcDefault("true") Boolean recordAudio) throws Exception {
     int ms = convertSecondsToMilliseconds(duration);
     startVideoRecording(new File(targetPath), ms, recordAudio);
@@ -95,10 +186,6 @@ public class MediaRecorderFacade extends RpcReceiver {
       mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
     }
     mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
-    if (!FileUtils.makeDirectories(file.getParentFile(), 0755)) {
-      throw new RuntimeException(String
-          .format("Cannot create directories for %s.", file.toString()));
-    }
     mMediaRecorder.setOutputFile(file.getAbsolutePath());
     if (milliseconds > 0) {
       mMediaRecorder.setMaxDuration(milliseconds);
@@ -186,7 +273,7 @@ public class MediaRecorderFacade extends RpcReceiver {
     return task;
   }
 
-  private int convertSecondsToMilliseconds(Double seconds) {
+  private int convertSecondsToMilliseconds(Integer seconds) {
     if (seconds == null) {
       return 0;
     }

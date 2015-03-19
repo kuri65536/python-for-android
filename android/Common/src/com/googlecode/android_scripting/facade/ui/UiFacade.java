@@ -20,10 +20,10 @@ import android.app.ProgressDialog;
 import android.app.Service;
 import android.util.AndroidRuntimeException;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ContextMenu.ContextMenuInfo;
 
 import com.googlecode.android_scripting.BaseApplication;
 import com.googlecode.android_scripting.FileUtils;
@@ -39,6 +39,8 @@ import com.googlecode.android_scripting.rpc.RpcOptional;
 import com.googlecode.android_scripting.rpc.RpcParameter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +54,7 @@ import org.json.JSONException;
  * User Interface Facade. <br>
  * <br>
  * <b>Usage Notes</b><br>
- *<br>
+ * <br>
  * The UI facade provides access to a selection of dialog boxes for general user interaction, and
  * also hosts the {@link #webViewShow} call which allows interactive use of html pages.<br>
  * The general use of the dialog functions is as follows:<br>
@@ -69,7 +71,7 @@ import org.json.JSONException;
  * </ul>
  * <li>Set additional features to your dialog
  * <ul>
- * <li>{@link #dialogSetItems} Set a list of items.}
+ * <li>{@link #dialogSetItems} Set a list of items. Used like a menu.
  * <li>{@link #dialogSetMultiChoiceItems} Set a multichoice list of items.
  * <li>{@link #dialogSetSingleChoiceItems} Set a single choice list of items.
  * <li>{@link #dialogSetPositiveButtonText}
@@ -94,7 +96,8 @@ import org.json.JSONException;
  * <li>Once done, use {@link #dialogDismiss} to remove the dialog.
  * </ol>
  * <br>
- * You can also manipulate menu options.
+ * You can also manipulate menu options. The menu options are available for both {@link #dialogShow}
+ * and {@link #fullShow}.
  * <ul>
  * <li>{@link #clearOptionsMenu}
  * <li>{@link #addOptionsMenuItem}
@@ -118,12 +121,14 @@ public class UiFacade extends RpcReceiver {
   private final Service mService;
   private final FutureActivityTaskExecutor mTaskQueue;
   private DialogTask mDialogTask;
+  private FullScreenTask mFullScreenTask;
 
   private final List<UiMenuItem> mContextMenuItems;
   private final List<UiMenuItem> mOptionsMenuItems;
   private final AtomicBoolean mMenuUpdated;
 
   private final EventFacade mEventFacade;
+  private List<Integer> mOverrideKeys = Collections.synchronizedList(new ArrayList<Integer>());
 
   public UiFacade(FacadeManager manager) {
     super(manager);
@@ -135,15 +140,25 @@ public class UiFacade extends RpcReceiver {
     mMenuUpdated = new AtomicBoolean(false);
   }
 
+  /**
+   * For inputType, see <a
+   * href="http://developer.android.com/reference/android/R.styleable.html#TextView_inputType"
+   * >InputTypes</a>. Some useful ones are text, number, and textUri. Multiple flags can be
+   * supplied, seperated by "|", ie: "textUri|textAutoComplete"
+   */
   @Rpc(description = "Create a text input dialog.")
   public void dialogCreateInput(
       @RpcParameter(name = "title", description = "title of the input box") @RpcDefault("Value") final String title,
       @RpcParameter(name = "message", description = "message to display above the input box") @RpcDefault("Please enter value:") final String message,
-      @RpcParameter(name = "defaultText", description = "text to insert into the input box") @RpcOptional final String text)
+      @RpcParameter(name = "defaultText", description = "text to insert into the input box") @RpcOptional final String text,
+      @RpcParameter(name = "inputType", description = "type of input data, ie number or text") @RpcOptional final String inputType)
       throws InterruptedException {
     dialogDismiss();
     mDialogTask = new AlertDialogTask(title, message);
     ((AlertDialogTask) mDialogTask).setTextInput(text);
+    if (inputType != null) {
+      ((AlertDialogTask) mDialogTask).setEditInputType(inputType);
+    }
   }
 
   @Rpc(description = "Create a password input dialog.")
@@ -174,7 +189,7 @@ public class UiFacade extends RpcReceiver {
       @RpcParameter(name = "message", description = "message to display above the input box") @RpcDefault("Please enter value:") final String message,
       @RpcParameter(name = "defaultText", description = "text to insert into the input box") @RpcOptional final String text)
       throws InterruptedException {
-    dialogCreateInput(title, message, text);
+    dialogCreateInput(title, message, text, "text");
     dialogSetNegativeButtonText("Cancel");
     dialogSetPositiveButtonText("Ok");
     dialogShow();
@@ -255,6 +270,15 @@ public class UiFacade extends RpcReceiver {
     mDialogTask = new AlertDialogTask(title, message);
   }
 
+  /**
+   * Will produce "dialog" events on change, containing:
+   * <ul>
+   * <li>"progress" - Position chosen, between 0 and max
+   * <li>"which" = "seekbar"
+   * <li>"fromuser" = true/false change is from user input
+   * </ul>
+   * Response will contain a "progress" element.
+   */
   @Rpc(description = "Create seek bar dialog.")
   public void dialogCreateSeekBar(
       @RpcParameter(name = "starting value") @RpcDefault("50") Integer progress,
@@ -350,6 +374,10 @@ public class UiFacade extends RpcReceiver {
   }
 
   // TODO(damonkohler): Make RPC layer translate between JSONArray and List<Object>.
+  /**
+   * This effectively creates list of options. Clicking on an item will immediately return an "item"
+   * element, which is the index of the selected item.
+   */
   @Rpc(description = "Set alert dialog list items.")
   public void dialogSetItems(@RpcParameter(name = "items") JSONArray items) {
     if (mDialogTask != null && mDialogTask instanceof AlertDialogTask) {
@@ -359,6 +387,12 @@ public class UiFacade extends RpcReceiver {
     }
   }
 
+  /**
+   * This creates a list of radio buttons. You can select one item out of the list. A response will
+   * not be returned until the dialog is closed, either with the Cancel key or a button
+   * (positive/negative/neutral). Use {@link #dialogGetSelectedItems()} to find out what was
+   * selected.
+   */
   @Rpc(description = "Set dialog single choice items and selected item.")
   public void dialogSetSingleChoiceItems(
       @RpcParameter(name = "items") JSONArray items,
@@ -369,6 +403,13 @@ public class UiFacade extends RpcReceiver {
       throw new AndroidRuntimeException("No dialog to add list to.");
     }
   }
+
+  /**
+   * This creates a list of check boxes. You can select multiple items out of the list. A response
+   * will not be returned until the dialog is closed, either with the Cancel key or a button
+   * (positive/negative/neutral). Use {@link #dialogGetSelectedItems()} to find out what was
+   * selected.
+   */
 
   @Rpc(description = "Set dialog multiple choice items and selection.")
   public void dialogSetMultiChoiceItems(
@@ -411,7 +452,7 @@ public class UiFacade extends RpcReceiver {
       throws IOException {
     String jsonSrc = FileUtils.readFromAssetsFile(mService, HtmlInterpreter.JSON_FILE);
     String AndroidJsSrc = FileUtils.readFromAssetsFile(mService, HtmlInterpreter.ANDROID_JS_FILE);
-    HtmlActivityTask task = new HtmlActivityTask(mManager, AndroidJsSrc, jsonSrc, url);
+    HtmlActivityTask task = new HtmlActivityTask(mManager, AndroidJsSrc, jsonSrc, url, false);
     mTaskQueue.execute(task);
     if (wait != null && wait) {
       try {
@@ -502,8 +543,128 @@ public class UiFacade extends RpcReceiver {
     return true;
   }
 
+  /**
+   * See <a href=http://code.google.com/p/android-scripting/wiki/FullScreenUI>wiki page</a> for more
+   * detail.
+   */
+  @Rpc(description = "Show Full Screen.")
+  public List<String> fullShow(
+      @RpcParameter(name = "layout", description = "String containing View layout") String layout,
+      @RpcParameter(name = "title", description = "Activity Title") @RpcOptional String title)
+      throws InterruptedException {
+    if (mFullScreenTask != null) {
+      // fullDismiss();
+      mFullScreenTask.setLayout(layout);
+      if (title != null) {
+        mFullScreenTask.setTitle(title);
+      }
+    } else {
+      mFullScreenTask = new FullScreenTask(layout, title);
+      mFullScreenTask.setEventFacade(mEventFacade);
+      mFullScreenTask.setUiFacade(this);
+      mFullScreenTask.setOverrideKeys(mOverrideKeys);
+      mTaskQueue.execute(mFullScreenTask);
+      mFullScreenTask.getShowLatch().await();
+    }
+    return mFullScreenTask.mInflater.getErrors();
+  }
+
+  @Rpc(description = "Dismiss Full Screen.")
+  public void fullDismiss() {
+    if (mFullScreenTask != null) {
+      mFullScreenTask.finish();
+      mFullScreenTask = null;
+    }
+  }
+
+  @Rpc(description = "Get Fullscreen Properties")
+  public Map<String, Map<String, String>> fullQuery() {
+    if (mFullScreenTask == null) {
+      throw new RuntimeException("No screen displayed.");
+    }
+    return mFullScreenTask.getViewAsMap();
+  }
+
+  @Rpc(description = "Get fullscreen properties for a specific widget")
+  public Map<String, String> fullQueryDetail(
+      @RpcParameter(name = "id", description = "id of layout widget") String id) {
+    if (mFullScreenTask == null) {
+      throw new RuntimeException("No screen displayed.");
+    }
+    return mFullScreenTask.getViewDetail(id);
+  }
+
+  @Rpc(description = "Set fullscreen widget property")
+  public String fullSetProperty(
+      @RpcParameter(name = "id", description = "id of layout widget") String id,
+      @RpcParameter(name = "property", description = "name of property to set") String property,
+      @RpcParameter(name = "value", description = "value to set property to") String value) {
+    if (mFullScreenTask == null) {
+      throw new RuntimeException("No screen displayed.");
+    }
+    return mFullScreenTask.setViewProperty(id, property, value);
+  }
+
+  @Rpc(description = "Attach a list to a fullscreen widget")
+  public String fullSetList(
+      @RpcParameter(name = "id", description = "id of layout widget") String id,
+      @RpcParameter(name = "list", description = "List to set") JSONArray items) {
+    if (mFullScreenTask == null) {
+      throw new RuntimeException("No screen displayed.");
+    }
+    return mFullScreenTask.setList(id, items);
+  }
+
+  @Rpc(description = "Set the Full Screen Activity Title")
+  public void fullSetTitle(
+      @RpcParameter(name = "title", description = "Activity Title") String title) {
+    if (mFullScreenTask == null) {
+      throw new RuntimeException("No screen displayed.");
+    }
+    mFullScreenTask.setTitle(title);
+  }
+
+  /**
+   * This will override the default behaviour of keys while in the fullscreen mode. ie:
+   * 
+   * <pre>
+   *   droid.fullKeyOverride([24,25],True)
+   * </pre>
+   * 
+   * This will override the default behaviour of the volume keys (codes 24 and 25) so that they do
+   * not actually adjust the volume. <br>
+   * Returns a list of currently overridden keycodes.
+   */
+  @Rpc(description = "Override default key actions")
+  public JSONArray fullKeyOverride(
+      @RpcParameter(name = "keycodes", description = "List of keycodes to override") JSONArray keycodes,
+      @RpcParameter(name = "enable", description = "Turn overriding or off") @RpcDefault(value = "true") Boolean enable)
+      throws JSONException {
+    for (int i = 0; i < keycodes.length(); i++) {
+      int value = (int) keycodes.getLong(i);
+      if (value > 0) {
+        if (enable) {
+          if (!mOverrideKeys.contains(value)) {
+            mOverrideKeys.add(value);
+          }
+        } else {
+          int index = mOverrideKeys.indexOf(value);
+          if (index >= 0) {
+            mOverrideKeys.remove(index);
+          }
+        }
+      }
+    }
+    if (mFullScreenTask != null) {
+      mFullScreenTask.setOverrideKeys(mOverrideKeys);
+    }
+    return new JSONArray(mOverrideKeys);
+  }
+
   @Override
   public void shutdown() {
+    fullDismiss();
+    HtmlActivityTask.shutdown();
   }
 
   private class UiMenuItem {

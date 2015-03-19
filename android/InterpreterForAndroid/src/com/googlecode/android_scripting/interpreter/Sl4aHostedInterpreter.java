@@ -56,17 +56,20 @@ public abstract class Sl4aHostedInterpreter implements InterpreterDescriptor {
 
   @Override
   public String getInterpreterArchiveName() {
-    return String.format("%s_r%s.zip", getName(), getInterpreterVersion());
+    int rev = getInterpreterVersion();
+    return String.format("r%s/%s_r%s.zip", rev, getName(), rev);
   }
 
   @Override
   public String getExtrasArchiveName() {
-    return String.format("%s_extras_r%s.zip", getName(), getExtrasVersion());
+    int rev = getExtrasVersion();
+    return String.format("r%s/%s_extras_r%s.zip", rev, getName(), rev);
   }
 
   @Override
   public String getScriptsArchiveName() {
-    return String.format("%s_scripts_r%s.zip", getName(), getScriptsVersion());
+      int rev = getScriptsVersion();
+    return String.format("r%s/%s_scripts_r%s.zip", rev, getName(), rev);
   }
 
   @Override

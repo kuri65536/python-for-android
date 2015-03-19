@@ -19,6 +19,7 @@ package com.googlecode.android_scripting;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -116,17 +117,49 @@ public abstract class SimpleServer {
     return mConnectionThreads.size();
   }
 
-  private InetAddress getPublicInetAddress() throws UnknownHostException, SocketException {
+  public static InetAddress getPrivateInetAddress() throws UnknownHostException, SocketException {
+
+    InetAddress candidate = null;
     Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
     for (NetworkInterface netint : Collections.list(nets)) {
+      if (!netint.isLoopback() || !netint.isUp()) { // Ignore if localhost or not active
+        continue;
+      }
       Enumeration<InetAddress> addresses = netint.getInetAddresses();
       for (InetAddress address : Collections.list(addresses)) {
-        if (!address.getHostAddress().equals("127.0.0.1")) {
-          return address;
+        if (address instanceof Inet4Address) {
+          Log.d("local address " + address);
+          return address; // Prefer ipv4
         }
+        candidate = address; // Probably an ipv6
       }
     }
-    return InetAddress.getLocalHost();
+    if (candidate != null) {
+      return candidate; // return ipv6 address if no suitable ipv6
+    }
+    return InetAddress.getLocalHost(); // No damn matches. Give up, return local host.
+  }
+
+  public static InetAddress getPublicInetAddress() throws UnknownHostException, SocketException {
+
+    InetAddress candidate = null;
+    Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+    for (NetworkInterface netint : Collections.list(nets)) {
+      if (netint.isLoopback() || !netint.isUp()) { // Ignore if localhost or not active
+        continue;
+      }
+      Enumeration<InetAddress> addresses = netint.getInetAddresses();
+      for (InetAddress address : Collections.list(addresses)) {
+        if (address instanceof Inet4Address) {
+          return address; // Prefer ipv4
+        }
+        candidate = address; // Probably an ipv6
+      }
+    }
+    if (candidate != null) {
+      return candidate; // return ipv6 address if no suitable ipv6
+    }
+    return InetAddress.getLocalHost(); // No damn matches. Give up, return local host.
   }
 
   /**
@@ -140,14 +173,15 @@ public abstract class SimpleServer {
   public InetSocketAddress startLocal(int port) {
     InetAddress address;
     try {
-      address = InetAddress.getLocalHost();
+      // address = InetAddress.getLocalHost();
+      address = getPrivateInetAddress();
       mServer = new ServerSocket(port, 5 /* backlog */, address);
     } catch (Exception e) {
       Log.e("Failed to start server.", e);
       return null;
     }
-    int boundPort = start(address);
-    return InetSocketAddress.createUnresolved(address.getHostAddress(), boundPort);
+    int boundPort = start();
+    return InetSocketAddress.createUnresolved(mServer.getInetAddress().getHostAddress(), boundPort);
   }
 
   /**
@@ -161,17 +195,37 @@ public abstract class SimpleServer {
   public InetSocketAddress startPublic(int port) {
     InetAddress address;
     try {
-      address = getPublicInetAddress();
-      mServer = new ServerSocket(port, 5 /* backlog */, address);
+      // address = getPublicInetAddress();
+      address = null;
+      mServer = new ServerSocket(port, 5 /* backlog */); //just bind to all interfaces
     } catch (Exception e) {
       Log.e("Failed to start server.", e);
       return null;
     }
-    int boundPort = start(address);
-    return InetSocketAddress.createUnresolved(address.getHostAddress(), boundPort);
+    int boundPort = start();
+    return InetSocketAddress.createUnresolved(mServer.getInetAddress().getHostAddress(), boundPort);
   }
 
-  private int start(InetAddress address) {
+  /**
+   * data Starts the RPC server bound to all interfaces
+   * 
+   * @param port
+   *          the port to bind to or 0 to pick any unused port
+   * 
+   * @return the port that the server is bound to
+   */
+  public InetSocketAddress startAllInterfaces(int port) {
+    try {
+      mServer = new ServerSocket(port, 5 /* backlog */);
+    } catch (Exception e) {
+      Log.e("Failed to start server.", e);
+      return null;
+    }
+    int boundPort = start();
+    return InetSocketAddress.createUnresolved(mServer.getInetAddress().getHostAddress(), boundPort);
+  }
+
+  private int start() {
     mServerThread = new Thread() {
       @Override
       public void run() {
@@ -192,7 +246,7 @@ public abstract class SimpleServer {
       }
     };
     mServerThread.start();
-    Log.v("Bound to " + address.getHostAddress() + ":" + mServer.getLocalPort());
+    Log.v("Bound to " + mServer.getInetAddress());
     return mServer.getLocalPort();
   }
 

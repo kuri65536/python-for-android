@@ -12,7 +12,8 @@ public class SupportedLanguages {
     HTML(".html", HtmlLanguage.class), BEANSHELL(".bsh", BeanShellLanguage.class), JAVASCRIPT(
         ".js", JavaScriptLanguage.class), LUA(".lua", LuaLanguage.class), PERL(".pl",
         PerlLanguage.class), PYTHON(".py", PythonLanguage.class), RUBY(".rb", RubyLanguage.class),
-    TCL(".tcl", TclLanguage.class), PHP(".php", PhpLanguage.class);
+    TCL(".tcl", TclLanguage.class), PHP(".php", PhpLanguage.class), SLEEP(".sl",
+        SleepLanguage.class), SQUIRREL(".nut", SquirrelLanguage.class);
 
     private final String mmExtension;
     private final Class<? extends Language> mmClass;
@@ -48,6 +49,9 @@ public class SupportedLanguages {
     Language lang = null;
 
     Class<? extends Language> clazz = sSupportedLanguages.get(extension);
+    if (clazz == null) {
+      clazz = Language.class; // revert to default language.
+    }
     if (clazz != null) {
       try {
         lang = clazz.newInstance();

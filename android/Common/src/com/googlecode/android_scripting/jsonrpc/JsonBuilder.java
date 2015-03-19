@@ -16,6 +16,7 @@
 
 package com.googlecode.android_scripting.jsonrpc;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Location;
@@ -32,9 +33,10 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import org.apache.commons.codec.binary.Base64Codec;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -115,7 +117,22 @@ public class JsonBuilder {
     if (data instanceof InetSocketAddress) {
       return buildInetSocketAddress((InetSocketAddress) data);
     }
-    throw new JSONException("Failed to build JSON result.");
+    if (data instanceof byte[]) {
+      return Base64Codec.encodeBase64((byte[]) data);
+    }
+    if (data instanceof Object[]) {
+      return buildJSONArray((Object[]) data);
+    }
+    return data.toString();
+    // throw new JSONException("Failed to build JSON result. " + data.getClass().getName());
+  }
+
+  private static JSONArray buildJSONArray(Object[] data) throws JSONException {
+    JSONArray result = new JSONArray();
+    for (Object o : data) {
+      result.put(build(o));
+    }
+    return result;
   }
 
   private static Object buildInetSocketAddress(InetSocketAddress data) {
@@ -157,6 +174,7 @@ public class JsonBuilder {
     result.put("accuracy", location.getAccuracy());
     result.put("speed", location.getSpeed());
     result.put("provider", location.getProvider());
+    result.put("bearing", location.getBearing());
     return result;
   }
 
@@ -171,7 +189,16 @@ public class JsonBuilder {
   private static JSONObject buildJsonIntent(Intent data) throws JSONException {
     JSONObject result = new JSONObject();
     result.put("data", data.getDataString());
+    result.put("type", data.getType());
     result.put("extras", build(data.getExtras()));
+    result.put("categories", build(data.getCategories()));
+    result.put("action", data.getAction());
+    ComponentName component = data.getComponent();
+    if (component != null) {
+      result.put("packagename", component.getPackageName());
+      result.put("classname", component.getClassName());
+    }
+    result.put("flags", data.getFlags());
     return result;
   }
 

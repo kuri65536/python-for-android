@@ -23,15 +23,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Use this annotation to mark RPC method as deprecated.
+ * Use this annotation to mark an RPC parameter that have a default value.
+ * 
+ * @author igor.v.karp@gmail.com (Igor Karp)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @Documented
-public @interface RpcDeprecated {
-  /** The method that replaced this one. */
-  public String value();
-
-  /** Release of SL4A when deprecation occurred. */
-  public String release() default "r4";
+public @interface RpcName {
+  /** The default value of the RPC parameter. */
+  public String name();
 }
