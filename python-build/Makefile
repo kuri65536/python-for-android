@@ -20,27 +20,26 @@ OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 ifeq (x$(NDK_PATH),x)
 build: error
 else
-build: .download .build_host .patch .build_android
+build: $(PYTOHNTAR) .build_host $(PYTHONSRC) .build_android
 endif
 
 init:
-	rm -f .download .build_host .patch .build_android
+	rm -f $(PYTHONTAR) .build_host $(PYTHONSRC) .build_android
 
 error:
 	@echo please set NDK_PATH to android-ndk-r10d or later::
 	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10d make build"
 
 
-.download:
+$(PYTHONTAR):
 	echo "Building Python VM For Android Release $(RELEASE_VERSION)"
 	rm -rf python*$(RELEASE_VERSION).zip
 	if [ ! -f $(CWD)/Python-$(VERSION).tar.bz2 ]; then \
 	    URL="http://www.python.org/ftp/python/$(VERSION)/$(PYTHONNET)"; \
 	    wget -O $(PYTHONTAR) $$URL; \
 	fi
-	touch .download
 
-.build_host: .download
+.build_host: $(PYTHONTAR)
 	# we need to build the host python and host pgen so we can
 	# generate the correct grammar and some other stuff
 	echo "Decompressing Python-$(VERSION)"
@@ -53,12 +52,11 @@ error:
 	rm -rf Python-$(VERSION)
 	touch .build_host
 
-.patch: .download
+$(PYTHONSRC): $(PYTHONTAR)
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
 	patch -p1 -i $(CWD)/Python-$(VERSION)-android.patch
-	touch .patch
 
 LIBS = site-packages encodings compiler hotshot \
     email email/mime \
@@ -73,7 +71,7 @@ LIBS = site-packages encodings compiler hotshot \
     xml xml/dom xml/etree xml/parsers xml/sax \
 
 
-.build_android: .patch
+.build_android: $(PYTHONSRC)
 	rm -rf $(OUT)*
 	mkdir -p $(OUT)/usr/bin
 	mkdir -p $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
@@ -87,6 +85,8 @@ LIBS = site-packages encodings compiler hotshot \
 	    fi; \
 	done
 	
+	cd $(PYTHONSRC); $(PYTHONHST)/bin/python Lib/sysconfig.py --generate-posix-vars
+	cp $(PYTHONSRC)/build/lib*/_sysconfigdata.py $(OUT_LIB)/
 	cp $$(find $(PYTHONSRC)/Lib/ -maxdepth 1 -type f) $(OUT_LIB)/
 	cp -r $(PYTHONSRC)/Include/* $(OUT)/usr/include/$(PYTHONLIB)/
 	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
@@ -108,9 +108,6 @@ LIBS = site-packages encodings compiler hotshot \
 	$(CWD)/host/bin/python $(OUT)/usr/lib/$(PYTHONLIB)/compileall.py $(OUT)/usr/lib/$(PYTHONLIB)
 	$(CWD)/host/bin/python build.py
 	
-	if [ "$DEBUG" != "yes" ]; then \
-	    rm -rf output*; \
-	fi
 	echo "Done"
 	touch .build_android
 

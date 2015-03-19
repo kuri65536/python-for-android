@@ -8,4 +8,6 @@ LOCAL_MODULE := python
 LOCAL_SRC_FILES := Modules/python.c
 LOCAL_PATH := $(PYTHON_SRC_PATH)
 LOCAL_SHARED_LIBRARIES := libpython2.7
+LOCAL_CFLAGS += -pie -fPIE
+LOCAL_LDFLAGS += -pie -fPIE
 include $(BUILD_EXECUTABLE)

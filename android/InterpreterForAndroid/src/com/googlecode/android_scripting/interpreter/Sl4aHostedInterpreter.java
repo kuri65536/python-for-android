@@ -17,6 +17,7 @@
 package com.googlecode.android_scripting.interpreter;
 
 import android.content.Context;
+import android.os.Build;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -54,22 +55,43 @@ public abstract class Sl4aHostedInterpreter implements InterpreterDescriptor {
     return getVersion();
   }
 
+    public String getPlatformString() {
+        String ret = System.getProperty("os.arch");
+        if (ret.startsWith("arm")) {
+            ret = "";
+        }
+        else if (ret.startsWith("i686")) {
+            ret = "_x86";
+        }
+        else if (ret.startsWith("mips")) {
+            ret = "_mips";
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            ret = ret + "_pie";
+        } else {
+            ret = ret;
+        }
+        return ret;
+    }
+
   @Override
   public String getInterpreterArchiveName() {
-    int rev = getInterpreterVersion();
-    return String.format("r%s/%s_r%s.zip", rev, getName(), rev);
+        String plat = getPlatformString();
+        int rev = getInterpreterVersion();
+        return String.format("r%s/%s_r%s%s.zip", rev, getName(), rev, plat);
   }
 
   @Override
   public String getExtrasArchiveName() {
-    int rev = getExtrasVersion();
-    return String.format("r%s/%s_extras_r%s.zip", rev, getName(), rev);
+        int rev = getExtrasVersion();
+        return String.format("r%s/%s_extras_r%s.zip", rev, getName(), rev);
   }
 
   @Override
   public String getScriptsArchiveName() {
-      int rev = getScriptsVersion();
-    return String.format("r%s/%s_scripts_r%s.zip", rev, getName(), rev);
+        int rev = getScriptsVersion();
+        return String.format("r%s/%s_scripts_r%s.zip", rev, getName(), rev);
   }
 
   @Override
