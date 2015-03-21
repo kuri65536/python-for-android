@@ -19,17 +19,18 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
+# LOCAL_CFLAGS += -DFFI_NATIVE_RAW_API  <= no effect in r18
 LOCAL_MODULE := ffi
 LOCAL_MODULE_FILENAME := 
-LOCAL_SRC_FILES := src/arm/sysv.S \
-	src/arm/ffi.c \
+LOCAL_SRC_FILES := src/$(TARGET_ARCH)/sysv.S \
+	src/$(TARGET_ARCH)/ffi.c \
 	src/debug.c \
 	src/java_raw_api.c \
 	src/prep_cif.c \
 	src/raw_api.c \
 	src/types.c
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/linux-arm
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/linux-$(TARGET_ARCH)
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_C_INCLUDES)
 
 $(call __ndk_info, Building libffi)
