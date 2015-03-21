@@ -31,10 +31,17 @@ ifeq (x$(host),x)
 host = $(shell uname -s | tr A-Z a-z)-$(shell uname -m)
 endif
 
-.PHONY: build
+.PHONY: build clean cleanall
 
 build: $(OPENSSL_BIN)
 	ln -sf .build_arm openssl-src
+
+cleanall: clean
+	rm -f $(OPENSSL_SRC)
+
+clean:
+	make -C .build_arm clean
+	make -C .build_x86 clean
 
 $(OPENSSL_SRC):
 	wget https://www.openssl.org/source/openssl-1.0.2a.tar.gz

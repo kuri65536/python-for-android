@@ -21,7 +21,7 @@ ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
-.PHONY: build error init clean_output
+.PHONY: build error init clean_output cleanall
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -29,9 +29,13 @@ else
 build: $(ZIP) $(ZIP_PIE)
 endif
 
-clean:
-	rm -f $(PYTHONTAR) .build_* $(PYTHONSRC)
+cleanall: clean
+	rm -f $(PYTHONTAR)
+
+clean: clean_output
 	make -C openssl clean
+	rm -f .build_*
+	rm -rf $(PYTHONSRC)
 
 error:
 	@echo please set NDK_PATH to android-ndk-r10d or later::
@@ -72,11 +76,10 @@ LIBS = site-packages encodings compiler hotshot \
     email email/mime \
     json \
     sqlite3 \
-    logging bsddb csv wsgiref \
+    logging bsddb wsgiref \
     ctypes ctypes/macholib idlelib idlelib/Icons \
     distutils distutils/command \
     multiprocessing multiprocessing/dummy \
-    lib-old \
     plat-linux2 \
     xml xml/dom xml/etree xml/parsers xml/sax \
 
