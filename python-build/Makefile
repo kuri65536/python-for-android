@@ -12,19 +12,26 @@ PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
 PYTHONHST := $(CWD)/host
 TAR := tar xvfz
+ZIP := python_$(RELEASE_VERSION).zip \
+       python_$(RELEASE_VERSION)_x86.zip \
+       python_extras_$(shell cat LATEST_VERSION_EXTRA).zip \
+       python_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
+ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
+           python_$(RELEASE_VERSION)_x86_pie.zip
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
-.PHONY: build error init
+.PHONY: build error init clean_output
 
 ifeq (x$(NDK_PATH),x)
 build: error
 else
-build: $(PYTOHNTAR) .build_host $(PYTHONSRC) .build_android
+build: $(ZIP) $(ZIP_PIE)
 endif
 
-init:
-	rm -f $(PYTHONTAR) .build_host $(PYTHONSRC) .build_android
+clean:
+	rm -f $(PYTHONTAR) .build_* $(PYTHONSRC)
+	make -C openssl clean
 
 error:
 	@echo please set NDK_PATH to android-ndk-r10d or later::
@@ -32,12 +39,15 @@ error:
 
 
 $(PYTHONTAR):
-	echo "Building Python VM For Android Release $(RELEASE_VERSION)"
-	rm -rf python*$(RELEASE_VERSION).zip
+	@echo "Building Python VM For Android Release $(RELEASE_VERSION)"
 	if [ ! -f $(CWD)/Python-$(VERSION).tar.bz2 ]; then \
 	    URL="http://www.python.org/ftp/python/$(VERSION)/$(PYTHONNET)"; \
 	    wget -O $(PYTHONTAR) $$URL; \
 	fi
+
+.build_openssl: $(PYTHONTAR)
+	make -C openssl build
+	touch .build_openssl
 
 .build_host: $(PYTHONTAR)
 	# we need to build the host python and host pgen so we can
@@ -71,10 +81,10 @@ LIBS = site-packages encodings compiler hotshot \
     xml xml/dom xml/etree xml/parsers xml/sax \
 
 
-.build_android: $(PYTHONSRC)
+clean_output:
 	rm -rf $(OUT)*
 	mkdir -p $(OUT)/usr/bin
-	mkdir -p $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
+	mkdir -p $(OUT_LIB)/lib-dynload
 	mkdir -p $(OUT)/usr/include/$(PYTHONLIB)
 	
 	for lib in $(LIBS); do \
@@ -90,24 +100,70 @@ LIBS = site-packages encodings compiler hotshot \
 	cp $$(find $(PYTHONSRC)/Lib/ -maxdepth 1 -type f) $(OUT_LIB)/
 	cp -r $(PYTHONSRC)/Include/* $(OUT)/usr/include/$(PYTHONLIB)/
 	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
+
+
+$(ZIP): $(PYTHONSRC) .build_openssl
+	@echo non-PIE: build the android libraries/executables
+	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
+	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
 	
-	# build the android needed libraries
 	cd $(CWD)/python; \
 	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
 	    $(CWD)/python-src/Include/graminit.h \
 	    $(CWD)/python-src/Python/graminit.c
 	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
+	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
+	touch .build_bin
 	
-	# copy out all the needed files
+	# arm: copy out all the needed files
+	make clean_output
 	cd $(CWD)/python; \
-	mv obj/local/armeabi/python $(OUT)/usr/bin; \
-	mv obj/local/armeabi/lib*.so $(OUT)/usr/lib; \
-	mv obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload; \
+	cp obj/local/armeabi/python $(OUT)/usr/bin; \
+	cp obj/local/armeabi/lib*.so $(OUT)/usr/lib; \
+	cp obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload; \
 	
 	cd $(CWD)/python-libs; bash -ex setuptools.sh
 	$(CWD)/host/bin/python $(OUT)/usr/lib/$(PYTHONLIB)/compileall.py $(OUT)/usr/lib/$(PYTHONLIB)
 	$(CWD)/host/bin/python build.py
 	
+	# x86: copy out all the needed files
+	make clean_output
+	cd $(CWD)/python; \
+	cp obj/local/x86/python $(OUT)/usr/bin; \
+	cp obj/local/x86/lib*.so $(OUT)/usr/lib; \
+	cp obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
+	$(CWD)/host/bin/python build.py x86
+	
 	echo "Done"
-	touch .build_android
+
+$(ZIP_PIE): $(PYTHONSRC) .build_openssl
+	@echo PIE: build the android libraries/executables
+	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
+	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
+	
+	# FIXME: do not build duplicated bins with non-PIE binary.
+	cd $(CWD)/python; \
+	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
+	    $(CWD)/python-src/Include/graminit.h \
+	    $(CWD)/python-src/Python/graminit.c
+	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
+	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
+	
+	# arm: copy out all the needed files
+	make clean_output
+	cd $(CWD)/python; \
+	mv obj/local/armeabi/python $(OUT)/usr/bin; \
+	mv obj/local/armeabi/lib*.so $(OUT)/usr/lib; \
+	mv obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
+	$(CWD)/host/bin/python build.py pie
+	
+	# x86: copy out all the needed files
+	make clean_output
+	cd $(CWD)/python; \
+	mv obj/local/x86/python $(OUT)/usr/bin; \
+	mv obj/local/x86/lib*.so $(OUT)/usr/lib; \
+	mv obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
+	$(CWD)/host/bin/python build.py pie x86
+	
+	echo "Done"
 

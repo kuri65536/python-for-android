@@ -22,6 +22,8 @@ import subprocess
 import shutil
 import sys
 import zipfile
+from logging import info, debug
+
 
 VERSION={
     "": "",
@@ -30,16 +32,34 @@ VERSION={
     "lib": ""
 }
 
+
+def options():
+    import logging
+    l = logging.getLogger("")
+    l.setLevel(logging.INFO)
+
+    pie, plat = "", ""
+    for arg in sys.argv:
+        if arg in ("pie", ):
+            pie = "_pie"
+        elif arg in ("x86", ):
+            plat = "_x86"
+    return pie, plat
+
+pie, plat = options()
+
+
 for i in ("scripts", "extra", "lib"):
     if os.path.isfile("LATEST_VERSION_"+i.upper()):
-	VERSION[i] = "_"+open("LATEST_VERSION_"+i.upper()).read().strip()
+        VERSION[i] = "_"+open("LATEST_VERSION_"+i.upper()).read().strip()
 
 if os.path.isfile("LATEST_VERSION"):
     VERSION[""] = "_"+open("LATEST_VERSION").read().strip()
 
 
 def run(cmd, exit=True, cwd=None):
-  print cmd
+  if True:
+    debug(cmd)
   if subprocess.Popen(cmd.split(), cwd=cwd).wait() != 0:
     if exit:
       print 'Failed!'
@@ -49,7 +69,8 @@ def run(cmd, exit=True, cwd=None):
 
 
 def find(directory, pattern=None, exclude=None):
-  print 'Looking for paths in %r matching %r' % (directory, pattern)
+  if True:
+    debug('Looking for paths in %r matching %r' % (directory, pattern))
   matches = []
   misses = []
   if exclude is None:
@@ -71,7 +92,7 @@ def find(directory, pattern=None, exclude=None):
 
 
 def rm(path):
-  print 'Deleting %r' % path
+  debug('Deleting %r' % path)
   try:
     if os.path.isdir(path):
       shutil.rmtree(path)
@@ -82,19 +103,28 @@ def rm(path):
 
 
 def strip(path):
-    toolchain = os.environ["NDK_PATH"]
+    ndkpath = os.environ["NDK_PATH"]
     toolchain = os.path.join(
-        toolchain, "toolchains/arm-linux-androideabi-4.9/prebuilt/"
-                   "linux-x86_64/arm-linux-androideabi")
+        ndkpath, "toolchains/arm-linux-androideabi-4.9/prebuilt/"
+                 "linux-x86_64/arm-linux-androideabi")
+    if plat == "_x86":
+        toolchain = os.path.join(
+            ndkpath, "toolchains/x86-4.9/prebuilt/"
+                     "linux-x86_64/i686-linux-android")
     run('%s/bin/strip %s' % (toolchain, path))
 
 
 def zipup(out_path, in_path, top, exclude=None, prefix=''):
+  if True:
+    info("zipup: %s" % out_path)
+    # Remove an existing zip file.
+    rm(out_path)
+
   zip_file = zipfile.ZipFile(out_path, 'w', compression=zipfile.ZIP_DEFLATED)
   for path in find(in_path, exclude=exclude)[0]:
     if not os.path.isdir(path):
       arcname = prefix + path[len(top):].lstrip('/')
-      print 'Adding %s to %s' % (arcname, out_path)
+      debug('Adding %s to %s' % (arcname, out_path))
       zip_file.write(path, arcname)
   zip_file.close()
 
@@ -145,10 +175,6 @@ for i in os.listdir(setuptools_path):
 shutil.copytree(os.path.join(setuptools_path, "setuptools"), 
 	'output/usr/lib/python2.7/setuptools')
 
-# Remove any existing zip files.
-for p in glob.glob(os.path.join(pwd, '*.zip')):
-  rm(p)
-
 print 'Zipping up Python Libs for deployment.'
 output=os.path.join(pwd, 'output')
 shutil.copytree(output, 'output.temp')
@@ -194,7 +220,7 @@ def clean_library(lib):
 map (clean_library, ['ctypes', 'distutils', 'idlelib', 'plat-linux2', 'site-packages'])
 
 print 'Zipping up Python interpreter for deployment.'
-zipup(os.path.join(pwd, 'python%s.zip' % VERSION[""]),
+zipup(os.path.join(pwd, 'python%s%s%s.zip' % (VERSION[""], plat, pie)),
       os.path.join(pwd, 'output', 'usr'),
       os.path.join(pwd, 'output', 'usr'),
       exclude=['*.pyc',  '*.py'], prefix="python/")
