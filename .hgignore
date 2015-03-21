@@ -44,11 +44,13 @@ build
 .idea
 gradlew{,.bat}
 android/PythonForAndroid/gradle
-python-build/.build_*
 *.so
 android/PythonForAndroidInOne/res/raw/files.xml
 python-build/Python-2.7.8.tgz
 android/PythonForAndroid/local.properties
+.build_*
+python-build/openssl/openssl-*.tar.gz
+python-build/openssl/openssl-src
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
