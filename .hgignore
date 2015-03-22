@@ -49,8 +49,9 @@ android/PythonForAndroidInOne/res/raw/files.xml
 python-build/Python-2.7.8.tgz
 android/PythonForAndroid/local.properties
 .build_*
-python-build/openssl/openssl-*.tar.gz
-python-build/openssl/openssl-src
+openssl/openssl-*.tar.gz
+openssl/openssl-src
+python3-alpha/host
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
