@@ -25,7 +25,7 @@ android/DocumentationGenerator/doc/*
 python-build/*.tar.bz2
 python-build/*.zip
 python-build/*.apk
-python-build/python-src
+python{,3}-{build,alpha}/python-src
 python-build/python-libs/setuptools
 python-build/python-libs/setuptools-*.tar.gz
 python-build/python-libs/*/build/
@@ -46,7 +46,7 @@ gradlew{,.bat}
 android/PythonForAndroid/gradle
 *.so
 android/PythonForAndroidInOne/res/raw/files.xml
-python-build/Python-2.7.8.tgz
+Python-*.tgz
 android/PythonForAndroid/local.properties
 .build_*
 openssl/openssl-*.tar.gz
