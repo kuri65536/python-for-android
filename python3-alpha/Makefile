@@ -21,7 +21,7 @@ ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
-.PHONY: build build_config build_bin error init clean_output cleanall
+.PHONY: build build_config build_bin error init clean_output cleanall patch
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -35,14 +35,17 @@ host = $(shell uname -s | tr A-Z a-z)-$(shell uname -m)
 endif
 
 # build variables for cross-compile.
-ifeq (x$(CROSS),xyes)
+ifeq (x$(CROSS),xarm)
 TARGET := arm-linux-androideabi
 tabi := $(TARGET)-4.9
-ANDROID_TOOLCHAIN = $(NDK_PATH)/toolchains/$(tabi)/prebuilt/$(host)/bin
-PATH := $(ANDROID_TOOLCHAIN):$(PATH)
+# ANDROID_API := android-4     # TODO: missing waitid
+ANDROID_API := android-9
+ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(tabi)/prebuilt/$(host)/bin
+export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
 _ANDROID_ARCH = arch-arm
 _ANDROID_EABI = $(tabi)
-# CC = ${TARGET}-gcc
+export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT)
+export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT)
 # CXX = ${TARGET}-g++
 # AR = ${TARGET}-ar
 # RANLIB=${TARGET}-ranlib
@@ -51,7 +54,7 @@ ARCH = arm
 HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
 BLDSHARED = arm-linux-androideabi-gcc -shared
 CROSS_COMPILE = arm-linux-androideabi-
-CROSS_COMPILE_TARGET = yes
+CROSS_COMPILE_TARGET = arm
 HOSTARCH = arm-linux-androideabi
 BUILDARCH = x86_64-linux-gnu
 endif
@@ -132,21 +135,21 @@ clean_output:
 
 
 .build_config: $(PYTHONSRC)
-	make build_config CROSS=yes
+	make build_config CROSS=arm
 	touch .build_config
 
 build_config:
-	@echo $$PATH
-	cd $(PYTHONSRC); \
-	./configure --host=${TARGET} --build=x86_64-linux-gnu \
+	# @echo PATH: "'$$PATH'"
+	@echo CFLAGS: "'$$CFLAGS'"
+	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
+	./configure --host=$(TARGET) --build=x86_64-linux-gnu \
 	            --prefix=/python --enable-shared
-build_bin: _ANDROID_ARCH:=arch-arm
 build_bin:
 	make -C $(PYTHONSRC)
 	touch .build_config
 
 .build_bin: .build_config
-	make build_bin CROSS=yes
+	make build_bin CROSS=arm
 	touch .build_bin
 
 
@@ -209,4 +212,8 @@ $(ZIP_PIE): $(PYTHONSRC) .build_openssl
 	$(CWD)/host/bin/python build.py pie x86
 	
 	echo "Done"
+
+patch:
+	diff -wuprN Python-$(VERSION) $(PYTHONSRC) \
+	  > Python-$(VERSION)-android.patch.new
 

@@ -1,4 +1,33 @@
+diff -ruN Python-3.2.2-old/config.site Python-3.2.2/config.site
+--- Python-2.7.2/config.site	2011-06-11 17:46:28.000000000 +0200
++++ Python-2.7.2-new/config.site	2012-08-13 00:28:43.083150979 +0200
++ac_cv_file__dev_ptmx=no
++ac_cv_file__dev_ptc=no
 diff -ruN Python-3.2.2-old//configure Python-3.2.2/configure
+--- Python-2.7.2/configure	2011-06-11 17:46:28.000000000 +0200
++++ Python-2.7.2-new/configure	2012-08-13 00:28:43.083150979 +0200
+@@ -10881,20 +10881,8 @@ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_buggy_getaddrinfo" >&5
+ $as_echo "$ac_cv_buggy_getaddrinfo" >&6; }
+ 
+-if test $have_getaddrinfo = no -o "$ac_cv_buggy_getaddrinfo" = yes
+-then
+-	if test $ipv6 = yes
+-	then
+-		echo 'Fatal: You must get working getaddrinfo() function.'
+-		echo '       or you can specify "--disable-ipv6"'.
+-		exit 1
+-	fi
+-else
+-
+ $as_echo "#define HAVE_GETADDRINFO 1" >>confdefs.h
+ 
+-fi
+-
+ for ac_func in getnameinfo
+ do :
+   ac_fn_c_check_func "$LINENO" "getnameinfo" "ac_cv_func_getnameinfo"
+diff -wuprN Python-2.7.2/configure Python-2.7.2-new/configure
 --- Python-3.2.2-old//configure	2011-09-04 02:16:50.000000000 +1000
 +++ Python-3.2.2/configure	2011-10-30 19:19:13.852835272 +1000
 @@ -12160,7 +12160,7 @@
@@ -10,6 +39,37 @@ diff -ruN Python-3.2.2-old//configure Python-3.2.2/configure
    ac_cv_broken_sem_getvalue=yes
  else
    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+diff -wuprN Python-2.7.2/configure.in Python-2.7.2-new/configure.in
+--- Python-2.7.2/configure.in	2011-06-11 17:46:28.000000000 +0200
++++ Python-2.7.2-new/configure.in	2012-08-13 00:27:38.479150981 +0200
+@@ -3125,17 +3125,17 @@ fi
+ 
+ AC_MSG_RESULT($ac_cv_buggy_getaddrinfo)
+ 
+-if test $have_getaddrinfo = no -o "$ac_cv_buggy_getaddrinfo" = yes
+-then
+-	if test $ipv6 = yes
+-	then
+-		echo 'Fatal: You must get working getaddrinfo() function.'
+-		echo '       or you can specify "--disable-ipv6"'.
+-		exit 1
+-	fi
+-else
++#if test $have_getaddrinfo = no -o "$ac_cv_buggy_getaddrinfo" = yes
++#then
++#	if test $ipv6 = yes
++#	then
++#		echo 'Fatal: You must get working getaddrinfo() function.'
++#		echo '       or you can specify "--disable-ipv6"'.
++#		exit 1
++#	fi
++#else
+ 	AC_DEFINE(HAVE_GETADDRINFO, 1, [Define if you have the getaddrinfo function.])
+-fi
++#fi
+ 
+ AC_CHECK_FUNCS(getnameinfo)
+ 
 diff -ruN Python-3.2.2-old//Makefile.pre.in Python-3.2.2/Makefile.pre.in
 --- Python-3.2.2-old//Makefile.pre.in	2011-09-04 02:16:45.000000000 +1000
 +++ Python-3.2.2/Makefile.pre.in	2011-10-30 19:25:23.480851641 +1000
