@@ -22,7 +22,8 @@ ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
 .PHONY: build build_config build_bin error init clean_output cleanall \
-        patch .build_misc_sqlite3_arm .build_misc_ncurses_arm
+        patch .build_misc_sqlite3_arm .build_misc_ncurses_arm \
+        .build_misc_readline_arm
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -99,6 +100,8 @@ sqlite3.tar.gz:
 	wget -O $@ https://sqlite.org/2015/sqlite-autoconf-3080803.tar.gz
 ncurses-5.9.tar.gz:
 	wget http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
+readline-6.3.tar.gz:
+	wget ftp://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
 
 targz = $(subst .tar.gz,,$1)
 
@@ -112,6 +115,20 @@ targz = $(subst .tar.gz,,$1)
 	  --enable-shared --without-cxx --without-cxx-binding
 	cd $(call targz,$<); patch -p1 < android.patch
 	make -C $(call targz,$<)
+.build_misc_readline: readline-6.3.tar.gz
+	tar xfz $<
+	cd $(call targz,$<); patch < fix.patch
+	make $@_arm CROSS=arm
+	touch $@
+.build_misc_readline_arm: readline-6.3.tar.gz
+	cd $(call targz,$<); \
+	   bash_cv_wcwidth_broken=no \
+	   CFLAGS="$(CFLAGS) -I$(CWD)/ncurses-5.9/include" \
+	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=/python \
+	   --enable-shared --with-curses=../ncurses-5.9
+	cd $(call targz,$<); patch < android.patch
+	make -C $(call targz,$<)
+	touch $@
 .build_misc_sqlite3: sqlite3.tar.gz
 	tar xfz $<
 	mv sqlite-autoconf-3080803 $(call targz,$<)
@@ -122,7 +139,8 @@ targz = $(subst .tar.gz,,$1)
 	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=/python
 	make -C $(call targz,$<)
 
-.build_misc: .build_misc_sqlite3 .build_misc_ncurses
+.build_misc: .build_misc_sqlite3 .build_misc_ncurses \
+             .build_misc_readline
 	make -C bzip2-1.0.6
 	make -C zlib-1.2.6
 	touch .build_misc

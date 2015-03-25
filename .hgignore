@@ -56,6 +56,8 @@ python3-alpha/sqlite3.tar.gz
 python3-alpha/sqlite3
 python3-alpha/ncurses-5.9.tar.gz
 python3-alpha/ncurses-5.9
+python3-alpha/readline-6.*.tar.gz
+python3-alpha/readline-6.*
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
