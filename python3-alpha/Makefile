@@ -6,7 +6,7 @@ OUT := $(CWD)/output
 DEBUG=no
 
 RELEASE_VERSION:=$(shell cat LATEST_VERSION)
-PYTHONSRC := $(CWD)/python-src
+PYTHONSRC := ./python-src
 PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
@@ -21,7 +21,8 @@ ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
-.PHONY: build build_config build_bin error init clean_output cleanall patch
+.PHONY: build build_config build_bin error init clean_output cleanall \
+        patch .build_misc_sqlite3_arm
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -45,12 +46,13 @@ export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
 _ANDROID_ARCH = arch-arm
 _ANDROID_EABI = $(tabi)
 export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT)
-export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT)
+export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
+                 -L$(CWD)/openssl/.build_$(ARCH)
 # CXX = ${TARGET}-g++
 # AR = ${TARGET}-ar
 # RANLIB=${TARGET}-ranlib
 MACHINE = armv7
-ARCH = arm
+export ARCH = arm
 HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
 BLDSHARED = arm-linux-androideabi-gcc -shared
 CROSS_COMPILE = arm-linux-androideabi-
@@ -90,6 +92,28 @@ $(PYTHONTAR):
 .build_openssl: $(PYTHONTAR)
 	make -C openssl build
 	touch .build_openssl
+
+
+#### libraries
+sqlite3.tar.gz:
+	wget -O $@ https://sqlite.org/2015/sqlite-autoconf-3080803.tar.gz
+
+targz = $(subst .tar.gz,,$1)
+
+.build_misc_sqlite3: sqlite3.tar.gz
+	tar xfz $<
+	mv sqlite-autoconf-3080803 $(call targz,$<)
+	make .build_misc_sqlite3_arm CROSS=arm
+	touch $@
+.build_misc_sqlite3_arm: sqlite3.tar.gz
+	cd $(call targz,$<); \
+	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(CWD)
+	make -C $(call targz,$<)
+
+.build_misc: .build_misc_sqlite3
+	make -C bzip2-1.0.6
+	make -C zlib-1.2.6
+	touch .build_misc
 
 .build_host: HOSTPYTHON:=$(dir $(dir PYTHON_FOR_BUILD))
 .build_host: $(PYTHONTAR)
@@ -137,23 +161,21 @@ clean_output:
 .build_config: $(PYTHONSRC)
 	make build_config CROSS=arm
 	touch .build_config
-
 build_config:
 	# @echo PATH: "'$$PATH'"
 	@echo CFLAGS: "'$$CFLAGS'"
 	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
 	./configure --host=$(TARGET) --build=x86_64-linux-gnu \
 	            --prefix=/python --enable-shared
-build_bin:
-	make -C $(PYTHONSRC)
-	touch .build_config
 
 .build_bin: .build_config
 	make build_bin CROSS=arm
 	touch .build_bin
+build_bin: .build_openssl .build_misc
+	make -C $(PYTHONSRC)
 
 
-$(ZIP): .build_bin .build_openssl
+$(ZIP): .build_bin
 	@echo non-PIE: build the android libraries/executables
 	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
 	cp openssl/.build_x86/lib*.so ./python/obj/local/x86

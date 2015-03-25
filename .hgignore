@@ -52,6 +52,8 @@ android/PythonForAndroid/local.properties
 openssl/openssl-*.tar.gz
 openssl/openssl-src
 python3-alpha/host
+python3-alpha/sqlite3.tar.gz
+python3-alpha/sqlite3
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
