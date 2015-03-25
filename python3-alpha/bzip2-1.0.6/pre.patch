@@ -1,0 +1,25 @@
+--- bzip2-1.0.6/Makefile-libbz2_so	2010-09-11 08:07:52.000000000 +0900
++++ bzip.mk	2015-03-26 01:04:17.047320070 +0900
+@@ -21,10 +21,8 @@
+ # ------------------------------------------------------------------
+ 
+ 
+-SHELL=/bin/sh
+-CC=gcc
+ BIGFILES=-D_FILE_OFFSET_BITS=64
+-CFLAGS=-fpic -fPIC -Wall -Winline -O2 -g $(BIGFILES)
++CFLAGS+=-fpic -fPIC -Wall -Winline -O2 -g $(BIGFILES)
+ 
+ OBJS= blocksort.o  \
+       huffman.o    \
+--- bzip2-1.0.6/Makefile-libbz2_so	2015-03-26 01:06:44.083082841 +0900
++++ bzip.mk	2015-03-26 01:07:56.427506025 +0900
+@@ -33,7 +33,7 @@
+       bzlib.o
+ 
+ all: $(OBJS)
+-	$(CC) -shared -Wl,-soname -Wl,libbz2.so.1.0 -o libbz2.so.1.0.6 $(OBJS)
++	$(CC) $(CFLAGS) -shared -Wl,-soname -Wl,libbz2.so.1.0 -o libbz2.so.1.0.6 $(OBJS)
+ 	$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.1.0.6
+ 	rm -f libbz2.so.1.0
+ 	ln -s libbz2.so.1.0.6 libbz2.so.1.0

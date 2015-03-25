@@ -23,7 +23,7 @@ OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
 .PHONY: build build_config build_bin error init clean_output cleanall \
         patch .build_misc_sqlite3_arm .build_misc_ncurses_arm \
-        .build_misc_readline_arm
+        .build_misc_readline_arm .build_misc_bzip2_arm
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -104,6 +104,8 @@ readline-6.3.tar.gz:
 	wget ftp://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
 # zlib-1.2.8.tar.gz:
 # 	wget http://zlib.net/zlib-1.2.8.tar.gz
+bzip-1.0.6.tar.gz:
+	wget http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 
 
 targz = $(subst .tar.gz,,$1)
@@ -118,6 +120,7 @@ targz = $(subst .tar.gz,,$1)
 	  --enable-shared --without-cxx --without-cxx-binding
 	cd $(call targz,$<); patch -p1 < android.patch
 	make -C $(call targz,$<)
+
 .build_misc_readline: readline-6.3.tar.gz
 	tar xfz $<
 	cd $(call targz,$<); patch < fix.patch
@@ -132,6 +135,7 @@ targz = $(subst .tar.gz,,$1)
 	cd $(call targz,$<); patch < android.patch
 	make -C $(call targz,$<)
 	touch $@
+
 .build_misc_sqlite3: sqlite3.tar.gz
 	tar xfz $<
 	mv sqlite-autoconf-3080803 $(call targz,$<)
@@ -141,6 +145,7 @@ targz = $(subst .tar.gz,,$1)
 	cd $(call targz,$<); \
 	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=/python
 	make -C $(call targz,$<)
+
 # .build_misc_zlib: zlib-1.2.8.tar.gz
 # 	tar xfz $<
 # 	make $@_arm CROSS=arm
@@ -148,11 +153,18 @@ targz = $(subst .tar.gz,,$1)
 # .build_misc_zlib_arm: zlib-1.2.8.tar.gz
 # 	make -C $(call targz,$<)
 
-build_misc:
-	make -C $(MISC_TARGET)
+.build_misc_bzip2: bzip2-1.0.6.tar.gz
+	tar xfz $<
+	cd $(call targz,$<); patch -p1 < pre.patch
+	make $@_arm CROSS=arm
+	touch $@
+.build_misc_bzip2_arm: bzip2-1.0.6.tar.gz
+	PREFIX=/python \
+	  CC=$(TARGET)-gcc AR=$(TARGET)-ar RANLIB=$(TARGET)-ranlib \
+	  make -C $(call targz,$<) -f Makefile-libbz2_so
+
 .build_misc: .build_misc_sqlite3 .build_misc_ncurses \
-             .build_misc_readline
-	make build_misc MISC_TARGET=bzip2-1.0.6 CROSS=arm
+             .build_misc_readline .build_misc_bzip2
 	touch .build_misc
 
 .build_host: HOSTPYTHON:=$(dir $(dir PYTHON_FOR_BUILD))
