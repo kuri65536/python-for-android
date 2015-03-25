@@ -12,12 +12,12 @@ PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
 PYTHON_FOR_BUILD := $(CWD)/host/bin/python
 TAR := tar xvfz
-ZIP := python_$(RELEASE_VERSION).zip \
-       python_$(RELEASE_VERSION)_x86.zip \
-       python_extras_$(shell cat LATEST_VERSION_EXTRA).zip \
-       python_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
-ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
-           python_$(RELEASE_VERSION)_x86_pie.zip
+ZIP := python3_$(RELEASE_VERSION).zip \
+       python3_$(RELEASE_VERSION)_x86.zip \
+       python3_extras_$(shell cat LATEST_VERSION_EXTRA).zip \
+       python3_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
+ZIP_PIE := python3_$(RELEASE_VERSION)_pie.zip \
+           python3_$(RELEASE_VERSION)_x86_pie.zip
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
@@ -237,63 +237,51 @@ build_bin: .build_openssl .build_misc
 
 $(ZIP): .build_bin
 	@echo non-PIE: build the android libraries/executables
-	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
-	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
+	. ../VERSIONS
+	ZIPMAIN=python3_r${PY34A_VERSION}.zip
+	ZIPEXTRA=python3_extras_r${PY34A_EXTRAS_VERSION}.zip
+	ZIPSCRIPTS=python3_scripts_r${PY34A_SCRIPTS_VERSION}.zip
+	echo "Packing $ZIPMAIN"
+	rm $ZIPMAIN
+	pushd _install
+	cp ../../thirdparty/lib/libsqlite3.so.0 python3/lib
+	cp ../../thirdparty/lib/libreadline.so.6 python3/lib
+	cp ../../thirdparty/lib/libncurses.so.5 python3/lib
+	cp ../../thirdparty/lib/libz.so.1 python3/lib
+	#Symbolic linked libs just take up space
+	find python3/lib -type l -exec rm -f {} \;
+	zip -g ../$ZIPMAIN python3/bin/python3
+	zip -gri"*.so" -i"*.so.*" ../$ZIPMAIN python3/lib
+	zip -g ../$ZIPMAIN python3/lib/python3.2/config-3.2m/Makefile python3/include/python3.2m/pyconfig.h
+	popd
 	
-	cd python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
-	cd python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI=x86
-	
-	# arm: copy out all the needed files
-	make clean_output
-	cd $(CWD)/python; \
-	cp obj/local/armeabi/python $(OUT)/usr/bin; \
-	cp obj/local/armeabi/lib*.so $(OUT)/usr/lib; \
-	cp obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload; \
-	
-	cd $(CWD)/python-libs; bash -ex setuptools.sh
-	$(CWD)/host/bin/python $(OUT)/usr/lib/$(PYTHONLIB)/compileall.py $(OUT)/usr/lib/$(PYTHONLIB)
-	$(CWD)/host/bin/python build.py
-	
-	# x86: copy out all the needed files
-	make clean_output
-	cd $(CWD)/python; \
-	cp obj/local/x86/python $(OUT)/usr/bin; \
-	cp obj/local/x86/lib*.so $(OUT)/usr/lib; \
-	cp obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
-	$(CWD)/host/bin/python build.py x86
-	
-	echo "Done"
+	echo "Packing $ZIPEXTRA"
+	rm ${ZIPEXTRA}
+	rm -rf android
+	mkdir android
+	mkdir android/python3
+	cp android.py _install/python3/lib/python3.2
+	cp -r ../extra_modules/* _install/python3/lib/python3.2
+	cp -r _install/python3/lib/python3.2/* android/python3
+	mkdir -p android/python3/terminfo/x
+	mkdir -p android/python3/terminfo/v
+	mkdir -p android/python3/terminfo/a
+	cp ../thirdparty/share/terminfo/x/xterm android/python3/terminfo/x
+	cp ../thirdparty/share/terminfo/a/ansi android/python3/terminfo/a
+	cp ../thirdparty/share/terminfo/v/vt320 android/python3/terminfo/v
+	pushd android
+	zip -grx"*.so" -x"*.so.*" ../$ZIPEXTRA python3
+	zip -d ../$ZIPEXTRA "*.pc" "*pkgconfig*" "*lib/libpython3.2m.a" "*/test/*" "*.a"
+	popd
+	pushd _install
+	zip -g ../$ZIPEXTRA python3/lib/python3.2/config-3.2m/Makefile python3/lib/python3.2/site-packages/*
+	popd
 
-$(ZIP_PIE): $(PYTHONSRC) .build_openssl
-	@echo PIE: build the android libraries/executables
-	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
-	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
-	
-	# FIXME: do not build duplicated bins with non-PIE binary.
-	cd $(CWD)/python; \
-	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
-	    $(CWD)/python-src/Include/graminit.h \
-	    $(CWD)/python-src/Python/graminit.c
-	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
-	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
-	
-	# arm: copy out all the needed files
-	make clean_output
-	cd $(CWD)/python; \
-	mv obj/local/armeabi/python $(OUT)/usr/bin; \
-	mv obj/local/armeabi/lib*.so $(OUT)/usr/lib; \
-	mv obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
-	$(CWD)/host/bin/python build.py pie
-	
-	# x86: copy out all the needed files
-	make clean_output
-	cd $(CWD)/python; \
-	mv obj/local/x86/python $(OUT)/usr/bin; \
-	mv obj/local/x86/lib*.so $(OUT)/usr/lib; \
-	mv obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
-	$(CWD)/host/bin/python build.py pie x86
-	
-	echo "Done"
+echo "Packing $ZIPSCRIPTS"
+rm $ZIPSCRIPTS
+cd android-scripts
+zip -g ../$ZIPSCRIPTS *
+
 
 patch:
 	diff -wuprN Python-$(VERSION) $(PYTHONSRC) \

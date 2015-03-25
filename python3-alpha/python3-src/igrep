@@ -1,2 +1,0 @@
-echo $1
-grep -ir --include="*.[ch]" $1 .
