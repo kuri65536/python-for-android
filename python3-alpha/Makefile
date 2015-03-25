@@ -46,9 +46,14 @@ ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(tabi)/prebuilt/$(host)/bin
 export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
 _ANDROID_ARCH = arch-arm
 _ANDROID_EABI = $(tabi)
-export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT)
+export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
+                -I$(CWD)/sqlite3 -I$(CWD)/bzip2-1.0.6 \
+                -I$(CWD)
+# -I$(CWD): for #include <readline/readline.h>
 export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
-                 -L$(CWD)/openssl/.build_$(ARCH)
+                 -L$(CWD)/openssl/.build_$(ARCH) \
+                 -L$(CWD)/sqlite3 -L$(CWD)/bzip2-1.0.6 \
+                 -L$(CWD)/readline
 # CXX = ${TARGET}-g++
 # AR = ${TARGET}-ar
 # RANLIB=${TARGET}-ranlib
@@ -134,6 +139,7 @@ targz = $(subst .tar.gz,,$1)
 	   --enable-shared --with-curses=../ncurses-5.9
 	cd $(call targz,$<); patch < android.patch
 	make -C $(call targz,$<)
+	ln -sf $(call targz,$<) $(patsubst -6.3,,$(call targz,$<))
 	touch $@
 
 .build_misc_sqlite3: sqlite3.tar.gz
@@ -181,7 +187,9 @@ targz = $(subst .tar.gz,,$1)
 	rm -rf Python-$(VERSION)
 	touch .build_host
 
-$(PYTHONSRC): $(PYTHONTAR)
+$(CWD)/Python-$(VERSION)-android.patch:
+	echo
+$(PYTHONSRC): $(PYTHONTAR) $(CWD)/Python-$(VERSION)-android.patch
 	rm -rf $(PYTHONSRC)
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
@@ -210,7 +218,7 @@ clean_output:
 	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
 
 
-.build_config: $(PYTHONSRC)
+.build_config: $(PYTHONSRC) .build_misc
 	make build_config CROSS=arm
 	touch .build_config
 build_config:
