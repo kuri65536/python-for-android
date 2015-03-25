@@ -102,6 +102,9 @@ ncurses-5.9.tar.gz:
 	wget http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
 readline-6.3.tar.gz:
 	wget ftp://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
+# zlib-1.2.8.tar.gz:
+# 	wget http://zlib.net/zlib-1.2.8.tar.gz
+
 
 targz = $(subst .tar.gz,,$1)
 
@@ -138,11 +141,18 @@ targz = $(subst .tar.gz,,$1)
 	cd $(call targz,$<); \
 	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=/python
 	make -C $(call targz,$<)
+# .build_misc_zlib: zlib-1.2.8.tar.gz
+# 	tar xfz $<
+# 	make $@_arm CROSS=arm
+# 	touch $@
+# .build_misc_zlib_arm: zlib-1.2.8.tar.gz
+# 	make -C $(call targz,$<)
 
+build_misc:
+	make -C $(MISC_TARGET)
 .build_misc: .build_misc_sqlite3 .build_misc_ncurses \
              .build_misc_readline
-	make -C bzip2-1.0.6
-	make -C zlib-1.2.6
+	make build_misc MISC_TARGET=bzip2-1.0.6 CROSS=arm
 	touch .build_misc
 
 .build_host: HOSTPYTHON:=$(dir $(dir PYTHON_FOR_BUILD))
