@@ -30,7 +30,7 @@ OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
 .PHONY: build build_config build_bin error init clean_output cleanall \
         patch .build_misc_sqlite3_arm .build_misc_ncurses_arm \
-        .build_misc_readline_arm .build_misc_bzip2_arm
+        .build_misc_readline_arm .build_misc_bzip2_arm strip_bin
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -55,7 +55,7 @@ _ANDROID_ARCH = arch-arm
 _ANDROID_EABI = $(tabi)
 export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
                 -I$(CWD)/sqlite3 -I$(CWD)/bzip2-1.0.6 \
-                -I$(CWD)
+                -I$(CWD) -I$(PYBIN)/include -I$(PYBIN)/include/ncurses
 # -I$(CWD): for #include <readline/readline.h>
 export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
                  -L$(PYBIN)/lib
@@ -244,10 +244,15 @@ build_config:
 build_bin: .build_openssl .build_misc
 	make -C $(PYTHONSRC)
 	make -C $(PYTHONSRC) install
+strip_bin:
+	$(TARGET)-strip $(PYBIN)/bin/python3
+	for i in $(PYBIN)/lib/*.so*; do $(TARGET)-strip $$i; done
+	for i in $(PYLIB)/lib-dynload/*.so*; do $(TARGET)-strip $$i; done
 
 
 $(ZIPMAIN): .build_bin
 	@echo non-PIE: build the android libraries/executables
+	make strip_bin CROSS=arm
 	@echo "Packing $(ZIPMAIN)"
 	rm -f $(ZIPMAIN)
 	@echo Symbolic linked libs just take up space
@@ -268,7 +273,7 @@ $(ZIPEXTRA):
 	zip -g $@ $(PYBINR)/share/terminfo/v/vt320
 	$(PYTHON_FOR_BUILD) -m compileall $(PYBINR) || echo
 	zip -grx"*.so" -x"*.so.*" -x"*/test/*" -x"*.py" -x"*/include/*" \
-	               -x"*/man/*" -x"*/share/*" $@ $(PYBINR)
+	               -x"*/man/*" -x"*/share/*" -x"*/__pycache__*" $@ $(PYBINR)
 	zip -d $@ "*.pc" "*pkgconfig*" "*lib/libpython3.4m.a" \
 	          "*/test/*" "*.a" "bin/*"
 	zip -g $@ $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
