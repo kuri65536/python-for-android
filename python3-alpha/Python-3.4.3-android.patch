@@ -257,3 +257,36 @@ diff -wuprn python-3.4.3/configure ./python-src/configure
  
  # Interface to the Expat XML parser
  #
+--- Python-3.4.3/Modules/python.c	2015-02-25 20:27:46.000000000 +0900
++++ python-src/Modules/python.c	2015-03-29 06:43:32.649166816 +0900
+@@ -44,7 +44,7 @@
+     fpsetmask(m & ~FP_X_OFL);
+ #endif
+
+-    oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
++    oldloc = _PyMem_RawStrdup("C");
+     if (!oldloc) {
+         fprintf(stderr, "out of memory\n");
+         return 1;
+--- Python-3.4.3/Python/frozenmain.c	2015-02-25 20:27:46.000000000 +0900
++++ python-src/Python/frozenmain.c	2015-03-29 06:44:01.569082892 +0900
+@@ -44,7 +44,7 @@
+         setbuf(stderr, (char *)NULL);
+     }
+
+-    oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
++    oldloc = _PyMem_RawStrdup("C");
+     if (!oldloc) {
+         fprintf(stderr, "out of memory\n");
+         goto error;
+--- Python-3.4.3/Modules/main.c	2015-02-25 20:27:46.000000000 +0900
++++ python-src/Modules/main.c	2015-03-29 06:43:44.308729813 +0900
+@@ -537,7 +537,7 @@
+             Py_FatalError(
+                "not enough memory to copy PYTHONWARNINGS");
+         strcpy(buf, p);
+-        oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
++        oldloc = _PyMem_RawStrdup("C");
+         setlocale(LC_ALL, "");
+         for (p = strtok(buf, ","); p != NULL; p = strtok(NULL, ",")) {
+ #ifdef __APPLE__
