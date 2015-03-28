@@ -276,9 +276,8 @@ $(ZIPEXTRA):
 
 $(ZIPSCRIPTS):
 	echo "Packing $(ZIPSCRIPTS)"
-	rm $(ZIPSCRIPTS)
-	cd python-libs/ase/scripts; \
-	  zip -g ../../../$@ *
+	rm -f $(ZIPSCRIPTS)
+	cd python-scripts; zip -g ../$@ *
 
 
 patch:
