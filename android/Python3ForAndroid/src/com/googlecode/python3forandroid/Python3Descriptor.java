@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2015 Shimoda <kuri65536@hotmail.com>
  * Copyright (C) 2010-2011 Naranjo Manuel Francisco <manuel@aircable.net>
  * Copyright (C) 2010-2011 Robbie Matthews <rjmatthews62@gmail.com>
  * Copyright (C) 2009 Google Inc.
@@ -27,7 +28,10 @@ import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,33 +45,15 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   private static final String ENV_EXTRAS = "PY4A_EXTRAS";
   private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
   private static final String ENV_USERBASE = "PYTHONUSERBASE";
-  // static final String BASE_URL = "http://python-for-android.googlecode.com/files";
-  static final String BASE_URL = "http://www.mithril.com.au/android";
   private static final int LATEST_VERSION = 5;
+  private int cache_version = -1;
+  private int cache_extras_version = -1;
   private int cache_scripts_version = -1;
   private SharedPreferences mPreferences;
 
   @Override
-  public int getVersion() {
-    if (mPreferences != null) {
-      return mPreferences.getInt(Python3Constants.AVAIL_VERSION_KEY, LATEST_VERSION);
-    } else {
-      return LATEST_VERSION;
-    }
-  }
-
-  @Override
-  public int getExtrasVersion() {
-    if (mPreferences != null) {
-      return mPreferences.getInt(Python3Constants.AVAIL_EXTRAS_KEY, LATEST_VERSION);
-    } else {
-      return super.getExtrasVersion();
-    }
-  }
-
-  @Override
   public String getBaseInstallUrl() {
-    return BASE_URL + "/";
+    return Python3Urls.URL_BIN;
   }
 
   public String getExtension() {
@@ -79,7 +65,7 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   }
 
   public String getNiceName() {
-    return "Python 3.2.2";
+    return "Python 3.4.3";
   }
 
   public boolean hasInterpreterArchive() {
@@ -94,12 +80,50 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
     return true;
   }
 
+  private int __resolve_version(String what) {
+    // try resolving latest version
+    URL url;
+    try {
+      url = new URL(Python3Urls.URL_SRC + "python-build/LATEST_VERSION" + what.toUpperCase());
+      BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+      return Integer.parseInt(reader.readLine().substring(1).trim());
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+      return LATEST_VERSION;
+    }
+
+  }
+
+  public int getVersion() {
+    cache_version = __resolve_version("");
+    return cache_version;
+  }
+
+  public int getVersion(boolean usecache) {
+    if (usecache && cache_version > -1) {
+      return cache_version;
+    }
+    return this.getVersion();
+  }
+
+  @Override
+  public int getExtrasVersion() {
+    cache_extras_version = __resolve_version("_extra");
+    return cache_extras_version;
+  }
+
+  public int getExtrasVersion(boolean usecache) {
+    if (usecache && cache_extras_version > -1) {
+      return cache_extras_version;
+    }
+    return this.getExtrasVersion();
+  }
+
   @Override
   public int getScriptsVersion() {
-    if (mPreferences != null) {
-      return mPreferences.getInt(Python3Constants.AVAIL_SCRIPTS_KEY, LATEST_VERSION);
-    }
-    return super.getScriptsVersion();
+    cache_scripts_version = __resolve_version("_scripts");
+    return cache_scripts_version;
   }
 
   public int getScriptsVersion(boolean usecache) {
@@ -147,10 +171,10 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
     String libs = new File(getExtrasRoot(), "python3").getAbsolutePath();
     values.put(ENV_HOME, libs + ":" + new File(home, "python3").getAbsolutePath());
     values.put(ENV_LD, new File(home, "python3/lib").getAbsolutePath());
-    values.put(ENV_PATH, new File(home, "python3/lib/python3.2") + ":"
-        + new File(home, "python3/lib/python3.2/lib-dynload") + ":" + libs);
+    values.put(ENV_PATH, new File(home, "python3/lib/python3.4") + ":"
+        + new File(home, "python3/lib/python3.4/lib-dynload") + ":" + libs);
     values.put(ENV_EGGS,
-        new File(getHome(context), "python3/lib/python3.2/lib-dynload").getAbsolutePath());
+        new File(getHome(context), "python3/lib/python3.4/lib-dynload").getAbsolutePath());
     values.put(ENV_EXTRAS, getExtrasRoot());
     values.put(ENV_USERBASE, home);
     String temp = context.getCacheDir().getAbsolutePath();
