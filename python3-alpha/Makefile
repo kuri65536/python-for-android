@@ -12,7 +12,7 @@ PYTHONSRC := ./python-src
 PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
-PYTHON_FOR_BUILD := $(CWD)/host/bin/python
+PYTHON_FOR_BUILD := $(CWD)/host/bin/python3
 PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
 TAR := tar xfz
 
@@ -258,26 +258,21 @@ $(ZIPMAIN): .build_bin
 	zip -g $@ $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
 	          $(PYBINR)/include/python3.4m/pyconfig.h
 
-$(ZIPEXTRA): $(ZIPMAIN)
+$(ZIPEXTRA):
 	echo "Packing $(ZIPEXTRA)"
-	rm $(ZIPEXTRA)
-	rm -rf android
-	mkdir -p android/python3
-	cp python-libs/ase/android.py $(PYLIB)
-	cp -r python-libs/* $(PYLIB)
-	cp -r $(PYLIB)/* android/python3
-	mkdir -p android/python3/terminfo/x
-	mkdir -p android/python3/terminfo/v
-	mkdir -p android/python3/terminfo/a
-	cp $(PYBIN)/share/terminfo/x/xterm android/python3/terminfo/x
-	cp $(PYBIN)/share/terminfo/a/ansi android/python3/terminfo/a
-	cp $(PYBIN)/share/terminfo/v/vt320 android/python3/terminfo/v
-	cd $(PYBIN); \
-	  zip -grx"*.so" -x"*.so.*" ../$@ .; \
-	  zip -d ../$@ "*.pc" "*pkgconfig*" "*lib/libpython3.4m.a"
-	            "*/test/*" "*.a"
-	cd $(PYBIN); \
-	  zip -g ../$@ $(PYLIB)/config-3.4m/Makefile $(PYLIB)/site-packages/*
+	rm -f $(ZIPEXTRA)
+	cp python-libs/ase/android.py $(PYBINR)
+	cp -r python-libs/* $(PYBINR)
+	zip -g $@ $(PYBINR)/share/terminfo/x/xterm
+	zip -g $@ $(PYBINR)/share/terminfo/a/ansi
+	zip -g $@ $(PYBINR)/share/terminfo/v/vt320
+	$(PYTHON_FOR_BUILD) -m compileall $(PYBINR) || echo
+	zip -grx"*.so" -x"*.so.*" -x"*/test/*" -x"*.py" -x"*/include/*" \
+	               -x"*/man/*" -x"*/share/*" $@ $(PYBINR)
+	zip -d $@ "*.pc" "*pkgconfig*" "*lib/libpython3.4m.a" \
+	          "*/test/*" "*.a" "bin/*"
+	zip -g $@ $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
+	          $(PYBINR)/lib/$(PYTHONLIB)/site-packages/*
 
 $(ZIPSCRIPTS):
 	echo "Packing $(ZIPSCRIPTS)"
