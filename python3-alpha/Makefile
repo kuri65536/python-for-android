@@ -6,18 +6,25 @@ OUT := $(CWD)/output
 DEBUG=no
 
 RELEASE_VERSION:=$(shell cat LATEST_VERSION)
+PYBINR := python3
+PYBIN := $(CWD)/$(PYBINR)
 PYTHONSRC := ./python-src
 PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
 PYTHON_FOR_BUILD := $(CWD)/host/bin/python
-TAR := tar xvfz
-ZIP := python3_$(RELEASE_VERSION).zip \
-       python3_$(RELEASE_VERSION)_x86.zip \
-       python3_extras_$(shell cat LATEST_VERSION_EXTRA).zip \
-       python3_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
-ZIP_PIE := python3_$(RELEASE_VERSION)_pie.zip \
-           python3_$(RELEASE_VERSION)_x86_pie.zip
+PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
+TAR := tar xfz
+
+ZIPMAIN := python3_$(RELEASE_VERSION).zip
+ZIPEXTRA := python3_extras_$(shell cat LATEST_VERSION_EXTRA).zip
+ZIPSCRIPTS := python3_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
+ZIP := $(ZIPMAIN) \
+       $(ZIPEXTRA) \
+       $(ZIPSCRIPTS) \
+       $(patsubst .zip,_x86.zip,$(ZIPMAIN))
+ZIP_PIE := $(patsubst .zip,_pie.zip,$(ZIPMAIN)) \
+           $(patsubst .zip,_x86_pie.zip,$(ZIPMAIN))
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
@@ -51,9 +58,7 @@ export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
                 -I$(CWD)
 # -I$(CWD): for #include <readline/readline.h>
 export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
-                 -L$(CWD)/openssl/.build_$(ARCH) \
-                 -L$(CWD)/sqlite3 -L$(CWD)/bzip2-1.0.6 \
-                 -L$(CWD)/readline
+                 -L$(PYBIN)/lib
 # CXX = ${TARGET}-g++
 # AR = ${TARGET}-ar
 # RANLIB=${TARGET}-ranlib
@@ -121,10 +126,11 @@ targz = $(subst .tar.gz,,$1)
 	touch $@
 .build_misc_ncurses_arm: ncurses-5.9.tar.gz
 	cd $(call targz,$<); \
-	  ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=/python \
+	  ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
 	  --enable-shared --without-cxx --without-cxx-binding
 	cd $(call targz,$<); patch -p1 < android.patch
 	make -C $(call targz,$<)
+	make -C $(call targz,$<) install
 
 .build_misc_readline: readline-6.3.tar.gz
 	tar xfz $<
@@ -135,10 +141,11 @@ targz = $(subst .tar.gz,,$1)
 	cd $(call targz,$<); \
 	   bash_cv_wcwidth_broken=no \
 	   CFLAGS="$(CFLAGS) -I$(CWD)/ncurses-5.9/include" \
-	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=/python \
+	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
 	   --enable-shared --with-curses=../ncurses-5.9
 	cd $(call targz,$<); patch < android.patch
 	make -C $(call targz,$<)
+	make -C $(call targz,$<) install
 	ln -sf $(call targz,$<) $(patsubst -6.3,,$(call targz,$<))
 	touch $@
 
@@ -149,8 +156,9 @@ targz = $(subst .tar.gz,,$1)
 	touch $@
 .build_misc_sqlite3_arm: sqlite3.tar.gz
 	cd $(call targz,$<); \
-	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=/python
+	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN)
 	make -C $(call targz,$<)
+	make -C $(call targz,$<) install
 
 # .build_misc_zlib: zlib-1.2.8.tar.gz
 # 	tar xfz $<
@@ -165,9 +173,11 @@ targz = $(subst .tar.gz,,$1)
 	make $@_arm CROSS=arm
 	touch $@
 .build_misc_bzip2_arm: bzip2-1.0.6.tar.gz
-	PREFIX=/python \
-	  CC=$(TARGET)-gcc AR=$(TARGET)-ar RANLIB=$(TARGET)-ranlib \
+	PREFIX=$(PYBIN)\
+	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib \
 	  make -C $(call targz,$<) -f Makefile-libbz2_so
+	mkdir -p $(PYBIN)/lib
+	cp $(call targz,$<)/*.so* $(PYBIN)/lib
 
 .build_misc: .build_misc_sqlite3 .build_misc_ncurses \
              .build_misc_readline .build_misc_bzip2
@@ -226,61 +236,54 @@ build_config:
 	@echo CFLAGS: "'$$CFLAGS'"
 	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
 	./configure --host=$(TARGET) --build=x86_64-linux-gnu \
-	            --prefix=/python --enable-shared
+	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=no
 
 .build_bin: .build_config
 	make build_bin CROSS=arm
 	touch .build_bin
 build_bin: .build_openssl .build_misc
 	make -C $(PYTHONSRC)
+	make -C $(PYTHONSRC) install
 
 
-$(ZIP): .build_bin
+$(ZIPMAIN): .build_bin
 	@echo non-PIE: build the android libraries/executables
-	. ../VERSIONS
-	ZIPMAIN=python3_r${PY34A_VERSION}.zip
-	ZIPEXTRA=python3_extras_r${PY34A_EXTRAS_VERSION}.zip
-	ZIPSCRIPTS=python3_scripts_r${PY34A_SCRIPTS_VERSION}.zip
-	echo "Packing $ZIPMAIN"
-	rm $ZIPMAIN
-	pushd _install
-	cp ../../thirdparty/lib/libsqlite3.so.0 python3/lib
-	cp ../../thirdparty/lib/libreadline.so.6 python3/lib
-	cp ../../thirdparty/lib/libncurses.so.5 python3/lib
-	cp ../../thirdparty/lib/libz.so.1 python3/lib
-	#Symbolic linked libs just take up space
-	find python3/lib -type l -exec rm -f {} \;
-	zip -g ../$ZIPMAIN python3/bin/python3
-	zip -gri"*.so" -i"*.so.*" ../$ZIPMAIN python3/lib
-	zip -g ../$ZIPMAIN python3/lib/python3.2/config-3.2m/Makefile python3/include/python3.2m/pyconfig.h
-	popd
-	
-	echo "Packing $ZIPEXTRA"
-	rm ${ZIPEXTRA}
+	@echo "Packing $(ZIPMAIN)"
+	rm -f $(ZIPMAIN)
+	@echo Symbolic linked libs just take up space
+	find $(PYBIN)/lib -type l -exec rm -f {} \;
+	zip -g $@ $(PYBINR)/bin/python3
+	zip -gri"*.so" -i"*.so.*" $@ $(PYBINR)/lib
+	zip -gri"*.so" -i"*.so.*" $@ $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
+	zip -g $@ $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
+	          $(PYBINR)/include/python3.4m/pyconfig.h
+
+$(ZIPEXTRA): $(ZIPMAIN)
+	echo "Packing $(ZIPEXTRA)"
+	rm $(ZIPEXTRA)
 	rm -rf android
-	mkdir android
-	mkdir android/python3
-	cp android.py _install/python3/lib/python3.2
-	cp -r ../extra_modules/* _install/python3/lib/python3.2
-	cp -r _install/python3/lib/python3.2/* android/python3
+	mkdir -p android/python3
+	cp python-libs/ase/android.py $(PYLIB)
+	cp -r python-libs/* $(PYLIB)
+	cp -r $(PYLIB)/* android/python3
 	mkdir -p android/python3/terminfo/x
 	mkdir -p android/python3/terminfo/v
 	mkdir -p android/python3/terminfo/a
-	cp ../thirdparty/share/terminfo/x/xterm android/python3/terminfo/x
-	cp ../thirdparty/share/terminfo/a/ansi android/python3/terminfo/a
-	cp ../thirdparty/share/terminfo/v/vt320 android/python3/terminfo/v
-	pushd android
-	zip -grx"*.so" -x"*.so.*" ../$ZIPEXTRA python3
-	zip -d ../$ZIPEXTRA "*.pc" "*pkgconfig*" "*lib/libpython3.2m.a" "*/test/*" "*.a"
-	popd
-	pushd _install
-	zip -g ../$ZIPEXTRA python3/lib/python3.2/config-3.2m/Makefile python3/lib/python3.2/site-packages/*
-	popd
+	cp $(PYBIN)/share/terminfo/x/xterm android/python3/terminfo/x
+	cp $(PYBIN)/share/terminfo/a/ansi android/python3/terminfo/a
+	cp $(PYBIN)/share/terminfo/v/vt320 android/python3/terminfo/v
+	cd $(PYBIN); \
+	  zip -grx"*.so" -x"*.so.*" ../$@ .; \
+	  zip -d ../$@ "*.pc" "*pkgconfig*" "*lib/libpython3.4m.a"
+	            "*/test/*" "*.a"
+	cd $(PYBIN); \
+	  zip -g ../$@ $(PYLIB)/config-3.4m/Makefile $(PYLIB)/site-packages/*
 
-echo "Packing $ZIPSCRIPTS"
-rm $ZIPSCRIPTS
-cd android-scripts
-zip -g ../$ZIPSCRIPTS *
+$(ZIPSCRIPTS):
+	echo "Packing $(ZIPSCRIPTS)"
+	rm $(ZIPSCRIPTS)
+	cd python-libs/ase/scripts; \
+	  zip -g ../../../$@ *
 
 
 patch:
