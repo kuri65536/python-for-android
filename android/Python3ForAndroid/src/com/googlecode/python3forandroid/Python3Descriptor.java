@@ -84,7 +84,7 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
     // try resolving latest version
     URL url;
     try {
-      url = new URL(Python3Urls.URL_SRC + "python-build/LATEST_VERSION" + what.toUpperCase());
+      url = new URL(Python3Urls.URL_SRC + "python3-alpha/LATEST_VERSION" + what.toUpperCase());
       BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
       return Integer.parseInt(reader.readLine().substring(1).trim());
     } catch (Exception e) {
