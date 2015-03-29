@@ -83,7 +83,11 @@ ANDROID_DEV = $(ANDROID_SYSROOT)/usr
 cleanall: clean
 	rm -f $(PYTHONTAR)
 
-clean: clean_output
+clean:
+	rm -rf sqlite3
+	make -C readline-6.3 clean
+	make -C ncurses-5.9 clean
+	make -C bzip2-1.0.6 clean
 	make -C openssl clean
 	rm -f .build_*
 	rm -rf $(PYTHONSRC)
@@ -102,6 +106,8 @@ $(PYTHONTAR):
 
 .build_openssl: $(PYTHONTAR)
 	make -C openssl build
+	mkdir -p $(PYBIN)/lib
+	cp -dp openssl/.build_arm/lib*.so* $(PYBIN)/lib
 	touch .build_openssl
 
 
@@ -127,10 +133,17 @@ targz = $(subst .tar.gz,,$1)
 .build_misc_ncurses_arm: ncurses-5.9.tar.gz
 	cd $(call targz,$<); \
 	  ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
-	  --enable-shared --without-cxx --without-cxx-binding
+	  --enable-shared --without-ada --without-cxx --without-manpages \
+	  --without-cxx-binding --without-progs --without-tests \
+	  --with-termlib --enable-termcap --enable-widec \
+	  --disable-database --disable-home-terminfo
 	cd $(call targz,$<); patch -p1 < android.patch
 	make -C $(call targz,$<)
 	make -C $(call targz,$<) install
+	@echo Fix symlinks for Python _curses and _curses_panel extensions.
+	cd $(call targz,$<)
+	  ln -s ncursesw/curses.h $(PYBIN)/include/curses.h
+	  ln -s ncursesw/panel.h $(PYBIN)/include/panel.h
 
 .build_misc_readline: readline-6.3.tar.gz
 	tar xfz $<
@@ -142,11 +155,11 @@ targz = $(subst .tar.gz,,$1)
 	   bash_cv_wcwidth_broken=no \
 	   CFLAGS="$(CFLAGS) -I$(CWD)/ncurses-5.9/include" \
 	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
-	   --enable-shared --with-curses=../ncurses-5.9
+	   --disable-shared --with-curses=$(CWD)/ncurses-5.9
 	cd $(call targz,$<); patch < android.patch
 	make -C $(call targz,$<)
 	make -C $(call targz,$<) install
-	ln -sf $(call targz,$<) $(patsubst -6.3,,$(call targz,$<))
+	# ln -sf $(call targz,$<) $(patsubst -6.3,,$(call targz,$<))
 	touch $@
 
 .build_misc_sqlite3: sqlite3.tar.gz
@@ -156,7 +169,8 @@ targz = $(subst .tar.gz,,$1)
 	touch $@
 .build_misc_sqlite3_arm: sqlite3.tar.gz
 	cd $(call targz,$<); \
-	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN)
+	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
+	   --disable-shared
 	make -C $(call targz,$<)
 	make -C $(call targz,$<) install
 
@@ -199,36 +213,16 @@ targz = $(subst .tar.gz,,$1)
 
 $(CWD)/Python-$(VERSION)-android.patch:
 	echo
-$(PYTHONSRC): $(PYTHONTAR) $(CWD)/Python-$(VERSION)-android.patch
+.build_src: $(PYTHONTAR) $(CWD)/Python-$(VERSION)-android.patch
 	rm -rf $(PYTHONSRC)
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
-	patch -p1 -i $(CWD)/Python-$(VERSION)-android.patch
+	  for p in $(CWD)/patches/*.patch; do patch -p1 -i $$p; done
+	touch .build_src
 
 
-clean_output:
-	rm -rf $(OUT)*
-	mkdir -p $(OUT)/usr/bin
-	mkdir -p $(OUT_LIB)/lib-dynload
-	mkdir -p $(OUT)/usr/include/$(PYTHONLIB)
-	
-	for lib in $(LIBS); do \
-	    if [ -n "$$(find $(PYTHONSRC)/Lib/$$lib -maxdepth 1 -type f)" ]; then \
-	        mkdir -p $(OUT_LIB)/$$lib; \
-	        cp $$(find $(PYTHONSRC)/Lib/$$lib -maxdepth 1 -type f) \
-	           $(OUT_LIB)/$$lib; \
-	    fi; \
-	done
-	
-	cd $(PYTHONSRC); $(PYTHON_FOR_BUILD) Lib/sysconfig.py --generate-posix-vars
-	cp $(PYTHONSRC)/build/lib*/_sysconfigdata.py $(OUT_LIB)/
-	cp $$(find $(PYTHONSRC)/Lib/ -maxdepth 1 -type f) $(OUT_LIB)/
-	cp -r $(PYTHONSRC)/Include/* $(OUT)/usr/include/$(PYTHONLIB)/
-	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
-
-
-.build_config: $(PYTHONSRC) .build_misc
+.build_config: .build_src .build_misc
 	make build_config CROSS=arm
 	touch .build_config
 build_config:
@@ -252,32 +246,43 @@ strip_bin:
 
 $(ZIPMAIN): .build_bin
 	@echo non-PIE: build the android libraries/executables
-	make strip_bin CROSS=arm
+	# make strip_bin CROSS=arm
 	@echo "Packing $(ZIPMAIN)"
 	rm -f $(ZIPMAIN)
-	@echo Symbolic linked libs just take up space
-	find $(PYBIN)/lib -type l -exec rm -f {} \;
 	zip -g $@ $(PYBINR)/bin/python3
-	zip -gri"*.so" -i"*.so.*" $@ $(PYBINR)/lib
-	zip -gri"*.so" -i"*.so.*" $@ $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
+	zip -g $@ $(PYBINR)/lib/libpython3.so
+	deps=$$($(NDK_PATH)/ndk-depends $(PYBINR)/bin/python3 \
+	  | grep -v ^python3$$ | grep -v -e \.so$$ ); \
+	  for i in $$deps; do \
+	    zip -g $@ $(PYBINR)/lib/$$i; done
+	zip -gri"*.so" $@ $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
 	zip -g $@ $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
 	          $(PYBINR)/include/python3.4m/pyconfig.h
 
-$(ZIPEXTRA):
+PYEXT_ := python3-extras
+PYEXT := $(PYEXT_)/$(PYBINR)
+$(ZIPEXTRA): $(ZIPMAIN)
 	echo "Packing $(ZIPEXTRA)"
 	rm -f $(ZIPEXTRA)
-	cp python-libs/ase/android.py $(PYBINR)
-	cp -r python-libs/* $(PYBINR)
-	zip -g $@ $(PYBINR)/share/terminfo/x/xterm
-	zip -g $@ $(PYBINR)/share/terminfo/a/ansi
-	zip -g $@ $(PYBINR)/share/terminfo/v/vt320
-	$(PYTHON_FOR_BUILD) -m compileall $(PYBINR) || echo
-	zip -grx"*.so" -x"*.so.*" -x"*/test/*" -x"*.py" -x"*/include/*" \
-	               -x"*/man/*" -x"*/share/*" -x"*/__pycache__*" $@ $(PYBINR)
-	zip -d $@ "*.pc" "*pkgconfig*" "*lib/libpython3.4m.a" \
-	          "*/test/*" "*.a" "bin/*"
-	zip -g $@ $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
-	          $(PYBINR)/lib/$(PYTHONLIB)/site-packages/*
+	rm -rf $(PYEXT_)
+	mkdir -p $(PYEXT)/site-packages
+	# mkdir -p $(PYEXT)/share/x
+	# mkdir -p $(PYEXT)/share/a
+	# mkdir -p $(PYEXT)/share/v
+	# cp $(PYBINR)/share/terminfo/x/xterm $(PYEXT)/share/x
+	# cp $(PYBINR)/share/terminfo/a/ansi $(PYEXT)/share/a
+	# cp $(PYBINR)/share/terminfo/v/vt320 $(PYEXT)/share/v
+	
+	cp python-libs/ase/android.py $(PYEXT)
+	cp -r $(PYLIB)/* $(PYEXT)
+	cp -r python-libs/* $(PYEXT)/site-packages
+	# $(PYTHON_FOR_BUILD) -m compileall $(PYEXT) || echo
+	
+	cd $(PYEXT_); \
+	zip -grx"*.so" -x"*.so.*" -x"test/*" -x"*/test/*" -x"*.pyc" \
+	               -x"*.pyo" $(CWD)/$@ *
+	zip -d $@ "*.pc" "*pkgconfig*" "*/libpython3.4m.a" \
+	          "*/test/*" "*.exe" "*.a" "bin/*" "*.la"
 
 $(ZIPSCRIPTS):
 	echo "Packing $(ZIPSCRIPTS)"

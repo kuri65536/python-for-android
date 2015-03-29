@@ -136,9 +136,9 @@ I found python-dev mailing list supposing some compile errors.
 https://mail.python.org/pipermail/python-dev/2014-October/136713.html
 
 1. failed 'ensurepip' => specify --with-ensurepip=no in 163 (c50d5ab2bc7a)
-2. setup.py => ...
+2. setup.py => included in python3-android: 171 (f36da9968c8c)
 3. ossaudiodev => no-effect in 3.4.3, just skip in compile step.
-4. Module _decimal => ...
+4. Module _decimal => included in python3-android: 171 (f36da9968c8c)
 5. missing gethostbyaddr\_r => ...
 6. disable pw\_gecos => patched
 

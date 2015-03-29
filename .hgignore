@@ -61,6 +61,9 @@ python3-alpha/readline-6.*
 python3-alpha/bzip2-1.0.6.tar.gz
 python3-alpha/bzip2-1.0.6
 python3-alpha/python3
+python3-alpha/python3-extras
+android/Python3ForAndroid/gradle
+android/Python3ForAndroid/local.properties
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
