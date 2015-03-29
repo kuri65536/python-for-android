@@ -127,3 +127,18 @@ android_notes.txt
 * change setup.py (in detect modules) to be able to find cross-compiled builds. Also remove refs to /usr/local etc in crosscompile mode.
 * build replacement mbstowcs and wcstombs as these DON'T WORK AT ALL in android, and in fact seem to screw up memory.
 * change site.py to not fall over when trying to parse makefile.
+
+
+android compile
+---
+I found python-dev mailing list supposing some compile errors.
+
+https://mail.python.org/pipermail/python-dev/2014-October/136713.html
+
+1. failed 'ensurepip' => specify --with-ensurepip=no in 163 (c50d5ab2bc7a)
+2. setup.py => ...
+3. ossaudiodev => no-effect in 3.4.3, just skip in compile step.
+4. Module _decimal => ...
+5. missing gethostbyaddr\_r => ...
+6. disable pw\_gecos => patched
+
