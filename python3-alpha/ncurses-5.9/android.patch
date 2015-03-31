@@ -1,11 +1,12 @@
---- a/include/ncurses_cfg.h	2012-03-27 15:38:21.000000000 +1100
-+++ b/include/ncurses_cfg.h	2012-03-27 15:39:49.000000000 +1100
-@@ -105,7 +105,7 @@
- #define HAVE_FCNTL_H 1
- #define HAVE_GETOPT_H 1
- #define HAVE_LIMITS_H 1
--#define HAVE_LOCALE_H 1
-+#define HAVE_LOCALE_H 0
- #define HAVE_MATH_H 1
- #define HAVE_POLL_H 1
- #define HAVE_SYS_IOCTL_H 1
+diff -ru ncurses-5.9/form/fty_num.c ncurses-5.9-android/form/fty_num.c
+--- ncurses-5.9/form/fty_num.c	2010-01-23 22:14:36.000000000 +0100
++++ ncurses-5.9-android/form/fty_num.c	2014-08-04 23:04:23.000000000 +0200
+@@ -40,7 +40,7 @@
+ #include <locale.h>
+ #endif
+
+-#if HAVE_LOCALE_H
++#if HAVE_LOCALE_H && !__ANDROID__
+ #define isDecimalPoint(c) ((c) == ((L && L->decimal_point) ? *(L->decimal_point) : '.'))
+ #else
+ #define isDecimalPoint(c) ((c) == '.')

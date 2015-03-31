@@ -1,20 +1,24 @@
+
+.PHONY: build build_config build_bin error init clean_output cleanall \
+        patch .build_misc_sqlite3_arm .build_misc_ncurses_arm \
+        .build_misc_readline_arm .build_misc_bzip2_arm strip_bin
+
+# build settings section 1 {{{1
 VERSION=3.4.3
-ndk_build = $(NDK_PATH)/ndk-build
 # set -ex
 CWD := $(shell pwd)
-OUT := $(CWD)/output
 DEBUG=no
 
 RELEASE_VERSION:=$(shell cat LATEST_VERSION)
 PYBINR := python3
-PYBIN := $(CWD)/$(PYBINR)
+export PYBIN := $(CWD)/$(PYBINR)
 PYTHONSRC := ./python-src
 PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
 PYTHON_FOR_BUILD := $(CWD)/host/bin/python3
+HOSTPYTHON := $(dir $(dir PYTHON_FOR_BUILD))
 PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
-TAR := tar xfz
 
 ZIPMAIN := python3_$(RELEASE_VERSION).zip
 ZIPEXTRA := python3_extras_$(shell cat LATEST_VERSION_EXTRA).zip
@@ -26,11 +30,11 @@ ZIP := $(ZIPMAIN) \
 ZIP_PIE := $(patsubst .zip,_pie.zip,$(ZIPMAIN)) \
            $(patsubst .zip,_x86_pie.zip,$(ZIPMAIN))
 
-OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
-
-.PHONY: build build_config build_bin error init clean_output cleanall \
-        patch .build_misc_sqlite3_arm .build_misc_ncurses_arm \
-        .build_misc_readline_arm .build_misc_bzip2_arm strip_bin
+# check environment {{{1
+ifeq (x$(host),x)
+# check host variable: linux-x86_64, linux-x86 or darwin-x86
+host = $(shell uname -s | tr A-Z a-z)-$(shell uname -m)
+endif
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -38,33 +42,39 @@ else
 build: $(ZIP) $(ZIP_PIE)
 endif
 
-ifeq (x$(host),x)
-# check host variable: linux-x86_64, linux-x86 or darwin-x86
-host = $(shell uname -s | tr A-Z a-z)-$(shell uname -m)
-endif
+error:
+	@echo please set NDK_PATH to android-ndk-r10d or later::
+	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10d make build"
 
-# build variables for cross-compile.
+# tools {{{2
+ndk_build = $(NDK_PATH)/ndk-build
+TAR := tar xfz
+
+
+# build variables for cross-compile. (arm) {{{1
 ifeq (x$(CROSS),xarm)
 TARGET := arm-linux-androideabi
 tabi := $(TARGET)-4.9
 # ANDROID_API := android-4     # TODO: missing waitid
-ANDROID_API := android-9
-ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(tabi)/prebuilt/$(host)/bin
+export ANDROID_API := android-9
+export ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(tabi)/prebuilt/$(host)/bin
 export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
 _ANDROID_ARCH = arch-arm
 _ANDROID_EABI = $(tabi)
+
 export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
-                -I$(CWD)/sqlite3 -I$(CWD)/bzip2-1.0.6 \
-                -I$(CWD) -I$(PYBIN)/include -I$(PYBIN)/include/ncurses
-# -I$(CWD): for #include <readline/readline.h>
+                -I$(PYBIN)/include
+export CPPFLAGS = $(CFLAGS)
+export CXXFLAGS = $(CFLAGS)
 export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
                  -L$(PYBIN)/lib
+
 # CXX = ${TARGET}-g++
 # AR = ${TARGET}-ar
 # RANLIB=${TARGET}-ranlib
 MACHINE = armv7
 export ARCH = arm
-HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
+export HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
 BLDSHARED = arm-linux-androideabi-gcc -shared
 CROSS_COMPILE = arm-linux-androideabi-
 CROSS_COMPILE_TARGET = arm
@@ -72,6 +82,7 @@ HOSTARCH = arm-linux-androideabi
 BUILDARCH = x86_64-linux-gnu
 endif
 
+# build settings section 2 {{{1
 ANDROID_NDK_ROOT := $(NDK_PATH)
 ANDROID_SYSROOT = $(NDK_PATH)/platforms/$(ANDROID_API)/$(_ANDROID_ARCH)
 SYSROOT = $(ANDROID_SYSROOT)
@@ -79,7 +90,10 @@ NDK_SYSROOT = $(ANDROID_SYSROOT)
 ANDROID_NDK_SYSROOT = $(ANDROID_SYSROOT)
 ANDROID_DEV = $(ANDROID_SYSROOT)/usr
 
+PYTHON_OPTIONAL_MODULES="bz2 lzma ssl"
 
+
+# cleaning {{{1
 cleanall: clean
 	rm -f $(PYTHONTAR)
 
@@ -92,26 +106,13 @@ clean:
 	rm -f .build_*
 	rm -rf $(PYTHONSRC)
 
-error:
-	@echo please set NDK_PATH to android-ndk-r10d or later::
-	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10d make build"
 
+# libraries {{{1
+.build_misc: .build_misc_sqlite3 .build_misc_ncurses \
+             .build_misc_readline .build_misc_bzip2
+	touch .build_misc
 
-$(PYTHONTAR):
-	@echo "Building Python VM For Android Release $(RELEASE_VERSION)"
-	if [ ! -f $(CWD)/Python-$(VERSION).tar.bz2 ]; then \
-	    URL="http://www.python.org/ftp/python/$(VERSION)/$(PYTHONNET)"; \
-	    wget -O $(PYTHONTAR) $$URL; \
-	fi
-
-.build_openssl: $(PYTHONTAR)
-	make -C openssl build
-	mkdir -p $(PYBIN)/lib
-	cp -dp openssl/.build_arm/lib*.so* $(PYBIN)/lib
-	touch .build_openssl
-
-
-#### libraries
+## download {{{2
 sqlite3.tar.gz:
 	wget -O $@ https://sqlite.org/2015/sqlite-autoconf-3080803.tar.gz
 ncurses-5.9.tar.gz:
@@ -126,15 +127,23 @@ bzip-1.0.6.tar.gz:
 
 targz = $(subst .tar.gz,,$1)
 
+## openssl {{{2
+.build_openssl: $(PYTHONTAR)
+	make -C openssl build
+	# install_sw is contained in build.
+	touch .build_openssl
+
+## ncurses {{{2
 .build_misc_ncurses: ncurses-5.9.tar.gz
 	tar xfz $<
 	make $@_arm CROSS=arm
 	touch $@
 .build_misc_ncurses_arm: ncurses-5.9.tar.gz
 	cd $(call targz,$<); \
-	  ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
-	  --enable-shared --without-ada --without-cxx --without-manpages \
-	  --without-cxx-binding --without-progs --without-tests \
+	  ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
+	  --prefix=$(PYBIN) \
+	  --without-ada --without-cxx --without-manpages \
+	  --without-progs --without-tests \
 	  --with-termlib --enable-termcap --enable-widec \
 	  --disable-database --disable-home-terminfo
 	cd $(call targz,$<); patch -p1 < android.patch
@@ -145,6 +154,7 @@ targz = $(subst .tar.gz,,$1)
 	  ln -s ncursesw/curses.h $(PYBIN)/include/curses.h
 	  ln -s ncursesw/panel.h $(PYBIN)/include/panel.h
 
+## readline {{{2
 .build_misc_readline: readline-6.3.tar.gz
 	tar xfz $<
 	cd $(call targz,$<); patch < fix.patch
@@ -152,16 +162,16 @@ targz = $(subst .tar.gz,,$1)
 	touch $@
 .build_misc_readline_arm: readline-6.3.tar.gz
 	cd $(call targz,$<); \
+	   autoreconf -i; \
 	   bash_cv_wcwidth_broken=no \
-	   CFLAGS="$(CFLAGS) -I$(CWD)/ncurses-5.9/include" \
-	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
+	   CFLAGS="$(CFLAGS) -DANDROID" \
+	   ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
+	   --prefix=$(PYBIN) \
 	   --disable-shared --with-curses=$(CWD)/ncurses-5.9
-	cd $(call targz,$<); patch < android.patch
 	make -C $(call targz,$<)
 	make -C $(call targz,$<) install
-	# ln -sf $(call targz,$<) $(patsubst -6.3,,$(call targz,$<))
-	touch $@
 
+## sqlite3 {{{2
 .build_misc_sqlite3: sqlite3.tar.gz
 	tar xfz $<
 	mv sqlite-autoconf-3080803 $(call targz,$<)
@@ -169,11 +179,12 @@ targz = $(subst .tar.gz,,$1)
 	touch $@
 .build_misc_sqlite3_arm: sqlite3.tar.gz
 	cd $(call targz,$<); \
-	   ./configure --host=$(HOSTARCH) --target=$(HOSTARCH) --prefix=$(PYBIN) \
+	   ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) --prefix=$(PYBIN) \
 	   --disable-shared
 	make -C $(call targz,$<)
 	make -C $(call targz,$<) install
 
+## zlib => use bionic library {{{2
 # .build_misc_zlib: zlib-1.2.8.tar.gz
 # 	tar xfz $<
 # 	make $@_arm CROSS=arm
@@ -181,6 +192,7 @@ targz = $(subst .tar.gz,,$1)
 # .build_misc_zlib_arm: zlib-1.2.8.tar.gz
 # 	make -C $(call targz,$<)
 
+## bzip2 {{{2
 .build_misc_bzip2: bzip2-1.0.6.tar.gz
 	tar xfz $<
 	cd $(call targz,$<); patch -p1 < pre.patch
@@ -193,11 +205,14 @@ targz = $(subst .tar.gz,,$1)
 	mkdir -p $(PYBIN)/lib
 	cp $(call targz,$<)/*.so* $(PYBIN)/lib
 
-.build_misc: .build_misc_sqlite3 .build_misc_ncurses \
-             .build_misc_readline .build_misc_bzip2
-	touch .build_misc
+# python3: download and build for current host  {{{1
+$(PYTHONTAR):
+	@echo "Building Python VM For Android Release $(RELEASE_VERSION)"
+	if [ ! -f $(CWD)/Python-$(VERSION).tar.bz2 ]; then \
+	    URL="http://www.python.org/ftp/python/$(VERSION)/$(PYTHONNET)"; \
+	    wget -O $(PYTHONTAR) $$URL; \
+	fi
 
-.build_host: HOSTPYTHON:=$(dir $(dir PYTHON_FOR_BUILD))
 .build_host: $(PYTHONTAR)
 	# we need to build the host python and host pgen so we can
 	# generate the correct grammar and some other stuff
@@ -211,16 +226,17 @@ targz = $(subst .tar.gz,,$1)
 	rm -rf Python-$(VERSION)
 	touch .build_host
 
-$(CWD)/Python-$(VERSION)-android.patch:
+# python3: patching-configure-build {{{1
+$(CWD)/patches/*.patch:
 	echo
-.build_src: $(PYTHONTAR) $(CWD)/Python-$(VERSION)-android.patch
+.build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
 	rm -rf $(PYTHONSRC)
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
-	  for p in $(CWD)/patches/*.patch; do patch -p1 -i $$p; done
+	  for p in $(CWD)/patches/*.patch; do \
+	    echo "patching: $$p..."; patch -p1 -i $$p; done
 	touch .build_src
-
 
 .build_config: .build_src .build_misc
 	make build_config CROSS=arm
@@ -228,22 +244,25 @@ $(CWD)/Python-$(VERSION)-android.patch:
 build_config:
 	# @echo PATH: "'$$PATH'"
 	@echo CFLAGS: "'$$CFLAGS'"
+	ln -sf $(NDK_SYSROOT)/usr/include/linux/soundcard.h \
+	       $(NDK_SYSROOT)/usr/include/sys/soundcard.h
 	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
-	./configure --host=$(TARGET) --build=x86_64-linux-gnu \
+	./configure CROSS_COMPILE_TARGET=yes \
+	            --host=$(TARGET) --build=x86_64-linux-gnu --disable-ipv6 \
 	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=no
 
 .build_bin: .build_config
 	make build_bin CROSS=arm
 	touch .build_bin
 build_bin: .build_openssl .build_misc
-	make -C $(PYTHONSRC)
-	make -C $(PYTHONSRC) install
+	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC)
+	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) install
 strip_bin:
 	$(TARGET)-strip $(PYBIN)/bin/python3
 	for i in $(PYBIN)/lib/*.so*; do $(TARGET)-strip $$i; done
 	for i in $(PYLIB)/lib-dynload/*.so*; do $(TARGET)-strip $$i; done
 
-
+# python3: packaging {{{1
 $(ZIPMAIN): .build_bin
 	@echo non-PIE: build the android libraries/executables
 	# make strip_bin CROSS=arm
@@ -251,6 +270,7 @@ $(ZIPMAIN): .build_bin
 	rm -f $(ZIPMAIN)
 	zip -g $@ $(PYBINR)/bin/python3
 	zip -g $@ $(PYBINR)/lib/libpython3.so
+	zip -g $@ $(PYBINR)/lib/libpython3.4m.so
 	deps=$$($(NDK_PATH)/ndk-depends $(PYBINR)/bin/python3 \
 	  | grep -v ^python3$$ | grep -v -e \.so$$ ); \
 	  for i in $$deps; do \
@@ -289,8 +309,9 @@ $(ZIPSCRIPTS):
 	rm -f $(ZIPSCRIPTS)
 	cd python-scripts; zip -g ../$@ *
 
-
+# misc {{{1
 patch:
 	diff -wuprN Python-$(VERSION) $(PYTHONSRC) \
 	  > Python-$(VERSION)-android.patch.new
 
+# vi: ft=Makefile:fdm=marker

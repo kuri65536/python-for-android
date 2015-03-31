@@ -30,11 +30,17 @@ ifeq (x$(host),x)
 # check host variable: linux-x86_64, linux-x86 or darwin-x86
 host = $(shell uname -s | tr A-Z a-z)-$(shell uname -m)
 endif
+ifeq (x$(PYBIN),x)
+build: error
+else
+build: $(OPENSSL_BIN)
+	ln -sf .build_arm openssl-src
+endif
 
 .PHONY: build clean cleanall
 
-build: $(OPENSSL_BIN)
-	ln -sf .build_arm openssl-src
+error:
+	echo PYBIN must be defined.
 
 cleanall: clean
 	rm -f $(OPENSSL_SRC)
@@ -64,9 +70,10 @@ $(OPENSSL_BIN_arm): .build_arm
 	./showenv.sh
 	cd $<; perl $(perlopt) Makefile.org
 	cd $<; ./config shared no-ssl2 no-ssl3 no-comp no-hw no-engine \
-	  --openssldir=$(NDK_PATH)/platforms/$(ANDROID_API)/arch-x86/usr/local/ssl/
+	  --openssldir=$(PYBIN)/share --prefix=$(PYBIN)
 	make -C $< depend
 	make -C $< all
+	make -C $< install_sw
 
 # setup arch depended variables: x86
 $(OPENSSL_BIN_x86): export ANDROID_API := android-9
