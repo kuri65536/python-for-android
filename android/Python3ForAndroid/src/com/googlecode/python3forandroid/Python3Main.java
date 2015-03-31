@@ -85,11 +85,11 @@ import java.util.zip.ZipFile;
  * the module contains shared libraries (*.so) then the module is unpacked into data, other installs
  * in extras.
  * 
- * Typically, these will be /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.2
+ * Typically, these will be /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.4
  * and /sdcard/com.googlecode.pythonforandroid/extras respectively.
  * 
  * Egg files are just copied into
- * /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.2
+ * /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.4
  * 
  * @author Damon
  * @author Robbie Matthews (rjmatthews62@gmail.com)
@@ -422,7 +422,7 @@ public class Python3Main extends Main {
     mModule = module;
     mFrom = sourceFile;
     mSoPath =
-        new File(InterpreterUtils.getInterpreterRoot(this), "python3/lib/python3.2/lib-dynload");
+        new File(InterpreterUtils.getInterpreterRoot(this), "python3/lib/python3.4/lib-dynload");
     mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python3/egg-info");
     mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"), "python3");
 
@@ -436,7 +436,7 @@ public class Python3Main extends Main {
             try {
               File out =
                   new File(InterpreterUtils.getInterpreterRoot(Python3Main.this),
-                      "lib/python3.2/site-packages/" + mModule + ".pth");
+                      "lib/python3.4/site-packages/" + mModule + ".pth");
               FileOutputStream fout = new FileOutputStream(out);
               fout.write(new File(mSoPath, mModule).getAbsolutePath().getBytes());
               fout.close();
@@ -471,7 +471,7 @@ public class Python3Main extends Main {
     mEggPath = new File(InterpreterUtils.getInterpreterRoot(this), "python3/egg-info");
     mFrom = new File(mEggPath, module + ".egg");
     mSoPath =
-        new File(InterpreterUtils.getInterpreterRoot(this), "python3/lib/python3.2/lib-dynload");
+        new File(InterpreterUtils.getInterpreterRoot(this), "python3/lib/python3.4/lib-dynload");
 
     mPythonPath = new File(mDescriptor.getEnvironmentVariables(this).get("PY4A_EXTRAS"));
 

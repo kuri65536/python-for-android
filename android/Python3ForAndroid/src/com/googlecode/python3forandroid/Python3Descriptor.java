@@ -167,16 +167,17 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
   @Override
   public Map<String, String> getEnvironmentVariables(Context context) {
     Map<String, String> values = new HashMap<String, String>();
-    String home = getHome(context);
+          String home = getHome(context) + "/python3";
     String libs = new File(getExtrasRoot(), "python3").getAbsolutePath();
-    values.put(ENV_HOME, libs + ":" + new File(home, "python3").getAbsolutePath());
-    values.put(ENV_LD, new File(home, "python3/lib").getAbsolutePath());
-    values.put(ENV_PATH, new File(home, "python3/lib/python3.4") + ":"
-        + new File(home, "python3/lib/python3.4/lib-dynload") + ":" + libs);
+          // BUG: current binary does not recognize PYTHONHOME collectly... why...?
+          // values.put(ENV_HOME, libs + ":" + new File(home, "python3").getAbsolutePath());
+          // values.put(ENV_USERBASE, home);
+          values.put(ENV_LD, new File(home, "lib").getAbsolutePath());
+          values.put(ENV_PATH, libs + ":" +
+                     new File(home, "lib/python3.4/lib-dynload").getAbsolutePath());
     values.put(ENV_EGGS,
-        new File(getHome(context), "python3/lib/python3.4/lib-dynload").getAbsolutePath());
+                     new File(libs, "tmp").getAbsolutePath());
     values.put(ENV_EXTRAS, getExtrasRoot());
-    values.put(ENV_USERBASE, home);
     String temp = context.getCacheDir().getAbsolutePath();
     values.put(ENV_TEMP, temp);
     try {

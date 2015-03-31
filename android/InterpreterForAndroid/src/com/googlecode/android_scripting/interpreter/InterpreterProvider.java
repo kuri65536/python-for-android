@@ -35,7 +35,7 @@ import java.util.Map;
  * 
  * <p>
  * To create an interpreter APK, please extend this content provider and implement getDescriptor()
- * and getEnvironmentSettings().<br>
+ * and getEnvironmentVariables().<br>
  * Please declare the provider in the android manifest xml (the authority values has to be set to
  * your_package_name.provider_name).
  * 
