@@ -1,3 +1,6 @@
+Index
+===
+
 | page | description | date | author |
 |:---- | :--- | :--: | :--- |
 | [fullscreenwrapper2][01]     | A GUI Framework developing full screen apps using FullScreenUI API in SL4A Featured | Aug 2012 | srinathd...@gmail.com |
@@ -30,3 +33,6 @@
 [13]:building_apk.md
 [14]:building_python.md
 
+<!---
+ vi: ft=markdown
+ -->

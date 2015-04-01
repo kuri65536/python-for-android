@@ -1,11 +1,11 @@
-Introduction
+Building modules
 ===
 A guide on how to build Python Modules. Note: For 2.6.2 Python. 3.2.2 is still in development
 Setup
 
 Download the latest python-lib from our Downloads section, At time of writing, this is:
 
-python-lib_r14.zip
+python-lib\_r14.zip
 
 Unzip this into python-modules/python-lib
 Using setuptools - Creating Egg
@@ -15,7 +15,9 @@ In order to build binary modules you need to have Android NDK installed and corr
 Download the latest NDK, drop it somewhere, do a toolchain installation, and then export the next
 variables:
 
+```shell
 export ANDROID_NDK_TOOLCHAIN_ROOT=<path to installed toolchain>
+```
 
 Setup setup.py
 ===
@@ -23,14 +25,18 @@ In order to use setuptools with Android a few changes need to be done into your 
 First you need to monkey patch setuptools, we provide with a helper script for this, edit your
 setup.py and add this lines before calling setup
 
-from py4a import patch_distutils
-patch_distutils()
+```python
+from py4a import patch\_distutils
+patch\_distutils()
+```
 
 You also need to either pass -p linux-armv or create a file setup.cfg inside the same folder than
 setup.py with this content
 
+```ini
 [bdist_egg]
 plat-name=linux-armv
+```
 
 Setup environment
 ===
@@ -56,7 +62,7 @@ Cooking your eggs
 Ok so it's time to cook an egg. Once we have all the setup done it's time to boil the water and
 cook an egg.
 
-If everything is fine the process is simple just do the regular python setup.py bdist_egg . If it
+If everything is fine the process is simple just do the regular python setup.py bdist\_egg . If it
 doesn't work for you, then start looking at our other modules, and start asking questions in our
 mailing list, we don't bite.
 Stuff below this line is more or less obsolete
@@ -85,11 +91,14 @@ the needed .so files.
 
 In general, you need to:
 
-    Copy the .c and .h files into a jni folder.
-    Set up an android.mk to tell ndk-build what to do.
-    set up a script to run ndk-build and then copy the needed python and .so files into a zip. 
+* Copy the .c and .h files into a jni folder.
+* Set up an android.mk to tell ndk-build what to do.
+* set up a script to run ndk-build and then copy the needed python and .so files into a zip. 
 
 See the source for pybluez for a simple example, and for twisted for something more complex.
 
 Documentation on the Android.mk can be found in the android-ndk docs folder. 
 
+<!---
+ vi: ft=markdown
+ -->

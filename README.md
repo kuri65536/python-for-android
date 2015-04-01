@@ -1,11 +1,11 @@
-This repository is alpha development. forked from [GoogleCode](https://code.google.com/p/python-for-android/)
-===
+## This repository is in alpha development. forked from [Py4A on GoogleCode](https://code.google.com/p/python-for-android/)
 
 Instruction for installation
 ===
 Requirements
 ---
-* an Android Device 1.6 >=
+* python2: an Android Device 1.6 >=
+* python3: an Android Device 2.3.1 >=
 * [SL4A](http://github.com/kuri65536/sl4a) was installed.
 
 How to install
@@ -39,9 +39,18 @@ External Links
 * [Py4A Discussion](http://groups.google.com/group/python-for-android)
 * [SL4A Discussion](http://groups.google.com/group/android-scripting)
 
+Similar projects
+---
+Please do not ask any question about below!
+
+* No relatations: [Py4A python2.7](https://googlecode.com/p/android-python27)
+* No relatations: [QPython](http://qpython.com)
+* No relatations: [Kivy](http://kivy.org)
+
 
 Instruction for build
 ===
+[Instruction for r16 or ealier](docs/building_ant.md)
 
 Requirements for build
 ---
@@ -50,6 +59,7 @@ Requirements for build
   distro in Ubuntu run: sudo apt-get build-dep python2.7
 * Android NDK >= r10d
 * Android SDK >= 21.1.2
+* Gradle >= 2.0 (included in Android Studio >= 1.0.2)
 
 How to build
 ---
@@ -96,45 +106,6 @@ r17
   and Select 'Python 2.7.?'.
 * Python will be launched, have fun!
 
-
-Old instruction (use ant)
-===
-* In Ubuntu (i386) you need to run this before anything else:
-```shell
-export LDFLAGS="-L /usr/lib/i386-linux-gnu/"
-
-pushd python-build
-bash build.sh
-popd
-```
-* Then you need to update the references for the APK file
-```shell
-pushd python-build
-python update-apk.py
-popd
-```
-* Next step is building a few Android libraries needed for Py4A to be built.
-```shell
-pushd android
-pushd Utils
-ant
-popd
-pushd Common
-ant
-popd
-pushd InterpreterForAndroid
-ant
-popd
-popd
-```
-* Now build Py4A apk signing with debug key
-```shell
-pushd android/PythonForAndroid
-mkdir libs
-cp ../{Utils,Common,InterpreterForAndroid}/dist/*.jar libs
-ant debug
-popd
-```
 
 <!---
  vi: ft=markdown:et:ts=4:nowrap
