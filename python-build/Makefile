@@ -84,8 +84,8 @@ LIBS = site-packages encodings compiler hotshot \
     xml xml/dom xml/etree xml/parsers xml/sax \
 
 # libraries {{{1
-LIBS := .build_misc_sqlite3 \
-        .build_misc_bzip2
+TARGET_LIBS := .build_misc_sqlite3 \
+               .build_misc_bzip2
 targz = $(subst .tar.gz,,$1)
 
 ## download {{{2
@@ -130,11 +130,11 @@ clean_output:
 	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
 
 
-$(ZIP): $(PYTHONSRC) .build_openssl $(LIBS)
+$(ZIP): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	@echo non-PIE: build the android libraries/executables
 	mkdir -p ./python/obj/local/{armeabi,x86}
-	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
-	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
+	cp -dp openssl/.build_armeabi/lib*.so ./python/obj/local/armeabi
+	cp -dp openssl/.build_x86/lib*.so ./python/obj/local/x86
 	
 	cd $(CWD)/python; \
 	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
@@ -148,7 +148,7 @@ $(ZIP): $(PYTHONSRC) .build_openssl $(LIBS)
 	make clean_output
 	cd $(CWD)/python; \
 	cp obj/local/armeabi/python $(OUT)/usr/bin; \
-	cp obj/local/armeabi/lib*.so $(OUT)/usr/lib; \
+	cp -dp obj/local/armeabi/lib*.so* $(OUT)/usr/lib; \
 	cp obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload; \
 	
 	cd $(CWD)/python-libs; bash -ex setuptools.sh
@@ -159,17 +159,17 @@ $(ZIP): $(PYTHONSRC) .build_openssl $(LIBS)
 	make clean_output
 	cd $(CWD)/python; \
 	cp obj/local/x86/python $(OUT)/usr/bin; \
-	cp obj/local/x86/lib*.so $(OUT)/usr/lib; \
+	cp -dp obj/local/x86/lib*.so* $(OUT)/usr/lib; \
 	cp obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
 	$(CWD)/host/bin/python build.py x86
 	
 	echo "Done"
 
-$(ZIP_PIE): $(PYTHONSRC) .build_openssl $(LIBS)
+$(ZIP_PIE): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	@echo PIE: build the android libraries/executables
 	mkdir -p ./python/obj/local/{armeabi,x86}
-	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
-	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
+	cp -dp openssl/.build_armeabi/lib*.so* ./python/obj/local/armeabi
+	cp -dp openssl/.build_x86/lib*.so* ./python/obj/local/x86
 	
 	# FIXME: do not build duplicated bins with non-PIE binary.
 	cd $(CWD)/python; \
@@ -178,21 +178,22 @@ $(ZIP_PIE): $(PYTHONSRC) .build_openssl $(LIBS)
 	    $(CWD)/python-src/Python/graminit.c
 	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
 	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
+	touch .build_bin_pie
 	
 	# arm: copy out all the needed files
 	make clean_output
 	cd $(CWD)/python; \
-	mv obj/local/armeabi/python $(OUT)/usr/bin; \
-	mv obj/local/armeabi/lib*.so $(OUT)/usr/lib; \
-	mv obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
+	cp obj/local/armeabi/python $(OUT)/usr/bin; \
+	cp -dp obj/local/armeabi/lib*.so* $(OUT)/usr/lib; \
+	cp obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
 	$(CWD)/host/bin/python build.py pie
 	
 	# x86: copy out all the needed files
 	make clean_output
 	cd $(CWD)/python; \
-	mv obj/local/x86/python $(OUT)/usr/bin; \
-	mv obj/local/x86/lib*.so $(OUT)/usr/lib; \
-	mv obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
+	cp obj/local/x86/python $(OUT)/usr/bin; \
+	cp -dp obj/local/x86/lib*.so* $(OUT)/usr/lib; \
+	cp obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
 	$(CWD)/host/bin/python build.py pie x86
 	
 	echo "Done"

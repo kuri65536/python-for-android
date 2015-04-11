@@ -122,7 +122,15 @@ def zipup(out_path, in_path, top, exclude=None, prefix=''):
 
   zip_file = zipfile.ZipFile(out_path, 'w', compression=zipfile.ZIP_DEFLATED)
   for path in find(in_path, exclude=exclude)[0]:
-    if not os.path.isdir(path):
+    if os.path.islink(path):
+                dest = os.readlink(path)
+                attr = zipfile.ZipInfo()
+                attr.filename = prefix + path[len(top):].lstrip('/')
+                attr.create_system = 3
+                # long type of hex say, symlink attr magic...
+                attr.external_attr = 0xA1ED0000L
+                zip_file.writestr(attr, dest)
+    elif not os.path.isdir(path):
       arcname = prefix + path[len(top):].lstrip('/')
       debug('Adding %s to %s' % (arcname, out_path))
       zip_file.write(path, arcname)

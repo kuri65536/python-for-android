@@ -122,15 +122,14 @@ LOCAL_MODULE_FILENAME := _elementtree
 LOCAL_SRC_FILES := Modules/_elementtree.c
 include $(BUILD_SHARED_LIBRARY)
 
-# $(call build-module,  _ssl ,  Modules/_ssl.c, ssl crypto )
-# $(call import-module, openssl)
+$(call import-module, openssl)
 LOCAL_PATH :=  $(PYTHON_SRC_PATH)
 LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include $(OPENSSL)/include
 LOCAL_MODULE := _ssl
 LOCAL_MODULE_FILENAME := _ssl
 LOCAL_SRC_FILES := Modules/_ssl.c
-LOCAL_LDFLAGS := -L./obj/local/$(TARGET_ARCH_ABI) -lcrypto -lssl
-LOCAL_SHARED_LIBRARIES := libpython2.7 libcrypto libssl
+# LOCAL_SHARED_LIBRARIES := libpython2.7 ./obj/local/$(TARGET_ARCH_ABI)/libssl.so ./obj/local/$(TARGET_ARCH_ABI)/libcrypto.so
+LOCAL_SHARED_LIBRARIES := libpython2.7 ssl crypto
 include $(BUILD_SHARED_LIBRARY)
 
 

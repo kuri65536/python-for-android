@@ -17,8 +17,8 @@ OPENSSL_SRC = openssl-$(OPENSSL_VERSION).tar.gz
 
 OPENSSL_BIN_x86 := .build_x86/libcrypto.so \
                    .build_x86/libssl.so
-OPENSSL_BIN_arm := .build_arm/libcrypto.so \
-                   .build_arm/libssl.so
+OPENSSL_BIN_arm := .build_armeabi/libcrypto.so \
+                   .build_armeabi/libssl.so
 OPENSSL_BIN := $(OPENSSL_BIN_x86) $(OPENSSL_BIN_arm)
 
 eabi_arm := arm-linux-androideabi-4.9
@@ -34,13 +34,13 @@ endif
 .PHONY: build clean cleanall
 
 build: $(OPENSSL_BIN)
-	ln -sf .build_arm openssl-src
+	ln -sf .build_armeabi openssl-src
 
 cleanall: clean
 	rm -f $(OPENSSL_SRC)
 
 clean:
-	make -C .build_arm clean
+	make -C .build_armeabi clean
 	make -C .build_x86 clean
 
 $(OPENSSL_SRC):
@@ -60,7 +60,7 @@ $(OPENSSL_BIN_arm): export CROSS_COMPILE="arm-linux-androideabi-"
 $(OPENSSL_BIN_arm): \
     export ANDROID_TOOLS="arm-linux-androideabi-gcc arm-linux-androideabi-ranlib arm-linux-androideabi-ld"
 
-$(OPENSSL_BIN_arm): .build_arm
+$(OPENSSL_BIN_arm): .build_armeabi
 	./showenv.sh
 	cd $<; perl $(perlopt) Makefile.org
 	cd $<; ./config shared no-ssl2 no-ssl3 no-comp no-hw no-engine \
@@ -94,7 +94,7 @@ $(OPENSSL_BIN_x86): .build_x86
 	tar xfz $(OPENSSL_SRC)
 	mv $(OPENSSL_DIR) .build_x86
 
-.build_arm: $(OPENSSL_SRC)
+.build_armeabi: $(OPENSSL_SRC)
 	tar xfz $(OPENSSL_SRC)
-	mv $(OPENSSL_DIR) .build_arm
+	mv $(OPENSSL_DIR) .build_armeabi
 
