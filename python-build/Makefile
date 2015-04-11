@@ -85,7 +85,8 @@ LIBS = site-packages encodings compiler hotshot \
 
 # libraries {{{1
 TARGET_LIBS := .build_misc_sqlite3 \
-               .build_misc_bzip2
+               .build_misc_bzip2 \
+               .build_misc_expat
 targz = $(subst .tar.gz,,$1)
 
 ## download {{{2
@@ -96,13 +97,14 @@ bzip2-1.0.6.tar.gz:
 expat-2.1.0.tar.gz:
 	wget http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
 
-## sqlite3 {{{2
+# sqlite3 {{{1
 .build_misc_sqlite3: sqlite3.tar.gz
 	rm -rf $(call targz,$<)
 	tar xfz $<
 	mv sqlite-autoconf-3080900 $(call targz,$<)
 	cp sqlite3.mk $(call targz,$<)/Android.mk
 	touch $@
+# bzip2 {{{1
 .build_misc_bzip2: bzip2-1.0.6.tar.gz
 	rm -rf bzip2
 	tar xfz $<
@@ -110,12 +112,13 @@ expat-2.1.0.tar.gz:
 	mv $(call targz,$<) bzip2
 	cp bzip2.mk bzip2/Android.mk
 	touch $@
+# expat {{{1
 .build_misc_expat: expat-2.1.0.tar.gz
-	rm -rf expat-2.1.0
+	rm -rf expat
 	tar xfz $<
-	cd $(call targz,$<); patch -p1 < $(CWD)/../python3-alpha/patches/bzip2-1.0.6-pre.patch
-	mv $(call targz,$<) bzip2
-	cp bzip2.mk bzip2/Android.mk
+	mv expat-2.1.0 expat
+	cp expat.mk expat/Android.mk
+	cd expat; ./configure --host=arm-linux-androideabi
 	touch $@
 
 # clean-up {{{1
