@@ -4,8 +4,8 @@ Running Python from a shell
 ===
 The necessary environment settings required to run python from a shell script can be found here:
 
-* [python2](../python-build/standalone_python.sh)
-* [python3](../python3-alpha/standalone_python.sh)
+* [../python-build/standalone_python.sh](../python-build/standalone_python.sh)
+* [../python3-alpha/standalone_python.sh](../python3-alpha/standalone_python.sh)
 
 To use, make the script executable and run from the shell:
 
