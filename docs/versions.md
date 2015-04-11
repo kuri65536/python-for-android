@@ -1,3 +1,5 @@
+* [Report issue](../README.md#create_issue)
+
 PythonForAndroid\_r18
 ---
 * new: python3 => 3.4.3

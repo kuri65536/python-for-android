@@ -1,20 +1,26 @@
-Running Python from a shell
+* [Report issue](../README.md#create_issue)
 
+Running Python from a shell
+===
 The necessary environment settings required to run python from a shell script can be found here:
 
-http://code.google.com/p/python-for-android/source/browse/python-build/standalone_python.sh
+* [python2](../python-build/standalone_python.sh)
+* [python3](../python3-alpha/standalone_python.sh)
 
 To use, make the script executable and run from the shell:
 
+```shell
 chmod a+x standalone_python.sh
 ./standalone_python.sh
+```
 
 or, if that doesn't work (and it may not, depending on filesystem) just:
 
-sh /sdcard/standalone_python.sh
+`sh /sdcard/standalone_python.sh`
 
 The script at time of writing looks like this:
 
+```shell
 #! /bin/sh
 
 export EXTERNAL_STORAGE=/mnt/storage
@@ -26,13 +32,14 @@ export PYTHON_EGG_CACHE=$TEMP
 export PYTHONHOME=/data/data/com.googlecode.pythonforandroid/files/python
 export LD_LIBRARY_PATH=/data/data/com.googlecode.pythonforandroid/files/python/lib
 /data/data/com.googlecode.pythonforandroid/files/python/bin/python "$@"
+```
 
 Note that you can pass arguments to python, ie:
 
-./standalone_python.sh hello.Py
+`./standalone_python.sh hello.Py`
 
 Why is it so complicated?
-
+---
 Android is quite fussy about what it lets you have access to. Executables and shared libraries
 have to be on the main file system (typically /data/data somewhere)
 
@@ -44,5 +51,8 @@ based spot to store this stuff (ie, /sdcard/com.googlecode.pythongorandroid/extr
 android devices, space in the main fs is at a premium. Thus the extensive library files are places
 on the /sdcard.
 
-Python needs to be told where all these non-standard places are. (Thus, PYTHONHOME etc) 
+Python needs to be told where all these non-standard places are. (Thus, PYTHONHOME etc)
 
+<!---
+ vi: ft=markdown:et:ts=4:fdm=marker
+ -->

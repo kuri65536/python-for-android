@@ -2,6 +2,8 @@ Python3 binaries
 ===
 This page is about the Python3 port to Android
 
+* [Report issue](../README.md#create_issue)
+
 Details
 ---
 I have started a conversion of Python3 for Android, tentatively codenamed Py3k4a.

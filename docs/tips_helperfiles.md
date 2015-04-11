@@ -1,3 +1,5 @@
+* [Report issue](../README.md#create_issue)
+
 Tips: Helper Files
 ---
 androidhelper.py for simplifying Python-for-Android SL4A development in IDEs. This creates a

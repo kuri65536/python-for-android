@@ -1,31 +1,31 @@
-Introduction
----
+* [Report issue](../README.md#create_issue)
+
 I've decided to annotate my experiences in porting Python3 to Android.
+
 Details
+---
+* Install the android toolchain: Toolchain_Installation
 
-Install the android toolchain: Toolchain_Installation
+* Make sure the bin directory of whereever you installed the toolchain is in you path.
 
-Make sure the bin directory of whereever you installed the toolchain is in you path.
+  ie:
+  `export PATH=$PATH:~/android-toolchain/bin`
 
-ie:
+* NB: Platform-9 supports widechar a bit, Platform-8 doesn't. Be aware.
 
-export PATH=$PATH:~/android-toolchain/bin
+* It's probably a good idea to make sure the android platform tools are also in your path:
 
-NB: Platform-9 supports widechar a bit, Platform-8 doesn't. Be aware.
+  `export PATH=$PATH:~/android-sdk-linux_86/platform-tools`
 
-It's probably a good idea to make sure the android platform tools are also in your path:
+* Get the source code of the version of Python you need to port.
 
-export PATH=$PATH:~/android-sdk-linux_86/platform-tools
+* The following the instructions here:
+  http://randomsplat.com/id5-cross-compiling-python-for-embedded-linux.html
 
-Get the source code of the version of Python you need to port.
+* The target for Android is arm-linux-androideabi
 
-The following the instructions here:
-http://randomsplat.com/id5-cross-compiling-python-for-embedded-linux.html
-
-The target for Android is arm-linux-androideabi
-
-Now, Android does NOT support Locale properly, and the wcs/mbs routines are completely broken.
-Therefore you need to remove any reference to them. I manually modify pyconfig.h as follows:
+* Now, Android does NOT support Locale properly, and the wcs/mbs routines are completely broken.
+  Therefore you need to remove any reference to them. I manually modify pyconfig.h as follows:
 
 ```C
 #define ANDROID 1  /* Useful for specific code changes.*/
@@ -41,8 +41,9 @@ Therefore you need to remove any reference to them. I manually modify pyconfig.h
 #undef HAVE_WCSXFRM
 ```
 
-Here is my sample configure parameters:
+* Here is my sample configure parameters:
 
+```shell
 pushd ../thirdparty
 export THIRD_PARTY_DIR=`pwd`
 popd
@@ -50,12 +51,14 @@ export TARGET=arm-linux-androideabi
 
 CC=${TARGET}-gcc CXX=${TARGET}-g++ AR=${TARGET}-ar RANLIB=${TARGET}-ranlib ./configure
 --host=${TARGET} --build=x86_64-linux-gnu --prefix=/python --enable-shared
+```
 
-Note that this refers to a bunch of third party libraries I cross-compiled. I've put these here in
-case you don't want to do them yourself:
-http://code.google.com/p/python-for-android/downloads/detail?name=thirdparty.tar.gz
+* Note that this refers to a bunch of third party libraries I cross-compiled. I've put these here in
+  case you don't want to do them yourself:
+  http://code.google.com/p/python-for-android/downloads/detail?name=thirdparty.tar.gz
+
 Setup Changes
-
+---
 setup.py will probably need to be modified. The major changes have to do with making sure setup
 looks for include files and libraries in your cross-compiled libraries, and not your system
 defaults. Mostly this has involved changes in build_extension(self, ext) and modifying inc_dirs
@@ -63,7 +66,9 @@ and lib_dirs. Look in setup.py, and look for cross_compile.
 
 Note: It's possible a lot of these changes to setup.py may have been rendered needless by correct
 use of LDFLAGS and CFLAGS (see readline example below).
+
 Code Changes
+---
 
 Not all references to locale or mbs/wcs are handled with the configuration changes. Some of these
 have to be handled in code. For example, Python3 assumes the existance of a working mbstowcs
@@ -134,17 +139,19 @@ and grouping.
 The easiest way to get around these errors is to hardcode in some sensible default values, and to
 remove references to localeconv and lconv altogether.
 
+```C
 //      struct lconv *locale_data = localeconv();
         locale_info->decimal_point = ".";
         locale_info->thousands_sep = ",";
         locale_info->grouping = "3";
+```
 
 This should get you off the ground and pointing in the right directions.
 Unsupported calls
 
 These are calls that will compile, but are not actually provided on the android platfrom, so they
 will throw errors when to you try to load. The trick is to make sure that references to these
-functions are not compiled in. See _termios.c as an example (look for #ifdef ANDROID)
+functions are not compiled in. See \_termios.c as an example (look for #ifdef ANDROID)
 
     tcdrain
     getgrp and setgrp
@@ -153,20 +160,18 @@ case) but the errors they throw will screw up most installation programs. posixm
 modified to silently fail instead, which allows pip and distribute to behave nicely. 
 
 Third Party Components
-
+---
 http://www.crosscompile.org contains a lot of useful hints and tips. A lot of configure scripts
 fail to recognize arm-linux-androideabi as a host. This can be solved by replacing config.sub and
 config.guess from here: http://git.savannah.gnu.org/gitweb/?p=config.git;a=tree
 
-or, indeed, here:
-
-http://code.google.com/p/python-for-android/source/browse/#hg%2Fpython3-alpha%2Fsqlite3
+or, indeed, [here](../python3-alpha) sqlite3:
 
 Note: different configurations have sub and guess in different folders... you'll need to work out
 where.
 
 As my readline configure command is:
-
+```shell
 export  TARGET=arm-linux-androideabi
 pushd ../thirdparty
 TARGET_DIR=`pwd`
@@ -174,6 +179,7 @@ popd
 
 LDFLAGS=-L${TARGET_DIR}/lib CFLAGS="-I${TARGET_DIR}/include -I${TARGET_DIR}/include/ncurses"
 ./configure --host=$TARGET --target=$TARGET --prefix=$TARGET_DIR --enable-shared  --with-curses 
+```
 
 This is a pretty good starting point for most libraries. readline is one of the ones that require
 a little patching to work. The patch file is:
@@ -194,7 +200,10 @@ You will probably have to make these minor changes. Most of the time it will be 
 references to unsupported library calls.
 Changes to Python modules
 
-    subprocess.py has a hardcoded call to /bin/sh, which breaks os.popen. This has been changed to
-/system/bin/sh for android.
-    locale.py - changed preferred encoding to utf-8 
+* subprocess.py has a hardcoded call to /bin/sh, which breaks os.popen.
+  This has been changed to /system/bin/sh for android.
+* locale.py - changed preferred encoding to utf-8 
 
+<!---
+ vi: ft=markdown:et:ts=4:fdm=marker
+ -->

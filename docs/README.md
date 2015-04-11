@@ -1,3 +1,5 @@
+* [Report issue](../README.md#create_issue)
+
 Index
 ===
 

@@ -1,3 +1,5 @@
+* [Report issue](../README.md#create_issue)
+
 Building modules
 ===
 A guide on how to build Python Modules. Note: For 2.6.2 Python. 3.2.2 is still in development
@@ -9,8 +11,9 @@ python-lib\_r14.zip
 
 Unzip this into python-modules/python-lib
 Using setuptools - Creating Egg
-NDK setup
 
+NDK setup
+---
 In order to build binary modules you need to have Android NDK installed and correctly setup.
 Download the latest NDK, drop it somewhere, do a toolchain installation, and then export the next
 variables:
@@ -20,7 +23,7 @@ export ANDROID_NDK_TOOLCHAIN_ROOT=<path to installed toolchain>
 ```
 
 Setup setup.py
-===
+---
 In order to use setuptools with Android a few changes need to be done into your setup.py script.
 First you need to monkey patch setuptools, we provide with a helper script for this, edit your
 setup.py and add this lines before calling setup
@@ -39,7 +42,7 @@ plat-name=linux-armv
 ```
 
 Setup environment
-===
+---
 If your project uses binary modules, the build process is a bit rougher, but still a lot of fun.
 Before calling build you need to import a shell script that will setup your environment to work,
 this script is called setup.sh and is part of the python-lib package.
@@ -57,7 +60,7 @@ Then you would do from projectX.
 source ../python-lib/setup.sh
 
 Cooking your eggs
-===
+---
 
 Ok so it's time to cook an egg. Once we have all the setup done it's time to boil the water and
 cook an egg.
@@ -68,20 +71,23 @@ mailing list, we don't bite.
 Stuff below this line is more or less obsolete
 
 But may still be useful...
-Non egg projects
 
+Non egg projects
+---
 cd to the folder containing your module, and run:
 
-bash build.sh
+`bash build.sh`
 
-There are now several modules built and supported by !Py4a. See Modules.
+There are now several modules built and supported by Py4A. See Modules.
+
 How to Build your Own Modules
-
+---
 Currently, the best advice is to look at how pybluez was built, in python-modules/pybluez.
 
 At this time, we are working on a more comprehensive guide.
-Rough Guide
 
+Rough Guide
+---
 If your module is pure python, then using it is as simple as copying the module into your phone.
 The best path for this is: /sdcard/com.googlecode.pythonforandroid/extras/python
 

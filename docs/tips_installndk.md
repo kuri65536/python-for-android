@@ -1,3 +1,5 @@
+* [Report issue](../README.md#create_issue)
+
 Tips: Install Android NDK
 ===
 How to install a cross-compiler toolchain for Android.
