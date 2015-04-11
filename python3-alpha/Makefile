@@ -1,7 +1,7 @@
 
 .PHONY: build build_config build_bin error init clean_output cleanall \
-        patch .build_misc_sqlite3_arm .build_misc_ncurses_arm \
-        .build_misc_readline_arm .build_misc_bzip2_arm strip_bin
+        patch build_misc_sqlite3 build_misc_ncurses \
+        build_misc_readline build_misc_bzip2 strip_bin
 
 # build settings section 1 {{{1
 VERSION=3.4.3
@@ -10,36 +10,36 @@ CWD := $(shell pwd)
 DEBUG=no
 
 RELEASE_VERSION:=$(shell cat LATEST_VERSION)
-PYBINR := python3
-export PYBIN := $(CWD)/$(PYBINR)
-PYTHONSRC := ./python-src
 PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
 PYTHON_FOR_BUILD := $(CWD)/host/bin/python3
 HOSTPYTHON := $(dir $(dir PYTHON_FOR_BUILD))
-PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
 
-ZIPMAIN := python3_$(RELEASE_VERSION).zip
+ZIP_BINarm := python3_$(RELEASE_VERSION).zip
+ZIP_BINx86 := $(subst .zip,_x86.zip,$(ZIP_BINarm))
+ZIP_PIEarm := $(subst .zip,_pie.zip,$(ZIP_BINarm))
+ZIP_PIEx86 := $(subst .zip,_x86_pie.zip,$(ZIP_BINarm))
 ZIPEXTRA := python3_extras_$(shell cat LATEST_VERSION_EXTRA).zip
 ZIPSCRIPTS := python3_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
-ZIP := $(ZIPMAIN) \
+ZIP := $(ZIP_BINarm) $(ZIP_BINx86) \
+       $(ZIP_PIEarm) $(ZIP_PIEx86) \
        $(ZIPEXTRA) \
-       $(ZIPSCRIPTS) \
-       $(patsubst .zip,_x86.zip,$(ZIPMAIN))
-ZIP_PIE := $(patsubst .zip,_pie.zip,$(ZIPMAIN)) \
-           $(patsubst .zip,_x86_pie.zip,$(ZIPMAIN))
+       $(ZIPSCRIPTS)
 
 # check environment {{{1
+BUILDMACHINE := $(shell uname -m)
+BUILDOS := $(shell uname -s | tr A-Z a-z)
+BUILDARCH := $(BUILDMACHINE)-$(BUILDOS)-gnu
 ifeq (x$(host),x)
 # check host variable: linux-x86_64, linux-x86 or darwin-x86
-host = $(shell uname -s | tr A-Z a-z)-$(shell uname -m)
+host = $(BUILDOS)-$(BUILDMACHINE)
 endif
 
 ifeq (x$(NDK_PATH),x)
 build: error
 else
-build: $(ZIP) $(ZIP_PIE)
+build: $(ZIP)
 endif
 
 error:
@@ -47,7 +47,7 @@ error:
 	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10d make build"
 
 # tools {{{2
-ndk_build = $(NDK_PATH)/ndk-build
+ndk_depends = $(NDK_PATH)/ndk-depends
 TAR := tar xfz
 
 
@@ -74,12 +74,40 @@ export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
 # RANLIB=${TARGET}-ranlib
 MACHINE = armv7
 export ARCH = arm
-export HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
 BLDSHARED = arm-linux-androideabi-gcc -shared
 CROSS_COMPILE = arm-linux-androideabi-
 CROSS_COMPILE_TARGET = arm
 HOSTARCH = arm-linux-androideabi
-BUILDARCH = x86_64-linux-gnu
+
+    ifeq (x$(PIE),xyes)
+        PYTHONSRC := ./python-src_arm_pie
+        SFX := _arm_pie
+        ZIPMAIN := $(ZIP_PIEarm)
+    else
+        PYTHONSRC := ./python-src_arm
+        SFX := _arm
+        ZIPMAIN := $(ZIP_BINarm)
+    endif
+endif
+
+# build variables for cross-compile. (x86) {{{1
+ifeq (x$(CROSS),xx86)
+    TARGET := i686-linux-android
+    HOSTARCH := $(TARGET)
+    _ANDROID_EABI = x86-4.9
+
+    MACHINE := i686
+    export ARCH := x86
+
+    ifeq (x$(PIE),xyes)
+        PYTHONSRC := ./python-src_x86_pie
+        SFX := _x86_pie
+        ZIPMAIN := $(ZIP_PIEx86)
+    else
+        PYTHONSRC := ./python-src_x86
+        SFX := _x86
+        ZIPMAIN := $(ZIP_BINx86)
+    endif
 endif
 
 # build settings section 2 {{{1
@@ -93,18 +121,60 @@ ANDROID_DEV = $(ANDROID_SYSROOT)/usr
 PYTHON_OPTIONAL_MODULES="bz2 lzma ssl"
 
 
+# build settings section 3 {{{1
+ifneq (x$(CROSS),x)
+    PYBINR := python3
+    PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
+    export PYBIN := $(CWD)/$(PYBINR)$(SFX)/$(PYBINR)
+
+    export ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(_ANDROID_EABI)/prebuilt/$(host)/bin
+    export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
+    # ANDROID_API := android-4     # TODO: missing waitid
+    export ANDROID_API := android-9
+    _ANDROID_ARCH = arch-$(ARCH)
+
+    export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
+                    -I$(PYBIN)/include
+    export CPPFLAGS = $(CFLAGS)
+    export CXXFLAGS = $(CFLAGS)
+    export LDFLAGS := --sysroot=$(ANDROID_NDK_SYSROOT) \
+                      -L$(PYBIN)/lib
+
+    export HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
+
+    CROSS_COMPILE := $(HOSTARCH)-
+    CROSS_COMPILE_TARGET := $(ARCH)
+    BLDSHARED := $(CROSS_COMPILE)gcc -shared
+    HOSTARCH := $(TARGET)
+endif
+ifeq (x$(PIE),xyes)
+    export CFLAGS += -fPIE
+    export CPPFLAGS += -fPIE
+    export CXXFLAGS += -fPIE
+    # export LDFLAGS +=
+    export CCSHARED := -fPIE
+endif
+
+
 # cleaning {{{1
 cleanall: clean
 	rm -f $(PYTHONTAR)
 
 clean:
-	rm -rf sqlite3
-	make -C readline-6.3 clean
-	make -C ncurses-5.9 clean
-	make -C bzip2-1.0.6 clean
 	make -C openssl clean
+	make clean_work CROSS=arm PIE=no
+	make clean_work CROSS=x86 PIE=no
+	make clean_work CROSS=arm PIE=yes
+	make clean_work CROSS=x86 PIE=yes
+	rm -rf python3_extras
 	rm -f .build_*
+clean_work:
+	rm -rf ncurses-5.9$(SFX)
+	rm -rf bzip2-1.0.6$(SFX)
+	rm -rf readline-6.3$(SFX)
+	rm -rf sqlite3$(SFX)
 	rm -rf $(PYTHONSRC)
+	rm -rf $(dir $(PYBIN))
 
 
 # libraries {{{1
@@ -121,7 +191,7 @@ readline-6.3.tar.gz:
 	wget ftp://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
 # zlib-1.2.8.tar.gz:
 # 	wget http://zlib.net/zlib-1.2.8.tar.gz
-bzip-1.0.6.tar.gz:
+bzip2-1.0.6.tar.gz:
 	wget http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 
 
@@ -135,54 +205,65 @@ targz = $(subst .tar.gz,,$1)
 
 ## ncurses {{{2
 .build_misc_ncurses: ncurses-5.9.tar.gz
-	tar xfz $<
-	make $@_arm CROSS=arm
+	make $(subst .,,$@) CROSS=arm PIE=no
+	make $(subst .,,$@) CROSS=x86 PIE=no
+	make $(subst .,,$@) CROSS=arm PIE=yes
+	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
-.build_misc_ncurses_arm: ncurses-5.9.tar.gz
-	cd $(call targz,$<); \
+build_misc_ncurses: ncurses-5.9.tar.gz
+	tar xfz $<
+	mv $(call targz,$<) $(call targz,$<)$(SFX)
+	cd $(call targz,$<)$(SFX); \
 	  ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
 	  --prefix=$(PYBIN) \
 	  --without-ada --without-cxx --without-manpages \
 	  --without-progs --without-tests \
 	  --with-termlib --enable-termcap --enable-widec \
 	  --disable-database --disable-home-terminfo
-	cd $(call targz,$<); patch -p1 < android.patch
-	make -C $(call targz,$<)
-	make -C $(call targz,$<) install
-	@echo Fix symlinks for Python _curses and _curses_panel extensions.
-	cd $(call targz,$<)
-	  ln -s ncursesw/curses.h $(PYBIN)/include/curses.h
-	  ln -s ncursesw/panel.h $(PYBIN)/include/panel.h
+	cd $(call targz,$<)$(SFX); patch -p1 < $(CWD)/patches/$(call targz,$<).patch
+	make -C $(call targz,$<)$(SFX)
+	make -C $(call targz,$<)$(SFX) install
+	# @echo Fix symlinks for Python _curses and _curses_panel extensions.
+	# cd $(call targz,$<)$(SFX); \
+	#   ln -s ncursesw/curses.h $(PYBIN)/include/curses.h; \
+	#   ln -s ncursesw/panel.h $(PYBIN)/include/panel.h
 
 ## readline {{{2
 .build_misc_readline: readline-6.3.tar.gz
-	tar xfz $<
-	cd $(call targz,$<); patch < fix.patch
-	make $@_arm CROSS=arm
+	make $(subst .,,$@) CROSS=arm PIE=no
+	make $(subst .,,$@) CROSS=x86 PIE=no
+	make $(subst .,,$@) CROSS=arm PIE=yes
+	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
-.build_misc_readline_arm: readline-6.3.tar.gz
-	cd $(call targz,$<); \
+build_misc_readline: readline-6.3.tar.gz
+	tar xfz $<
+	cd $(call targz,$<); patch < $(CWD)/patches/readline-6.3-pre.patch
+	mv $(call targz,$<) $(call targz,$<)$(SFX)
+	cd $(call targz,$<)$(SFX); \
 	   autoreconf -i; \
 	   bash_cv_wcwidth_broken=no \
 	   CFLAGS="$(CFLAGS) -DANDROID" \
 	   ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
 	   --prefix=$(PYBIN) \
-	   --disable-shared --with-curses=$(CWD)/ncurses-5.9
-	make -C $(call targz,$<)
-	make -C $(call targz,$<) install
+	   --disable-shared --with-curses=$(CWD)/ncurses-5.9$(SFX)
+	make -C $(call targz,$<)$(SFX)
+	make -C $(call targz,$<)$(SFX) install
 
 ## sqlite3 {{{2
 .build_misc_sqlite3: sqlite3.tar.gz
-	tar xfz $<
-	mv sqlite-autoconf-3080803 $(call targz,$<)
-	make $@_arm CROSS=arm
+	make $(subst .,,$@) CROSS=arm PIE=no
+	make $(subst .,,$@) CROSS=x86 PIE=no
+	make $(subst .,,$@) CROSS=arm PIE=yes
+	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
-.build_misc_sqlite3_arm: sqlite3.tar.gz
-	cd $(call targz,$<); \
+build_misc_sqlite3: sqlite3.tar.gz
+	tar xfz $<
+	mv sqlite-autoconf-3080803 $(call targz,$<)$(SFX)
+	cd $(call targz,$<)$(SFX); \
 	   ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) --prefix=$(PYBIN) \
 	   --disable-shared
-	make -C $(call targz,$<)
-	make -C $(call targz,$<) install
+	make -C $(call targz,$<)$(SFX)
+	make -C $(call targz,$<)$(SFX) install
 
 ## zlib => use bionic library {{{2
 # .build_misc_zlib: zlib-1.2.8.tar.gz
@@ -194,16 +275,20 @@ targz = $(subst .tar.gz,,$1)
 
 ## bzip2 {{{2
 .build_misc_bzip2: bzip2-1.0.6.tar.gz
-	tar xfz $<
-	cd $(call targz,$<); patch -p1 < pre.patch
-	make $@_arm CROSS=arm
+	make $(subst .,,$@) CROSS=arm PIE=no
+	make $(subst .,,$@) CROSS=x86 PIE=no
+	make $(subst .,,$@) CROSS=arm PIE=yes
+	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
-.build_misc_bzip2_arm: bzip2-1.0.6.tar.gz
+build_misc_bzip2: bzip2-1.0.6.tar.gz
+	tar xfz $<
+	cd $(call targz,$<); patch -p1 < $(CWD)/patches/bzip2-1.0.6-pre.patch
+	mv $(call targz,$<) $(call targz,$<)$(SFX)
 	PREFIX=$(PYBIN)\
 	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib \
-	  make -C $(call targz,$<) -f Makefile-libbz2_so
+	  make -C $(call targz,$<)$(SFX) -f Makefile-libbz2_so
 	mkdir -p $(PYBIN)/lib
-	cp $(call targz,$<)/*.so* $(PYBIN)/lib
+	cp $(call targz,$<)$(SFX)/*.so* $(PYBIN)/lib
 
 # python3: download and build for current host  {{{1
 $(PYTHONTAR):
@@ -227,19 +312,27 @@ $(PYTHONTAR):
 	touch .build_host
 
 # python3: patching-configure-build {{{1
-$(CWD)/patches/*.patch:
+$(CWD)/patches/python-*.patch:
 	echo
 .build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
+	make $(subst .,,$@) CROSS=arm PIE=no
+	make $(subst .,,$@) CROSS=x86 PIE=no
+	make $(subst .,,$@) CROSS=arm PIE=yes
+	make $(subst .,,$@) CROSS=x86 PIE=yes
+	touch .build_src
+build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
 	rm -rf $(PYTHONSRC)
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
-	  for p in $(CWD)/patches/*.patch; do \
+	  for p in $(CWD)/patches/python-*.patch; do \
 	    echo "patching: $$p..."; patch -p1 -i $$p; done
-	touch .build_src
 
 .build_config: .build_src .build_misc
-	make build_config CROSS=arm
+	make build_config CROSS=arm PIE=no
+	make build_config CROSS=x86 PIE=no
+	make build_config CROSS=arm PIE=yes
+	make build_config CROSS=x86 PIE=yes
 	touch .build_config
 build_config:
 	# @echo PATH: "'$$PATH'"
@@ -248,11 +341,14 @@ build_config:
 	       $(NDK_SYSROOT)/usr/include/sys/soundcard.h
 	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
 	./configure CROSS_COMPILE_TARGET=yes \
-	            --host=$(TARGET) --build=x86_64-linux-gnu --disable-ipv6 \
+	            --host=$(TARGET) --build=$(BUILDARCH) --disable-ipv6 \
 	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=no
 
 .build_bin: .build_config
-	make build_bin CROSS=arm
+	make build_bin CROSS=arm PIE=no
+	make build_bin CROSS=x86 PIE=no
+	make build_bin CROSS=arm PIE=yes
+	make build_bin CROSS=x86 PIE=yes
 	touch .build_bin
 build_bin: .build_openssl .build_misc
 	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC)
@@ -263,20 +359,29 @@ strip_bin:
 	for i in $(PYLIB)/lib-dynload/*.so*; do $(TARGET)-strip $$i; done
 
 # python3: packaging {{{1
-$(ZIPMAIN): .build_bin
+$(ZIP_BINarm): .build_bin
+	make CROSS=arm PIE=no build_zip
+$(ZIP_BINx86): .build_bin
+	make CROSS=x86 PIE=no build_zip
+$(ZIP_PIEarm): .build_bin
+	make CROSS=arm PIE=yes build_zip
+$(ZIP_PIEx86): .build_bin
+	make CROSS=x86 PIE=yes build_zip
+
+build_zip:
 	@echo non-PIE: build the android libraries/executables
 	# make strip_bin CROSS=arm
 	@echo "Packing $(ZIPMAIN)"
 	rm -f $(ZIPMAIN)
-	zip -g $@ $(PYBINR)/bin/python3
-	zip -g $@ $(PYBINR)/lib/libpython3.so
-	zip -g $@ $(PYBINR)/lib/libpython3.4m.so
-	deps=$$($(NDK_PATH)/ndk-depends $(PYBINR)/bin/python3 \
+	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYBINR)/bin/python3; \
+	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.so; \
+	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.4m.so
+	cd $(PYBIN)/..; deps=$$($(ndk_depends) $(PYBINR)/bin/python3 \
 	  | grep -v ^python3$$ | grep -v -e \.so$$ ); \
 	  for i in $$deps; do \
-	    zip -g $@ $(PYBINR)/lib/$$i; done
-	zip -gri"*.so" $@ $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
-	zip -g $@ $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
+	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$$i; done
+	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
+	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
 	          $(PYBINR)/include/python3.4m/pyconfig.h
 
 PYEXT_ := python3-extras

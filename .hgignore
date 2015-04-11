@@ -24,20 +24,13 @@ android/*/dist/*.jar
 android/DocumentationGenerator/doc/*
 python-build/*.tar.bz2
 python-build/*.zip
-python-build/*.apk
-python{,3}-{build,alpha}/python-src
+python{,3}-{build,alpha}/python-src{,_arm,_x86,_arm_pie,_x86_pie}
 python-build/python-libs/setuptools
 python-build/python-libs/setuptools-*.tar.gz
 python-build/python-libs/*/build/
 python-modules/PyCrypto/pycrypto-*/
 python-modules/PyCrypto/pycrypto-*.tar.gz
-android/Utils/libs/common.jar
 android/InterpreterForAndroid/libs/common.jar
-python3-alpha/python3-src/python3*.zip
-python3-alpha/python3-src/_install/
-python3-alpha/python3-src/build
-python3-alpha/python3-src/android
-python3-alpha/thirdparty/
 build
 *.iml
 .gradle
@@ -53,17 +46,17 @@ openssl/openssl-*.tar.gz
 openssl/openssl-src
 python3-alpha/host
 python3-alpha/sqlite3.tar.gz
-python3-alpha/sqlite3
+python3-alpha/sqlite3{_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/ncurses-5.9.tar.gz
-python3-alpha/ncurses-5.9
-python3-alpha/readline-6.*.tar.gz
-python3-alpha/readline-6.*
+python3-alpha/readline-6.3.tar.gz
+python3-alpha/readline-6.3{_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/bzip2-1.0.6.tar.gz
-python3-alpha/bzip2-1.0.6
-python3-alpha/python3
+python3-alpha/python3{_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/python3-extras
 android/Python3ForAndroid/gradle
 android/Python3ForAndroid/local.properties
+python3-alpha/bzip2-1.0.6{_arm,_x86,_arm_pie,_x86_pie}
+python3-alpha/ncurses-5.9{_arm,_arm_pie,_x86,_x86_pie}
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
@@ -80,6 +73,5 @@ python-build/output
 python-build/host
 python-build/python/libs
 python-modules/python-lib
-python-for-android/python3-alpha/googlecode_upload.py
 
 glob:*~
