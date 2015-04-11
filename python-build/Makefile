@@ -1,4 +1,4 @@
-VERSION=2.7.8
+VERSION=2.7.9
 ndk_build = $(NDK_PATH)/ndk-build
 # set -ex
 CWD := $(shell pwd)
@@ -66,7 +66,7 @@ $(PYTHONTAR):
 	rm -rf Python-$(VERSION)
 	touch .build_host
 
-$(PYTHONSRC): $(PYTHONTAR)
+$(PYTHONSRC): $(PYTHONTAR) .build_host
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
@@ -107,6 +107,7 @@ clean_output:
 
 $(ZIP): $(PYTHONSRC) .build_openssl
 	@echo non-PIE: build the android libraries/executables
+	mkdir -p ./python/obj/local/{armeabi,x86}
 	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
 	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
 	
@@ -141,6 +142,7 @@ $(ZIP): $(PYTHONSRC) .build_openssl
 
 $(ZIP_PIE): $(PYTHONSRC) .build_openssl
 	@echo PIE: build the android libraries/executables
+	mkdir -p ./python/obj/local/{armeabi,x86}
 	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
 	cp openssl/.build_x86/lib*.so ./python/obj/local/x86
 	
