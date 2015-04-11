@@ -53,7 +53,7 @@ Pages
 * [Modules](docs/modules.md)
 * [Python3](python3-alpha/README.md)
 * [Versions](docs/versions.md)
-* [fullscreenwrapper2]()
+* [fullscreenwrapper2](docs/fullscreenwrapper2.md)
 * [Show all](docs/README.md)
 
 External Links

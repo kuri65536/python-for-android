@@ -37,7 +37,7 @@ repository.
    is the main file you need to import
 2. _Update:_ A working [Python3 compatible version](../sl4atools/fullscreenwrapper2/py3/fullscreenwrapper2_py3.py)
    is now available - could do with more testing.
-3. [API Docs](../../releases/download/r17/fullscreenwrapper2_docs.zip)
+3. [API Docs](../../../releases/download/r17/fullscreenwrapper2_docs.zip)
    generated from docstrings are available
 4. The following FullScreenWrapper2 examples are available
    * [Simple Demo](../sl4atools/fullscreenwrapper2/examples/fullscreenwrapper2demo/fullscreenwrapper2demo.py)
@@ -45,10 +45,10 @@ repository.
    * [Gyroscope Sensor](../sl4atools/fullscreenwrapper2/examples/gyro_sl4a_test/gyro_sl4a_test.py)
      tilting example to show how FullScreenWrapper2 EventHandler classes can
      be used to catch SL4A events & use them in your User Interface
-   * [A Full App (a calorie counter)](../sl4atools/fullscreenwrapper2/examples/calcount2_example.zip)
+   * [A Full App (a calorie counter)](../../../releases/download/r17/fullscreenwrapper2_calcount2_example.zip)
      that has parent & child layouts, resources & layouts being
      loaded from files, database access etc.
-5. A zip file with [everything](../../releases/download/r17/fullscreenwrapper2_everything.zip)
+5. A zip file with [everything](../../../releases/download/r17/fullscreenwrapper2_everything.zip)
    is available
 
 How to Use Guide
