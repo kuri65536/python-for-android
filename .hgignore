@@ -50,11 +50,12 @@ python{-build,3-alpha}/sqlite3{,_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/ncurses-5.9.tar.gz
 python3-alpha/readline-6.3.tar.gz
 python3-alpha/readline-6.3{_arm,_x86,_arm_pie,_x86_pie}
-python3-alpha/bzip2-1.0.6.tar.gz
+python{-build,3-alpha}/bzip2-1.0.6.tar.gz
 python3-alpha/python3{_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/python3-extras
 android/Python3ForAndroid/gradle
 android/Python3ForAndroid/local.properties
+python-build/bzip2
 python3-alpha/bzip2-1.0.6{_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/ncurses-5.9{_arm,_arm_pie,_x86,_x86_pie}
 syntax: regexp

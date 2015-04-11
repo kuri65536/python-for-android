@@ -84,19 +84,30 @@ LIBS = site-packages encodings compiler hotshot \
     xml xml/dom xml/etree xml/parsers xml/sax \
 
 # libraries {{{1
-LIBS := .build_misc_sqlite3
+LIBS := .build_misc_sqlite3 \
+        .build_misc_bzip2
 targz = $(subst .tar.gz,,$1)
 
 ## download {{{2
 sqlite3.tar.gz:
 	wget -O $@ http://sqlite.org/2015/sqlite-autoconf-3080900.tar.gz
+bzip2-1.0.6.tar.gz:
+	wget http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 
 ## sqlite3 {{{2
 .build_misc_sqlite3: sqlite3.tar.gz
+	rm -rf $(call targz,$<)
 	tar xfz $<
 	mv sqlite-autoconf-3080900 $(call targz,$<)
 	cp sqlite3.mk $(call targz,$<)/Android.mk
-	touch .build_misc_sqlite3
+	touch $@
+.build_misc_bzip2: bzip2-1.0.6.tar.gz
+	rm -rf bzip2
+	tar xfz $<
+	cd $(call targz,$<); patch -p1 < $(CWD)/../python3-alpha/patches/bzip2-1.0.6-pre.patch
+	mv $(call targz,$<) bzip2
+	cp bzip2.mk bzip2/Android.mk
+	touch $@
 
 clean_output:
 	rm -rf $(OUT)*
