@@ -93,6 +93,8 @@ sqlite3.tar.gz:
 	wget -O $@ http://sqlite.org/2015/sqlite-autoconf-3080900.tar.gz
 bzip2-1.0.6.tar.gz:
 	wget http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
+expat-2.1.0.tar.gz:
+	wget http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
 
 ## sqlite3 {{{2
 .build_misc_sqlite3: sqlite3.tar.gz
@@ -108,7 +110,15 @@ bzip2-1.0.6.tar.gz:
 	mv $(call targz,$<) bzip2
 	cp bzip2.mk bzip2/Android.mk
 	touch $@
+.build_misc_expat: expat-2.1.0.tar.gz
+	rm -rf expat-2.1.0
+	tar xfz $<
+	cd $(call targz,$<); patch -p1 < $(CWD)/../python3-alpha/patches/bzip2-1.0.6-pre.patch
+	mv $(call targz,$<) bzip2
+	cp bzip2.mk bzip2/Android.mk
+	touch $@
 
+# clean-up {{{1
 clean_output:
 	rm -rf $(OUT)*
 	mkdir -p $(OUT)/usr/bin
@@ -198,3 +208,4 @@ $(ZIP_PIE): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	
 	echo "Done"
 
+# vi: ft=Makefile:fdm=marker
