@@ -83,6 +83,20 @@ LIBS = site-packages encodings compiler hotshot \
     plat-linux2 \
     xml xml/dom xml/etree xml/parsers xml/sax \
 
+# libraries {{{1
+LIBS := .build_misc_sqlite3
+targz = $(subst .tar.gz,,$1)
+
+## download {{{2
+sqlite3.tar.gz:
+	wget -O $@ http://sqlite.org/2015/sqlite-autoconf-3080900.tar.gz
+
+## sqlite3 {{{2
+.build_misc_sqlite3: sqlite3.tar.gz
+	tar xfz $<
+	mv sqlite-autoconf-3080900 $(call targz,$<)
+	cp sqlite3.mk $(call targz,$<)/Android.mk
+	touch .build_misc_sqlite3
 
 clean_output:
 	rm -rf $(OUT)*
@@ -105,7 +119,7 @@ clean_output:
 	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
 
 
-$(ZIP): $(PYTHONSRC) .build_openssl
+$(ZIP): $(PYTHONSRC) .build_openssl $(LIBS)
 	@echo non-PIE: build the android libraries/executables
 	mkdir -p ./python/obj/local/{armeabi,x86}
 	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi
@@ -140,7 +154,7 @@ $(ZIP): $(PYTHONSRC) .build_openssl
 	
 	echo "Done"
 
-$(ZIP_PIE): $(PYTHONSRC) .build_openssl
+$(ZIP_PIE): $(PYTHONSRC) .build_openssl $(LIBS)
 	@echo PIE: build the android libraries/executables
 	mkdir -p ./python/obj/local/{armeabi,x86}
 	cp openssl/.build_arm/lib*.so ./python/obj/local/armeabi

@@ -45,8 +45,8 @@ android/PythonForAndroid/local.properties
 openssl/openssl-*.tar.gz
 openssl/openssl-src
 python3-alpha/host
-python3-alpha/sqlite3.tar.gz
-python3-alpha/sqlite3{_arm,_x86,_arm_pie,_x86_pie}
+python{-build,3-alpha}/sqlite3.tar.gz
+python{-build,3-alpha}/sqlite3{,_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/ncurses-5.9.tar.gz
 python3-alpha/readline-6.3.tar.gz
 python3-alpha/readline-6.3{_arm,_x86,_arm_pie,_x86_pie}
