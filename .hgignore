@@ -59,6 +59,11 @@ python-build/bzip2
 python3-alpha/bzip2-1.0.6{_arm,_x86,_arm_pie,_x86_pie}
 python3-alpha/ncurses-5.9{_arm,_arm_pie,_x86,_x86_pie}
 python-build/expat{,-2.1.0.tar.gz}
+python-build/libffi-*.tar.gz
+python-build/libffi
+python-build/uClibc-*.tar.bz2
+python-build/uClibc-*/
+python-build/libcrypt
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc
