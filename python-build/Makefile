@@ -86,7 +86,8 @@ LIBS = site-packages encodings compiler hotshot \
 # libraries {{{1
 TARGET_LIBS := .build_misc_sqlite3 \
                .build_misc_bzip2 \
-               .build_misc_expat
+               .build_misc_expat \
+               .build_misc_libffi
 targz = $(subst .tar.gz,,$1)
 
 ## download {{{2
@@ -96,6 +97,8 @@ bzip2-1.0.6.tar.gz:
 	wget http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
 expat-2.1.0.tar.gz:
 	wget http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
+libffi-3.2.1.tar.gz:
+	wget ftp://sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
 
 # sqlite3 {{{1
 .build_misc_sqlite3: sqlite3.tar.gz
@@ -119,6 +122,15 @@ expat-2.1.0.tar.gz:
 	mv expat-2.1.0 expat
 	cp expat.mk expat/Android.mk
 	cd expat; ./configure --host=arm-linux-androideabi
+	touch $@
+# ffi {{{1
+.build_misc_libffi: libffi-3.2.1.tar.gz
+	rm -rf libffi
+	tar xfz $<
+	mv libffi-3.2.1 libffi
+	cp libffi.mk libffi/Android.mk
+	make -C libffi -f ../libffi.mk build_sep_arm
+	make -C libffi -f ../libffi.mk build_sep_x86
 	touch $@
 
 # clean-up {{{1
@@ -146,8 +158,10 @@ clean_output:
 $(ZIP): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	@echo non-PIE: build the android libraries/executables
 	mkdir -p ./python/obj/local/{armeabi,x86}
-	cp -dp openssl/.build_armeabi/lib*.so ./python/obj/local/armeabi
-	cp -dp openssl/.build_x86/lib*.so ./python/obj/local/x86
+	cp -dp openssl/.build_armeabi/lib*.so* ./python/obj/local/armeabi
+	cp -dp openssl/.build_x86/lib*.so* ./python/obj/local/x86
+	cp -dp libffi/arm-unknown-linux-androideabi/.libs/lib*.so* ./python/obj/local/armeabi
+	cp -dp libffi/i686-pc-linux-android/.libs/lib*.so* ./python/obj/local/x86
 	
 	cd $(CWD)/python; \
 	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
@@ -183,6 +197,8 @@ $(ZIP_PIE): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	mkdir -p ./python/obj/local/{armeabi,x86}
 	cp -dp openssl/.build_armeabi/lib*.so* ./python/obj/local/armeabi
 	cp -dp openssl/.build_x86/lib*.so* ./python/obj/local/x86
+	cp -dp libffi/arm-unknown-linux-androideabi/.libs/lib*.so* ./python/obj/local/armeabi
+	cp -dp libffi/i686-pc-linux-android/.libs/lib*.so* ./python/obj/local/x86
 	
 	# FIXME: do not build duplicated bins with non-PIE binary.
 	cd $(CWD)/python; \
@@ -211,4 +227,5 @@ $(ZIP_PIE): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	
 	echo "Done"
 
-# vi: ft=Makefile:fdm=marker
+# end of file {{{1
+# vi: ft=make:fdm=marker:et:ts=4:nowrap

@@ -23,3 +23,4 @@ $(call __ndk_info, INCLUDES: $(LOCAL_C_INCLUDES))
 $(call __ndk_info, EXPORT: $(LOCAL_EXPORT_C_INCLUDES))
 
 include $(BUILD_SHARED_LIBRARY)
+

@@ -139,7 +139,7 @@ LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
 LOCAL_MODULE := _ctypes
 LOCAL_MODULE_FILENAME := _ctypes
 LOCAL_SRC_FILES := Modules/_ctypes/_ctypes.c Modules/_ctypes/callbacks.c Modules/_ctypes/callproc.c Modules/_ctypes/stgdict.c Modules/_ctypes/cfield.c Modules/_ctypes/malloc_closure.c 
-LOCAL_SHARED_LIBRARIES := libpython2.7 libffi
+LOCAL_SHARED_LIBRARIES := libpython2.7 ffi
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module, sqlite3)
