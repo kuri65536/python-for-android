@@ -143,6 +143,11 @@ uClibc-0.9.33.2.tar.bz2:
 	mv $(subst .tar.bz2,,$<)/libcrypt .
 	cp $(subst .tar.bz2,,$<)/include/crypt.h libcrypt
 	cp libcrypt.mk libcrypt/Android.mk
+	
+	# rm -rf pwd_grp
+	# mv $(subst .tar.bz2,,$<)/libc/pwd_grp .
+	# cp pwd_grp.mk pwd_grp/Android.mk
+	
 	touch $@
 
 # clean-up {{{1
