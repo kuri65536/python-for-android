@@ -87,7 +87,8 @@ LIBS = site-packages encodings compiler hotshot \
 TARGET_LIBS := .build_misc_sqlite3 \
                .build_misc_bzip2 \
                .build_misc_expat \
-               .build_misc_libffi
+               .build_misc_libffi \
+               .build_misc_libcrypt
 targz = $(subst .tar.gz,,$1)
 
 ## download {{{2
@@ -99,6 +100,8 @@ expat-2.1.0.tar.gz:
 	wget http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz
 libffi-3.2.1.tar.gz:
 	wget ftp://sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
+uClibc-0.9.33.2.tar.bz2:
+	wget http://www.uclibc.org/downloads/uClibc-0.9.33.2.tar.bz2
 
 # sqlite3 {{{1
 .build_misc_sqlite3: sqlite3.tar.gz
@@ -131,6 +134,15 @@ libffi-3.2.1.tar.gz:
 	cp libffi.mk libffi/Android.mk
 	make -C libffi -f ../libffi.mk build_sep_arm
 	make -C libffi -f ../libffi.mk build_sep_x86
+	touch $@
+# libcrypt {{{1
+.build_misc_libcrypt: uClibc-0.9.33.2.tar.bz2
+	rm -rf $(subst .tar.bz2,,$<)
+	rm -rf libcrypt
+	tar xfj $<
+	mv $(subst .tar.bz2,,$<)/libcrypt .
+	cp $(subst .tar.bz2,,$<)/include/crypt.h libcrypt
+	cp libcrypt.mk libcrypt/Android.mk
 	touch $@
 
 # clean-up {{{1
