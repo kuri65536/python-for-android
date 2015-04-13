@@ -21,7 +21,7 @@ ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
-.PHONY: build error init clean_output cleanall
+.PHONY: build error init clean_output cleanall build_bin build_zip
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -172,8 +172,15 @@ clean_output:
 	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
 
 
-$(ZIP): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
-	@echo non-PIE: build the android libraries/executables
+# build & packaging 1 {{{1
+build_zip:
+	cd $(CWD)/python; \
+	cp obj/local/$(ZIP_ARCH)/python $(OUT)/usr/bin; \
+	cp -dp obj/local/$(ZIP_ARCH)/lib*.so* $(OUT)/usr/lib; \
+	cp obj/local/$(ZIP_ARCH)/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
+	$(CWD)/host/bin/python build.py $(BUILDPY_ARG)
+
+build_bin:
 	mkdir -p ./python/obj/local/{armeabi,x86}
 	cp -dp openssl/.build_armeabi/lib*.so* ./python/obj/local/armeabi
 	cp -dp openssl/.build_x86/lib*.so* ./python/obj/local/x86
@@ -186,61 +193,38 @@ $(ZIP): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	    $(CWD)/python-src/Python/graminit.c
 	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
 	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
+
+$(ZIP): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
+	@echo non-PIE: build the android libraries/executables
+	make build_bin
 	touch .build_bin
 	
 	# arm: copy out all the needed files
 	make clean_output
-	cd $(CWD)/python; \
-	cp obj/local/armeabi/python $(OUT)/usr/bin; \
-	cp -dp obj/local/armeabi/lib*.so* $(OUT)/usr/lib; \
-	cp obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload; \
-	
 	cd $(CWD)/python-libs; bash -ex setuptools.sh
 	$(CWD)/host/bin/python $(OUT)/usr/lib/$(PYTHONLIB)/compileall.py $(OUT)/usr/lib/$(PYTHONLIB)
-	$(CWD)/host/bin/python build.py
+	make build_zip ZIP_ARCH=armeabi BUILDPY_ARG=extra
 	
 	# x86: copy out all the needed files
 	make clean_output
-	cd $(CWD)/python; \
-	cp obj/local/x86/python $(OUT)/usr/bin; \
-	cp -dp obj/local/x86/lib*.so* $(OUT)/usr/lib; \
-	cp obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
-	$(CWD)/host/bin/python build.py x86
+	make build_zip ZIP_ARCH=x86 BUILDPY_ARG=x86
 	
 	echo "Done"
 
+# build & packaging 2 {{{1
 $(ZIP_PIE): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	@echo PIE: build the android libraries/executables
-	mkdir -p ./python/obj/local/{armeabi,x86}
-	cp -dp openssl/.build_armeabi/lib*.so* ./python/obj/local/armeabi
-	cp -dp openssl/.build_x86/lib*.so* ./python/obj/local/x86
-	cp -dp libffi/arm-unknown-linux-androideabi/.libs/lib*.so* ./python/obj/local/armeabi
-	cp -dp libffi/i686-pc-linux-android/.libs/lib*.so* ./python/obj/local/x86
-	
 	# FIXME: do not build duplicated bins with non-PIE binary.
-	cd $(CWD)/python; \
-	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
-	    $(CWD)/python-src/Include/graminit.h \
-	    $(CWD)/python-src/Python/graminit.c
-	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
-	cd $(CWD)/python; __ENABLE_PIE=yes NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
+	make build_bin __ENABLE_PIE=yes
 	touch .build_bin_pie
 	
 	# arm: copy out all the needed files
 	make clean_output
-	cd $(CWD)/python; \
-	cp obj/local/armeabi/python $(OUT)/usr/bin; \
-	cp -dp obj/local/armeabi/lib*.so* $(OUT)/usr/lib; \
-	cp obj/local/armeabi/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
-	$(CWD)/host/bin/python build.py pie
+	make build_zip ZIP_ARCH=armeabi BUILDPY_ARG=pie
 	
 	# x86: copy out all the needed files
 	make clean_output
-	cd $(CWD)/python; \
-	cp obj/local/x86/python $(OUT)/usr/bin; \
-	cp -dp obj/local/x86/lib*.so* $(OUT)/usr/lib; \
-	cp obj/local/x86/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
-	$(CWD)/host/bin/python build.py pie x86
+	make build_zip ZIP_ARCH=x86 BUILDPY_ARG="pie x86"
 	
 	echo "Done"
 

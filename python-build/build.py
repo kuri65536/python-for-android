@@ -33,6 +33,10 @@ VERSION={
 }
 
 
+class cfg:
+    fExtra = False
+
+
 def options():
     import logging
     l = logging.getLogger("")
@@ -44,6 +48,8 @@ def options():
             pie = "_pie"
         elif arg in ("x86", ):
             plat = "_x86"
+        elif arg in ("extra", ):
+            cfg.fExtra = True
     return pie, plat
 
 pie, plat = options()
@@ -193,7 +199,9 @@ run("mkdir python", cwd="output.temp/usr")
 run("cp -r %s/python-libs/py4a python" % pwd, cwd="output.temp/usr")
 run("cp %s/setup.cfg ." % pwd, cwd="output.temp/usr")
 run("cp %s/prepare_setuptools.sh setup.sh" % pwd, cwd="output.temp/usr")
-run("cp %s/standalone_python.sh python.sh" % pwd, cwd="output.temp/usr")
+if True:
+    run("cp %s/../sl4atools/standalone_python2.sh python.sh" % pwd,
+        cwd="output.temp/usr")
 zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION["lib"]),
       os.path.join(pwd, 'output.temp', 'usr'),
       os.path.join(pwd, 'output.temp', 'usr'))
@@ -211,13 +219,21 @@ rm('output/usr/include')
 map(strip, find('output', '\.so$')[0])
 strip('output/usr/bin/python')
 
-print 'Zipping up standard library.'
-libs = os.path.join(pwd, 'output/usr/lib/python2.7')
-# Copy in ASE's Android module.
-shutil.copy(os.path.join(pwd, 'python-libs', 'ase', 'android.py'),
-            'output/usr/lib/python2.7')
-zipup(os.path.join(pwd, 'python_extras%s.zip' % VERSION["extra"]), libs, libs,
-      exclude=['lib-dynload'], prefix='python/')
+
+def zipup_extra():
+    if not cfg.fExtra:
+        return
+    print 'Zipping up standard library.'
+    libs = os.path.join(pwd, 'output/usr/lib/python2.7')
+    # Copy in ASE's Android module.
+    shutil.copy(os.path.join(pwd, 'python-libs', 'ase', 'android.py'),
+                'output/usr/lib/python2.7')
+    zipup(os.path.join(pwd, 'python_extras%s.zip' % VERSION["extra"]),
+          libs, libs,
+          exclude=['lib-dynload'], prefix='python/')
+
+
+zipup_extra()
 
 map(rm, find('output', '\.py$')[0])
 map(rm, find('output', '\.pyc$')[0])
