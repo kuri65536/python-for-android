@@ -42,17 +42,15 @@ def options():
     l = logging.getLogger("")
     l.setLevel(logging.INFO)
 
-    pie, plat = "", ""
+    plat = ""
     for arg in sys.argv:
-        if arg in ("pie", ):
-            pie = "_pie"
-        elif arg in ("x86", ):
+        if arg in ("x86", ):
             plat = "_x86"
         elif arg in ("extra", ):
             cfg.fExtra = True
-    return pie, plat
+    return plat
 
-pie, plat = options()
+plat = options()
 
 
 for i in ("scripts", "extra", "lib"):
@@ -244,7 +242,7 @@ def clean_library(lib):
 map (clean_library, ['ctypes', 'distutils', 'idlelib', 'plat-linux2', 'site-packages'])
 
 print 'Zipping up Python interpreter for deployment.'
-zipup(os.path.join(pwd, 'python%s%s%s.zip' % (VERSION[""], plat, pie)),
+zipup(os.path.join(pwd, 'python%s%s.zip' % (VERSION[""], plat)),
       os.path.join(pwd, 'output', 'usr'),
       os.path.join(pwd, 'output', 'usr'),
       exclude=['*.pyc',  '*.py'], prefix="python/")

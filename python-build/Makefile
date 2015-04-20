@@ -16,8 +16,6 @@ ZIP := python_$(RELEASE_VERSION).zip \
        python_$(RELEASE_VERSION)_x86.zip \
        python_extras_$(shell cat LATEST_VERSION_EXTRA).zip \
        python_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
-ZIP_PIE := python_$(RELEASE_VERSION)_pie.zip \
-           python_$(RELEASE_VERSION)_x86_pie.zip
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
@@ -26,7 +24,7 @@ OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 ifeq (x$(NDK_PATH),x)
 build: error
 else
-build: $(ZIP) $(ZIP_PIE)
+build: $(ZIP)
 endif
 
 cleanall: clean
@@ -172,7 +170,7 @@ clean_output:
 	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
 
 
-# build & packaging 1 {{{1
+# build python {{{1
 build_zip:
 	cd $(CWD)/python; \
 	cp obj/local/$(ZIP_ARCH)/python $(OUT)/usr/bin; \
@@ -194,25 +192,8 @@ build_bin:
 	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
 	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
 
+# build & packaging {{{1
 $(ZIP): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
-	@echo non-PIE: build the android libraries/executables
-	make build_bin
-	touch .build_bin
-	
-	# arm: copy out all the needed files
-	make clean_output
-	cd $(CWD)/python-libs; bash -ex setuptools.sh
-	$(CWD)/host/bin/python $(OUT)/usr/lib/$(PYTHONLIB)/compileall.py $(OUT)/usr/lib/$(PYTHONLIB)
-	make build_zip ZIP_ARCH=armeabi BUILDPY_ARG=extra
-	
-	# x86: copy out all the needed files
-	make clean_output
-	make build_zip ZIP_ARCH=x86 BUILDPY_ARG=x86
-	
-	echo "Done"
-
-# build & packaging 2 {{{1
-$(ZIP_PIE): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	@echo PIE: build the android libraries/executables
 	# FIXME: do not build duplicated bins with non-PIE binary.
 	make build_bin __ENABLE_PIE=yes

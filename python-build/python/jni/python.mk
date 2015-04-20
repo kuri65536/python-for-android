@@ -1,13 +1,12 @@
 LOCAL_PATH := $(call my-dir)
 PYTHON_SRC_PATH := $(LOCAL_PATH)/../../python-src
 
-# for < 5.0
 include $(CLEAR_VARS)
 
 ifeq (x$(__ENABLE_PIE),xyes)
 # for > 5.0
-LOCAL_CFLAGS += -pie -fPIE
-LOCAL_LDFLAGS += -pie -fPIE
+    LOCAL_CFLAGS += -fvisibility=default -fPIE
+    LOCAL_LDFLAGS += -rdynamic -fPIE -pie
 endif
 
 LOCAL_C_INCLUDES := $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
