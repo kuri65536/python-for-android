@@ -66,12 +66,6 @@ public abstract class Sl4aHostedInterpreter implements InterpreterDescriptor {
         else if (ret.startsWith("mips")) {
             ret = "_mips";
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-            ret = ret + "_pie";
-        } else {
-            ret = ret;
-        }
         return ret;
     }
 
