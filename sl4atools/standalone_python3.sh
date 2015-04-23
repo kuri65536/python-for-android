@@ -1,5 +1,10 @@
 #! /bin/sh
 st=`for i in /mnt/storage /mnt/sdcard /sdcard; do [ -d $i ] && echo $i && break; done`
+if [ x$api != x ]; then :
+elif ! type \cut > /dev/null; then api=14; else
+    api=`grep build.version.sdk /system/build.prop | cut -d = -f 2`
+fi
+
 
 PW=`pwd`
 export EXTERNAL_STORAGE=$st
@@ -15,5 +20,17 @@ export PYTHON_EGG_CACHE=$TEMP
 # export PYTHONHOME=$bin
 export LD_LIBRARY_PATH=$bin/lib
 cd $PW
-$bin/bin/python3 "$@"
+if [ $api -lt 14 ]; then
+    run=/data/data/com.googlecode.android_scripting/files/run_pie
+    if ! [ -x $run ]; then
+        echo "need root permission to launch run_pie/python"
+        ls -l "$run"
+        # su -c "chmod 755 $run"
+        su -c "$run $bin/bin/python3 $*"
+    else
+        $run $bin/bin/python3 $*
+    fi
+else
+    $bin/bin/python3 $*
+fi
 
