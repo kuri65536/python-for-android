@@ -18,12 +18,9 @@ HOSTPYTHON := $(dir $(dir PYTHON_FOR_BUILD))
 
 ZIP_BINarm := python3_$(RELEASE_VERSION).zip
 ZIP_BINx86 := $(subst .zip,_x86.zip,$(ZIP_BINarm))
-ZIP_PIEarm := $(subst .zip,_pie.zip,$(ZIP_BINarm))
-ZIP_PIEx86 := $(subst .zip,_x86_pie.zip,$(ZIP_BINarm))
 ZIPEXTRA := python3_extras_$(shell cat LATEST_VERSION_EXTRA).zip
 ZIPSCRIPTS := python3_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
 ZIP := $(ZIP_BINarm) $(ZIP_BINx86) \
-       $(ZIP_PIEarm) $(ZIP_PIEx86) \
        $(ZIPEXTRA) \
        $(ZIPSCRIPTS)
 
@@ -62,13 +59,6 @@ export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
 _ANDROID_ARCH = arch-arm
 _ANDROID_EABI = $(tabi)
 
-export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
-                -I$(PYBIN)/include
-export CPPFLAGS = $(CFLAGS)
-export CXXFLAGS = $(CFLAGS)
-export LDFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
-                 -L$(PYBIN)/lib
-
 # CXX = ${TARGET}-g++
 # AR = ${TARGET}-ar
 # RANLIB=${TARGET}-ranlib
@@ -79,15 +69,9 @@ CROSS_COMPILE = arm-linux-androideabi-
 CROSS_COMPILE_TARGET = arm
 HOSTARCH = arm-linux-androideabi
 
-    ifeq (x$(PIE),xyes)
-        PYTHONSRC := ./python-src_arm_pie
-        SFX := _arm_pie
-        ZIPMAIN := $(ZIP_PIEarm)
-    else
-        PYTHONSRC := ./python-src_arm
-        SFX := _arm
-        ZIPMAIN := $(ZIP_BINarm)
-    endif
+    PYTHONSRC := ./python-src_arm
+    SFX := _arm
+    ZIPMAIN := $(ZIP_BINarm)
 endif
 
 # build variables for cross-compile. (x86) {{{1
@@ -99,15 +83,9 @@ ifeq (x$(CROSS),xx86)
     MACHINE := i686
     export ARCH := x86
 
-    ifeq (x$(PIE),xyes)
-        PYTHONSRC := ./python-src_x86_pie
-        SFX := _x86_pie
-        ZIPMAIN := $(ZIP_PIEx86)
-    else
-        PYTHONSRC := ./python-src_x86
-        SFX := _x86
-        ZIPMAIN := $(ZIP_BINx86)
-    endif
+    PYTHONSRC := ./python-src_x86
+    SFX := _x86
+    ZIPMAIN := $(ZIP_BINx86)
 endif
 
 # build settings section 2 {{{1
@@ -122,9 +100,10 @@ PYTHON_OPTIONAL_MODULES="bz2 lzma ssl"
 
 
 # build settings section 3 {{{1
+PYBINR := python3
+PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
+
 ifneq (x$(CROSS),x)
-    PYBINR := python3
-    PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
     export PYBIN := $(CWD)/$(PYBINR)$(SFX)/$(PYBINR)
 
     export ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(_ANDROID_EABI)/prebuilt/$(host)/bin
@@ -134,11 +113,13 @@ ifneq (x$(CROSS),x)
     _ANDROID_ARCH = arch-$(ARCH)
 
     export CFLAGS = --sysroot=$(ANDROID_NDK_SYSROOT) \
-                    -I$(PYBIN)/include
+                    -I$(PYBIN)/include -fvisibility=default -fPIE
     export CPPFLAGS = $(CFLAGS)
     export CXXFLAGS = $(CFLAGS)
-    export LDFLAGS := --sysroot=$(ANDROID_NDK_SYSROOT) \
-                      -L$(PYBIN)/lib
+    export CCSHARED = -fvisibility=default -fPIE
+    export LDFLAGS := --sysroot=$(ANDROID_NDK_SYSROOT) -L$(PYBIN)/lib
+    export LINKFORSHARED := -rdynamic -fPIE -pie \
+                            -Xlinker -export-dynamic
 
     export HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
 
@@ -146,13 +127,6 @@ ifneq (x$(CROSS),x)
     CROSS_COMPILE_TARGET := $(ARCH)
     BLDSHARED := $(CROSS_COMPILE)gcc -shared
     HOSTARCH := $(TARGET)
-endif
-ifeq (x$(PIE),xyes)
-    export CFLAGS += -fPIE
-    export CPPFLAGS += -fPIE
-    export CXXFLAGS += -fPIE
-    # export LDFLAGS +=
-    export CCSHARED := -fPIE
 endif
 
 
@@ -162,8 +136,6 @@ cleanall: clean
 
 clean:
 	make -C openssl clean
-	make clean_work CROSS=arm PIE=no
-	make clean_work CROSS=x86 PIE=no
 	make clean_work CROSS=arm PIE=yes
 	make clean_work CROSS=x86 PIE=yes
 	rm -rf python3_extras
@@ -205,8 +177,6 @@ targz = $(subst .tar.gz,,$1)
 
 ## ncurses {{{2
 .build_misc_ncurses: ncurses-5.9.tar.gz
-	make $(subst .,,$@) CROSS=arm PIE=no
-	make $(subst .,,$@) CROSS=x86 PIE=no
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
@@ -230,8 +200,6 @@ build_misc_ncurses: ncurses-5.9.tar.gz
 
 ## readline {{{2
 .build_misc_readline: readline-6.3.tar.gz
-	make $(subst .,,$@) CROSS=arm PIE=no
-	make $(subst .,,$@) CROSS=x86 PIE=no
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
@@ -251,8 +219,6 @@ build_misc_readline: readline-6.3.tar.gz
 
 ## sqlite3 {{{2
 .build_misc_sqlite3: sqlite3.tar.gz
-	make $(subst .,,$@) CROSS=arm PIE=no
-	make $(subst .,,$@) CROSS=x86 PIE=no
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
@@ -275,8 +241,6 @@ build_misc_sqlite3: sqlite3.tar.gz
 
 ## bzip2 {{{2
 .build_misc_bzip2: bzip2-1.0.6.tar.gz
-	make $(subst .,,$@) CROSS=arm PIE=no
-	make $(subst .,,$@) CROSS=x86 PIE=no
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
@@ -315,8 +279,6 @@ $(PYTHONTAR):
 $(CWD)/patches/python-*.patch:
 	echo
 .build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
-	make $(subst .,,$@) CROSS=arm PIE=no
-	make $(subst .,,$@) CROSS=x86 PIE=no
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch .build_src
@@ -329,14 +291,14 @@ build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
 	    echo "patching: $$p..."; patch -p1 -i $$p; done
 
 .build_config: .build_src .build_misc
-	make build_config CROSS=arm PIE=no
-	make build_config CROSS=x86 PIE=no
 	make build_config CROSS=arm PIE=yes
 	make build_config CROSS=x86 PIE=yes
 	touch .build_config
 build_config:
 	# @echo PATH: "'$$PATH'"
-	@echo CFLAGS: "'$$CFLAGS'"
+	# @echo CROSS: "$(CROSS)"
+	# @echo CFLAGS: "$$CFLAGS"
+	# @echo LINKFORSHARED: "$(LINKFORSHARED)"
 	ln -sf $(NDK_SYSROOT)/usr/include/linux/soundcard.h \
 	       $(NDK_SYSROOT)/usr/include/sys/soundcard.h
 	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
@@ -345,8 +307,6 @@ build_config:
 	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=no
 
 .build_bin: .build_config
-	make build_bin CROSS=arm PIE=no
-	make build_bin CROSS=x86 PIE=no
 	make build_bin CROSS=arm PIE=yes
 	make build_bin CROSS=x86 PIE=yes
 	touch .build_bin
@@ -360,12 +320,8 @@ strip_bin:
 
 # python3: packaging {{{1
 $(ZIP_BINarm): .build_bin
-	make CROSS=arm PIE=no build_zip
-$(ZIP_BINx86): .build_bin
-	make CROSS=x86 PIE=no build_zip
-$(ZIP_PIEarm): .build_bin
 	make CROSS=arm PIE=yes build_zip
-$(ZIP_PIEx86): .build_bin
+$(ZIP_BINx86): .build_bin
 	make CROSS=x86 PIE=yes build_zip
 
 build_zip:
@@ -399,7 +355,7 @@ $(ZIPEXTRA): $(ZIPMAIN)
 	# cp $(PYBINR)/share/terminfo/v/vt320 $(PYEXT)/share/v
 	
 	cp python-libs/ase/android.py $(PYEXT)
-	cp -r $(PYLIB)/* $(PYEXT)
+	cp -r $(CWD)/python3_arm/$(PYLIB)/* $(PYEXT)
 	cp -r python-libs/* $(PYEXT)/site-packages
 	# $(PYTHON_FOR_BUILD) -m compileall $(PYEXT) || echo
 	
