@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2015 Shimoda
  * Copyright (C) 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -19,4 +20,10 @@ public class PythonConstants {
   static final String ACTION_FILE_BROWSER = "com.googlecode.pythonforandroid.action.FILEBROWSER";
   static final String SL4A = "com.googlecode.android_scripting";
   static final String SL4A_MANAGER = "com.googlecode.android_scripting.activity.ScriptManager";
+  static final String INSTALLED_VERSION_KEY = "py4a.installed.version";
+  static final String INSTALLED_EXTRAS_KEY = "py4a.installed.extras";
+  static final String INSTALLED_SCRIPTS_KEY = "py4a.installed.scripts";
+  static final String AVAIL_VERSION_KEY = "py4a.available.version";
+  static final String AVAIL_EXTRAS_KEY = "py4a.available.extras";
+  static final String AVAIL_SCRIPTS_KEY = "py4a.available.scripts";
 }

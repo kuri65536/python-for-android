@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2015 Shimoda
  * Copyright (C) 2010-2011 Robbie Matthews <rjmatthews62@gmail.com>
  * Copyright (C) 2009 Google Inc.
  *
@@ -24,26 +25,34 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup.MarginLayoutParams;
+import android.view.Window;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.InterpreterInstaller;
 import com.googlecode.android_scripting.InterpreterUninstaller;
+import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.activity.Main;
 import com.googlecode.android_scripting.exception.Sl4aException;
+import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 import com.googlecode.android_scripting.interpreter.InterpreterUtils;
 
@@ -60,9 +69,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -101,7 +112,7 @@ public class PythonMain extends Main {
   private boolean mPromptResult;
 
   private static enum MenuId {
-    BROWSER, SL4A;
+    BROWSER, SL4A, VERSION;
     public int getId() {
       return ordinal() + Menu.FIRST;
     }
@@ -157,6 +168,7 @@ public class PythonMain extends Main {
   private File mPythonPath;
   private File mEggPath;
   private PythonDescriptor mDescriptor;
+  private TextView mVersions;
 
   @Override
   protected InterpreterDescriptor getDescriptor() {
@@ -194,6 +206,8 @@ public class PythonMain extends Main {
   @Override
   protected void initializeViews() {
     super.initializeViews();
+    // mButton.setVisibility(View.GONE);
+
     mDownloads = FileUtils.getExternalDownload();
     if (!mDownloads.exists()) {
       for (File file : new File(Environment.getExternalStorageDirectory().getAbsolutePath())
@@ -212,6 +226,29 @@ public class PythonMain extends Main {
     final float scale = getResources().getDisplayMetrics().density;
     int marginPixels = (int) (MARGIN_DIP * scale + 0.5f);
     marginParams.setMargins(marginPixels, marginPixels, marginPixels, marginPixels);
+
+    mButtonInstallScripts = new Button(this);
+    mButtonInstallScripts.setLayoutParams(marginParams);
+    mButtonInstallScripts.setText("Install Python");
+    // mLayout.addView(mButtonInstallScripts);
+    mButtonInstallScripts.setOnClickListener(new OnClickListener() {
+      public void onClick(View v) {
+        if (mCurrentTask != null) {
+          return;
+        }
+        getWindow().setFeatureInt(Window.FEATURE_INDETERMINATE_PROGRESS,
+            Window.PROGRESS_VISIBILITY_ON);
+        mCurrentTask = RunningTask.INSTALL;
+        InterpreterInstaller installTask;
+        try {
+          installTask = getInterpreterInstaller(mDescriptor, PythonMain.this, mTaskListener);
+        } catch (Sl4aException e) {
+          Log.e(PythonMain.this, e.getMessage(), e);
+          return;
+        }
+        installTask.execute();
+      }
+    });
 
     mButtonInstallModules = new Button(this);
     mButtonInstallModules.setLayoutParams(marginParams);
@@ -242,6 +279,47 @@ public class PythonMain extends Main {
         doDeleteModule();
       }
     });
+
+    mVersions = new TextView(this);
+    mVersions.setLayoutParams(marginParams);
+    updateVersions();
+    mLayout.addView(mVersions);
+    doCheckVersion();
+  }
+
+  void updateVersions() {
+    PythonDescriptor descriptor = new PythonDescriptor();
+    descriptor.setSharedPreferences(mPreferences);
+    mVersions.setText("Version Available: Bin: " + descriptor.getVersion() + " Extra: "
+        + descriptor.getExtrasVersion() + " Scripts: " + descriptor.getScriptsVersion() + "\n"
+        + "Version Installed: " + getInstalledVersion());
+
+  }
+
+  @Override
+  protected void setInstalled(boolean isInstalled) {
+    super.setInstalled(isInstalled);
+    updateVersions();
+  }
+
+  private String getInstalledVersion() {
+    String result;
+    int version = 0;
+    int extrasVersion = 0;
+    int scriptsVersion = 0;
+
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+    if (!preferences.getBoolean(InterpreterConstants.INSTALLED_PREFERENCE_KEY, false)) {
+      result = "Not Installed";
+    } else if (preferences.contains(PythonConstants.INSTALLED_VERSION_KEY)) {
+      version = preferences.getInt(PythonConstants.INSTALLED_VERSION_KEY, 0);
+      extrasVersion = preferences.getInt(PythonConstants.INSTALLED_EXTRAS_KEY, 0);
+      scriptsVersion = preferences.getInt(PythonConstants.INSTALLED_SCRIPTS_KEY, 0);
+      result = "Bin: " + version + " Extra: " + extrasVersion + " Scripts: " + scriptsVersion;
+    } else {
+      result = "Unknown";
+    }
+    return result;
   }
 
   protected void doBrowseModule() {
@@ -479,6 +557,8 @@ public class PythonMain extends Main {
     menu.add(Menu.NONE, MenuId.BROWSER.getId(), Menu.NONE, "File Browser").setIcon(
         android.R.drawable.ic_menu_myplaces);
     menu.add(Menu.NONE, MenuId.SL4A.getId(), Menu.NONE, "SL4A").setIcon(R.drawable.sl4a_logo_32);
+    menu.add(Menu.NONE, MenuId.VERSION.getId(), Menu.NONE, "Check Version").setIcon(
+        android.R.drawable.ic_menu_info_details);
     return true;
   }
 
@@ -499,8 +579,14 @@ public class PythonMain extends Main {
       } catch (Exception e) {
         showMessage("Py4A", "SL4A may not be installed.");
       }
+    } else if (MenuId.VERSION.getId() == id) {
+      doCheckVersion();
     }
     return true;
+  }
+
+  private void doCheckVersion() {
+    (new CheckVersion(this)).execute();
   }
 
   class RunExtract extends Thread {
@@ -713,6 +799,61 @@ public class PythonMain extends Main {
       bundle.putInt(key, value);
       message.setData(bundle);
       mHandler.sendMessage(message);
+    }
+  }
+
+  class CheckVersion extends AsyncTask<Integer, String, Boolean> {
+    PythonMain parent;
+    int version;
+    int extras;
+    int scripts;
+
+    CheckVersion(PythonMain parent) {
+      super();
+      this.parent = parent;
+    }
+
+    @Override
+    protected void onPostExecute(Boolean result) {
+      if (result) {
+        Editor e = parent.mPreferences.edit();
+        e.putInt(PythonConstants.AVAIL_VERSION_KEY, version);
+        e.putInt(PythonConstants.AVAIL_EXTRAS_KEY, extras);
+        e.putInt(PythonConstants.AVAIL_SCRIPTS_KEY, scripts);
+        e.commit();
+        parent.updateVersions();
+      }
+      super.onPostExecute(result);
+    }
+
+    @Override
+    protected Boolean doInBackground(Integer... params) {
+      publishProgress("Checking website for Updates");
+      URL url;
+      try {
+        // url = new URL("http://python-for-android.googlecode.com/hg/python3-alpha/VERSIONS");
+        url = new URL("http://www.mithril.com.au/android/VERSIONS");
+        Properties p = new Properties();
+        p.load(url.openStream());
+        if (p.containsKey("PY34A_VERSION")) {
+          version = Integer.valueOf(p.getProperty("PY34A_VERSION"));
+          extras = Integer.valueOf(p.getProperty("PY34A_EXTRAS_VERSION"));
+          scripts = Integer.valueOf(p.getProperty("PY34A_SCRIPTS_VERSION"));
+          publishProgress("Versions Updated");
+          return true;
+        }
+      } catch (Exception e) {
+        publishProgress("Error:\n" + e);
+      }
+      return false;
+    }
+
+    @Override
+    protected void onProgressUpdate(String... values) {
+      if (values.length > 0) {
+        Toast.makeText(parent, values[0], Toast.LENGTH_SHORT).show();
+      }
+      super.onProgressUpdate(values);
     }
   }
 

@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2015 shimoda
  * Copyright (C) 2010-2011 Naranjo Manuel Francisco <manuel@aircable.net>
  * Copyright (C) 2010-2011 Robbie Matthews <rjmatthews62@gmail.com>
  * Copyright (C) 2009 Google Inc.
@@ -22,6 +23,9 @@ import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
 import com.googlecode.android_scripting.interpreter.InterpreterProvider;
 
 public class PythonProvider extends InterpreterProvider {
+
+  static String TAG = "PY4A-PROVIDER";
+
   @Override
   protected InterpreterDescriptor getDescriptor() {
     return new PythonDescriptor();

@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2015 Shimoda <kuri65536@hotmail.com>
  * Copyright (C) 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -17,6 +18,7 @@
 package com.googlecode.pythonforandroid;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterUtils;
@@ -43,6 +45,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private int cache_version = -1;
   private int cache_extras_version = -1;
   private int cache_scripts_version = -1;
+  private SharedPreferences mPreferences;
 
   @Override
   public String getBaseInstallUrl() {
@@ -170,5 +173,9 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     values.put(ENV_TEMP, getTemp());
     values.put(ENV_EGGS, new File(getHome(context), "lib/python2.7/lib-dynload").getAbsolutePath());
     return values;
+  }
+
+  void setSharedPreferences(SharedPreferences preferences) {
+    mPreferences = preferences;
   }
 }

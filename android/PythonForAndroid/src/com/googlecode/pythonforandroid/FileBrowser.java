@@ -161,6 +161,7 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
     handleIntent(intent);
   }
 
+  @SuppressWarnings("serial")
   private void updateAndFilterScriptList(final String query) {
     List<File> scripts;
     List<File> work;
