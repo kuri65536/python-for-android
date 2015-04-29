@@ -180,21 +180,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
 
   @Override
   public Map<String, String> getEnvironmentVariables(Context context) {
-    Map<String, String> values = new HashMap<String, String>();
-    values.put(PythonConstants.ENV_HOME, getHome(context));
-    values.put(PythonConstants.ENV_LD, getHome(context) + pathShlib());
-    // values.put(ENV_PATH, getExtras() + ":" + getHome(context) + "/lib/python2.6/lib-dynload" +
-    // ":"
-    // + getHome(context) + "/lib/python2.7");
-    values.put(PythonConstants.ENV_PATH, getExtras() + ":"
-        + new File(getHome(context), this.pathShlib()) + ":"
-        + new File(getHome(context), this.pathSitepkgs()) + ":"
-        + new File(getHome(context), this.pathDynload()));
-    values.put(PythonConstants.ENV_EXTRAS, getExtrasRoot());
-    values.put(PythonConstants.ENV_TEMP, getTemp());
-    values.put(PythonConstants.ENV_EGGS,
-               new File(getHome(context), this.pathShlib()).getAbsolutePath());
-    return values;
+        throw new UnsupportedOperationException("not implemented in sub-class.");
   }
 
   public void setSharedPreferences(SharedPreferences preferences) {

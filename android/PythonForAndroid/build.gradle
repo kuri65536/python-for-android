@@ -21,7 +21,7 @@ apply plugin: 'com.android.application'
 dependencies {
     compile project(':Common')
     compile project(':InterpreterForAndroid')
-    // compile project(':PythonForAndroidInOne')
+    compile project(':PythonCommon')
     compile('com.android.support:support-v4:21.0.3'){
         force = true
     }

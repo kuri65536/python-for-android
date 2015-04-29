@@ -38,7 +38,7 @@
             android:authorities="com.googlecode.pythonforandroid.pythonprovider" />
 
         <activity
-            android:name=".FileBrowser"
+            android:name="com.googlecode.android_scripting.pythoncommon.FileBrowser"
             android:label="File Browser" >
             <intent-filter>
                 <action android:name="com.googlecode.pythonforandroid.FILEBROWSER" />
