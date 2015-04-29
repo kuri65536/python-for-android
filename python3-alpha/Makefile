@@ -1,5 +1,6 @@
 
-.PHONY: build build_config build_bin error init clean_output cleanall \
+.PHONY: build build_config build_bin build_install \
+        error init clean_output cleanall \
         patch build_misc_sqlite3 build_misc_ncurses \
         build_misc_readline build_misc_bzip2 strip_bin
 
@@ -91,7 +92,7 @@ endif
 # build settings section 2 {{{1
 ANDROID_NDK_ROOT := $(NDK_PATH)
 ANDROID_SYSROOT = $(NDK_PATH)/platforms/$(ANDROID_API)/$(_ANDROID_ARCH)
-SYSROOT = $(ANDROID_SYSROOT)
+export SYSROOT = $(ANDROID_SYSROOT)
 NDK_SYSROOT = $(ANDROID_SYSROOT)
 ANDROID_NDK_SYSROOT = $(ANDROID_SYSROOT)
 ANDROID_DEV = $(ANDROID_SYSROOT)/usr
@@ -310,19 +311,26 @@ build_config:
 	touch .build_bin
 build_bin: .build_openssl .build_misc
 	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC)
+
+.build_install: .build_bin
+	make build_install CROSS=arm PIE=yes
+	make build_install CROSS=x86 PIE=yes
+	touch .build_install
+build_install: .build_bin
 	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) install
-strip_bin:
-	$(TARGET)-strip $(PYBIN)/bin/python3
-	for i in $(PYBIN)/lib/*.so*; do $(TARGET)-strip $$i; done
-	for i in $(PYLIB)/lib-dynload/*.so*; do $(TARGET)-strip $$i; done
+
+# strip_bin:
+# 	$(TARGET)-strip $(PYBIN)/bin/python3
+# 	for i in $(PYBIN)/lib/*.so*; do $(TARGET)-strip $$i; done
+# 	for i in $(PYLIB)/lib-dynload/*.so*; do $(TARGET)-strip $$i; done
 
 # python3: packaging {{{1
-$(ZIP_BINarm): .build_bin
+$(ZIP_BINarm): .build_install
 	make CROSS=arm PIE=yes build_zip
-$(ZIP_BINx86): .build_bin
+$(ZIP_BINx86): .build_install
 	make CROSS=x86 PIE=yes build_zip
 
-build_zip:
+build_zip: .build_install
 	@echo non-PIE: build the android libraries/executables
 	# make strip_bin CROSS=arm
 	@echo "Packing $(ZIPMAIN)"

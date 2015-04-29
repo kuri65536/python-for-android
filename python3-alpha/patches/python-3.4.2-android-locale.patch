@@ -10,6 +10,16 @@ diff -ru Python-3.3.5/Modules/Setup.dist Python-3.3.5-android/Modules/Setup.dist
 
  # Standard I/O baseline
  _io -I$(srcdir)/Modules/_io _io/_iomodule.c _io/iobase.c _io/fileio.c _io/bytesio.c _io/bufferedio.c _io/textio.c _io/stringio.c
+@@ -357,7 +357,7 @@
+ # Andrew Kuchling's zlib module.
+ # This require zlib 1.1.3 (or later).
+ # See http://www.gzip.org/zlib/
+-#zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
++zlib zlibmodule.c -I$(SYSROOT)/include -L$(SYSROOT)/lib -lz
+
+ # Interface to the Expat XML parser
+ #
+ # Expat was written by James Clark and is now maintained by a group of
 diff -ru Python-3.3.5/Modules/_decimal/libmpdec/io.c Python-3.3.5-android/Modules/_decimal/libmpdec/io.c
 --- Python-3.3.5/Modules/_decimal/libmpdec/io.c	2014-03-09 09:40:25.000000000 +0100
 +++ Python-3.3.5-android/Modules/_decimal/libmpdec/io.c	2014-08-04 22:16:29.000000000 +0200

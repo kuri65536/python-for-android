@@ -55,7 +55,7 @@ diff -ru Python-3.4.2/Modules/python.c Python-3.4.2-android/Modules/python.c
 diff -ru Python-3.3.5/setup.py Python-3.3.5-android/setup.py
 --- Python-3.3.5/setup.py	2014-03-09 09:40:35.000000000 +0100
 +++ Python-3.3.5-android/setup.py	2014-08-04 22:14:36.000000000 +0200
-@@ -562,7 +562,7 @@
+@@ -574,7 +577,7 @@
                                 libraries=math_libs) )
 
          # time libraries: librt may be needed for clock_gettime()
@@ -64,7 +64,7 @@ diff -ru Python-3.3.5/setup.py Python-3.3.5-android/setup.py
          lib = sysconfig.get_config_var('TIMEMODULE_LIB')
          if lib:
              time_libs.append(lib)
-@@ -639,7 +639,8 @@
+@@ -655,7 +658,8 @@
          # Operations on audio samples
          # According to #993173, this one should actually work fine on
          # 64-bit platforms.
@@ -74,7 +74,28 @@ diff -ru Python-3.3.5/setup.py Python-3.3.5-android/setup.py
 
          # readline
          do_readline = self.compiler.find_library_file(lib_dirs, 'readline')
-@@ -1904,7 +1905,8 @@
+@@ -1339,7 +1336,10 @@
+         #
+         # You can upgrade zlib to version 1.1.4 yourself by going to
+         # http://www.gzip.org/zlib/
+-        zlib_inc = find_file('zlib.h', [], inc_dirs)
++        sysroot = os.environ["SYSROOT"]
++        _inc_dirs = inc_dirs + [sysroot + "/usr/include"]
++        _lib_dirs = lib_dirs + [sysroot + "/usr/lib"]
++        zlib_inc = find_file('zlib.h', [], _inc_dirs)
+         have_zlib = False
+         if zlib_inc is not None:
+             zlib_h = zlib_inc[0] + '/zlib.h'
+@@ -1356,7 +1356,7 @@
+                         version = line.split()[2]
+                         break
+             if version >= version_req:
+-                if (self.compiler.find_library_file(lib_dirs, 'z')):
++                if (self.compiler.find_library_file(_lib_dirs, 'z')):
+                     if host_platform == "darwin":
+                         zlib_extra_link_args = ('-Wl,-search_paths_first',)
+                     else:
+@@ -1928,7 +1932,8 @@
                          sources=sources,
                          depends=depends)
          ext_test = Extension('_ctypes_test',

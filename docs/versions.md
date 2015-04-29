@@ -1,5 +1,18 @@
 * [Report issue](../README.md#create_issue)
 
+PythonForAndroid\_r21
+---
+* openssl with armv5te for old devices.
+* [compile SSL for armv5te](http://stackoverflow.com/questions/16810110/how-to-build-openssl-to-generate-libcrypto-a-with-android-ndk-and-windows)
+
+PythonForAndroid\_r20
+---
+* use run_pie.c for GB or ealier
+
+PythonForAndroid\_r19
+---
+* python 2.7.8 => 2.7.9
+
 PythonForAndroid\_r18
 ---
 * new: python3 => 3.4.3
