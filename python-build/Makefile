@@ -19,6 +19,8 @@ ZIP := python_$(RELEASE_VERSION).zip \
 
 OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
 
+PYBINR := python
+
 .PHONY: build error init clean_output cleanall build_bin build_zip
 
 ifeq (x$(NDK_PATH),x)
@@ -48,7 +50,7 @@ $(PYTHONTAR):
 	fi
 
 .build_openssl: $(PYTHONTAR)
-	make -C openssl build
+	PYBINR=$(PYBINR) CWD=$(CWD) make -C openssl build
 	touch .build_openssl
 
 .build_host: $(PYTHONTAR)

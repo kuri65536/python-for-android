@@ -13,7 +13,7 @@ How to install
 1. Download [SL4A Application](https://github.com/kuri65536/sl4a), such as
    [sl4a-r6x04-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6x04/sl4a-r6x04-arm-debug.apk)
 2. Downlaod [Py4A Application](https://github.com/kuri65536/python-for-android/releases), such as
-   [PythonForAndroid-debug.apk](https://github.com/kuri65536/python-for-android/releases/download/r17/PythonForAndroid-debug.apk)
+   [PythonForAndroid-debug.apk](https://github.com/kuri65536/python-for-android/releases/download/r21/PythonForAndroid-debug.apk)
 3. Enable "Unknown Sources" in your device settings.
 4. Open 1. apk to install.
 5. Open 2. apk to install.

@@ -171,7 +171,7 @@ targz = $(subst .tar.gz,,$1)
 
 ## openssl {{{2
 .build_openssl: $(PYTHONTAR)
-	make -C openssl build
+	PYBINR=$(PYBINR) CWD=$(CWD) make -C openssl build
 	# install_sw is contained in build.
 	touch .build_openssl
 
@@ -193,10 +193,8 @@ build_misc_ncurses: ncurses-5.9.tar.gz
 	cd $(call targz,$<)$(SFX); patch -p1 < $(CWD)/patches/$(call targz,$<).patch
 	make -C $(call targz,$<)$(SFX)
 	make -C $(call targz,$<)$(SFX) install
-	# @echo Fix symlinks for Python _curses and _curses_panel extensions.
-	# cd $(call targz,$<)$(SFX); \
-	#   ln -s ncursesw/curses.h $(PYBIN)/include/curses.h; \
-	#   ln -s ncursesw/panel.h $(PYBIN)/include/panel.h
+	@echo Fix symlinks for Python _curses and _curses_panel extensions.
+	cd $(PYBIN)/include; cp ncursesw/*.h .
 
 ## readline {{{2
 .build_misc_readline: readline-6.3.tar.gz
@@ -290,7 +288,7 @@ build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
 	  for p in $(CWD)/patches/python-*.patch; do \
 	    echo "patching: $$p..."; patch -p1 -i $$p; done
 
-.build_config: .build_src .build_misc
+.build_config: .build_src .build_misc .build_openssl
 	make build_config CROSS=arm PIE=yes
 	make build_config CROSS=x86 PIE=yes
 	touch .build_config
@@ -332,8 +330,8 @@ build_zip:
 	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYBINR)/bin/python3; \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.so; \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.4m.so
-	cd $(PYBIN)/..; deps=$$($(ndk_depends) $(PYBINR)/bin/python3 \
-	  | grep -v ^python3$$ | grep -v -e \.so$$ ); \
+	cd $(PYBIN)/..; echo $(ndk_depends) $(PYBINR)/bin/python3
+	cd $(PYBIN)/..; deps="libssl.so.1.0.0 libcrypto.so.1.0.0"; \
 	  for i in $$deps; do \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$$i; done
 	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
