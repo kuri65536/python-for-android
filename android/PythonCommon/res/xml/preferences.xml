@@ -2,11 +2,10 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="File Browser"></PreferenceCategory><CheckBoxPreference android:key="showPermissions" android:title="Show Permissions"></CheckBoxPreference>
+    <CheckBoxPreference android:key="showPermissions" android:title="Show Permissions"></CheckBoxPreference>
     <CheckBoxPreference android:key="showSize" android:title="Show Size"></CheckBoxPreference>
     <CheckBoxPreference android:key="showOwner" android:title="Show Owner"></CheckBoxPreference>
     <PreferenceCategory android:title="Manual Installation"></PreferenceCategory><EditTextPreference android:key="manualMain" android:title="Main File for Manual Install"/>
     <EditTextPreference android:key="manualExtras" android:title="Extras File for Manual Install"/>
     <EditTextPreference android:key="manualScripts" android:title="Scripts File for Manual Install"/>
-    
-    
 </PreferenceScreen>

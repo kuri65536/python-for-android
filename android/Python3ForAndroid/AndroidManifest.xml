@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="com.googlecode.python3forandroid"
-    android:versionCode="5"
-    android:versionName="5" xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <uses-sdk android:minSdkVersion="9" />
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" >
     </uses-permission>
@@ -18,15 +15,12 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="com.googlecode.android_scripting.DISCOVER_INTERPRETERS" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
-
-                <data android:mimeType="script/.py" />
+                <data android:mimeType="script/.py3" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -44,7 +38,7 @@
             android:authorities="com.googlecode.python3forandroid.python3provider" />
 
         <activity
-            android:name=".FileBrowser"
+            android:name="com.googlecode.android_scripting.pythoncommon.FileBrowser"
             android:label="File Browser" >
             <intent-filter>
                 <action android:name="com.googlecode.python3forandroid.FILEBROWSER" />

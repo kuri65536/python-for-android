@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.googlecode.python3forandroid;
+package com.googlecode.android_scripting.pythoncommon;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -66,6 +66,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+import java.util.prefs.Preferences;
 
 /**
  * Manages creation, deletion, and execution of stored scripts.
@@ -565,7 +566,7 @@ public class FileBrowser extends ListActivity implements OnSharedPreferenceChang
 
       @Override
       public void onClick(DialogInterface dialog, int which) {
-        Python3Descriptor descriptor = new Python3Descriptor();
+        PythonDescriptor descriptor = new PythonDescriptor();
         switch (which) {
         case 0:
           mBaseDir = getFilesDir();

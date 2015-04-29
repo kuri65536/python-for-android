@@ -1,11 +1,3 @@
-task genURL << {
-    def root = System.getProperty("user.dir")
-    exec {
-        executable "python"
-        args "${root}/../../tools/gitbase.py", "${root}"
-    }
-}
-
 buildscript {
     repositories {
         mavenCentral()
@@ -16,12 +8,12 @@ buildscript {
     }
 }
 
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.library'
 
 dependencies {
+    compile project(':Utils')
     compile project(':Common')
     compile project(':InterpreterForAndroid')
-    compile project(':PythonCommon')
     compile('com.android.support:support-v4:21.0.3'){
         force = true
     }
@@ -30,6 +22,11 @@ dependencies {
 android {
     buildToolsVersion "21.1.2"
     compileSdkVersion 21
+
+    defaultConfig {
+        minSdkVersion 4
+        targetSdkVersion 4
+    }
 
     sourceSets {
         main {
@@ -41,24 +38,6 @@ android {
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
         }
-
         instrumentTest.setRoot('tests')
-
-    }
-
-    defaultConfig {
-        minSdkVersion 9
-        targetSdkVersion 9
-    }
-    productFlavors {
-    }
-    dexOptions {
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_6
-        targetCompatibility JavaVersion.VERSION_1_6
     }
 }
-
-preBuild.dependsOn genURL
-

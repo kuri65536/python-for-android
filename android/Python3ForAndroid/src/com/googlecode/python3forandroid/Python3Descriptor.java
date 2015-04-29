@@ -25,112 +25,75 @@ import android.os.Environment;
 
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.Log;
-import com.googlecode.android_scripting.interpreter.InterpreterConstants;
-import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
+import com.googlecode.android_scripting.pythoncommon.PythonConstants;
+import com.googlecode.android_scripting.pythoncommon.PythonDescriptor;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Python3Descriptor extends Sl4aHostedInterpreter {
+public class Python3Descriptor extends PythonDescriptor {
 
   private static final String PYTHON_BIN = "python3/bin/python3";
-  private static final String ENV_HOME = "PYTHONHOME";
-  private static final String ENV_PATH = "PYTHONPATH";
-  private static final String ENV_TEMP = "TEMP";
-  private static final String ENV_LD = "LD_LIBRARY_PATH";
-  private static final String ENV_EXTRAS = "PY4A_EXTRAS";
-  private static final String ENV_EGGS = "PYTHON_EGG_CACHE";
-  private static final String ENV_USERBASE = "PYTHONUSERBASE";
   private static final int LATEST_VERSION = 5;
   private int cache_version = -1;
   private int cache_extras_version = -1;
   private int cache_scripts_version = -1;
   private SharedPreferences mPreferences;
 
+    @Override
+    protected String pathBin() {
+        return "/bin/python";
+    }
+
+    @Override
+    protected String pathShlib() {
+        return "/lib";
+    }
+
+    @Override
+    protected String pathEgg() {
+        return this.pathShlib() + "/python3.4/egg-info";
+    }
+
+    @Override
+    protected String pathSitepkgs() {
+        return this.pathShlib() + "/python3.4/site-packages";
+    }
+
+    @Override
+    protected String pathDynload() {
+        return this.pathShlib() + "/python3.4/lib-dynload";
+    }
+
   @Override
   public String getBaseInstallUrl() {
     return Python3Urls.URL_BIN;
   }
 
+  @Override
+  protected String urlSrc() {
+    return Python3Urls.URL_SRC;
+  };
+
+  @Override
+  protected String pathVersion() {
+    return "python3-alpha/LATEST_VERSION";
+  };
+
+  @Override
   public String getExtension() {
-    return ".py";
+        return ".py3";
   }
 
+  @Override
   public String getName() {
     return "python3";
   }
 
+  @Override
   public String getNiceName() {
     return "Python 3.4.3";
-  }
-
-  public boolean hasInterpreterArchive() {
-    return true;
-  }
-
-  public boolean hasExtrasArchive() {
-    return true;
-  }
-
-  public boolean hasScriptsArchive() {
-    return true;
-  }
-
-  private int __resolve_version(String what) {
-    // try resolving latest version
-    URL url;
-    try {
-      url = new URL(Python3Urls.URL_SRC + "python3-alpha/LATEST_VERSION" + what.toUpperCase());
-      BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-      return Integer.parseInt(reader.readLine().substring(1).trim());
-    } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      return LATEST_VERSION;
-    }
-
-  }
-
-  public int getVersion() {
-    cache_version = __resolve_version("");
-    return cache_version;
-  }
-
-  public int getVersion(boolean usecache) {
-    if (usecache && cache_version > -1) {
-      return cache_version;
-    }
-    return this.getVersion();
-  }
-
-  @Override
-  public int getExtrasVersion() {
-    cache_extras_version = __resolve_version("_extra");
-    return cache_extras_version;
-  }
-
-  public int getExtrasVersion(boolean usecache) {
-    if (usecache && cache_extras_version > -1) {
-      return cache_extras_version;
-    }
-    return this.getExtrasVersion();
-  }
-
-  @Override
-  public int getScriptsVersion() {
-    cache_scripts_version = __resolve_version("_scripts");
-    return cache_scripts_version;
-  }
-
-  public int getScriptsVersion(boolean usecache) {
-    if (usecache && cache_scripts_version > -1) {
-      return cache_scripts_version;
-    }
-    return getScriptsVersion();
   }
 
   @Override
@@ -140,46 +103,24 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
     // return new File(getExtrasPath(context), PYTHON_BIN);
   }
 
-  private String getExtrasRoot() {
-    return InterpreterConstants.SDCARD_ROOT + getClass().getPackage().getName()
-        + InterpreterConstants.INTERPRETER_EXTRAS_ROOT;
-  }
-
-  private String getHome(Context context) {
-    return context.getFilesDir().getAbsolutePath();
-    // File file = InterpreterUtils.getInterpreterRoot(context, "");
-    // return file.getAbsolutePath();
-  }
-
-  public String getExtras() {
-    File file = new File(getExtrasRoot(), getName());
-    return file.getAbsolutePath();
-  }
-
-  private String getTemp() {
-    File tmp = new File(getExtrasRoot(), "/tmp");
-    if (!tmp.isDirectory()) {
-      tmp.mkdir();
-    }
-    return tmp.getAbsolutePath();
-  }
-
   @Override
   public Map<String, String> getEnvironmentVariables(Context context) {
     Map<String, String> values = new HashMap<String, String>();
-          String home = getHome(context) + "/python3";
-    String libs = new File(getExtrasRoot(), "python3").getAbsolutePath();
-          // BUG: current binary does not recognize PYTHONHOME collectly... why...?
-          // values.put(ENV_HOME, libs + ":" + new File(home, "python3").getAbsolutePath());
-          // values.put(ENV_USERBASE, home);
-          values.put(ENV_LD, new File(home, "lib").getAbsolutePath());
-          values.put(ENV_PATH, libs + ":" +
-                     new File(home, "lib/python3.4/lib-dynload").getAbsolutePath());
-    values.put(ENV_EGGS,
-                     new File(libs, "tmp").getAbsolutePath());
-    values.put(ENV_EXTRAS, getExtrasRoot());
+        String home = getHome(context);
+    String pylibs = getExtras();
+
+    // BUG: current binary does not recognize PYTHONHOME collectly... why...?
+    // values.put(ENV_HOME, libs + ":" + new File(home, "python3").getAbsolutePath());
+        values.put(PythonConstants.ENV_LD, home + pathShlib());
+    values.put(PythonConstants.ENV_PATH,
+               pylibs + ":" +
+               home + this.pathShlib() + ":" +
+               home + this.pathSitepkgs() + ":" +
+               home + this.pathDynload());
+    values.put(PythonConstants.ENV_EGGS, home + this.pathEgg());
+    values.put(PythonConstants.ENV_EXTRAS, getExtrasRoot());
     String temp = context.getCacheDir().getAbsolutePath();
-    values.put(ENV_TEMP, temp);
+    values.put(PythonConstants.ENV_TEMP, temp);
     try {
       FileUtils.chmod(context.getCacheDir(), 0777); // Make sure this is writable.
     } catch (Exception e) {
@@ -189,9 +130,5 @@ public class Python3Descriptor extends Sl4aHostedInterpreter {
       Log.d(k + " : " + values.get(k));
     }
     return values;
-  }
-
-  void setSharedPreferences(SharedPreferences preferences) {
-    mPreferences = preferences;
   }
 }

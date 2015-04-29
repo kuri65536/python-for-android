@@ -16,11 +16,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.googlecode.python3forandroid;
+package com.googlecode.android_scripting.pythoncommon;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 
 import com.googlecode.android_scripting.AsyncTaskListener;
@@ -29,19 +30,18 @@ import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.exception.Sl4aException;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterDescriptor;
-import com.googlecode.android_scripting.pythoncommon.PythonConstants;
 
 import java.io.File;
 
-public class Python3Installer extends InterpreterInstaller {
+public class PythonInstaller extends InterpreterInstaller {
   private SharedPreferences mPreferences;
 
-  public Python3Installer(InterpreterDescriptor descriptor, Context context,
+  public PythonInstaller(InterpreterDescriptor descriptor, Context context,
       AsyncTaskListener<Boolean> listener) throws Sl4aException {
     super(descriptor, context, listener);
     mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    if (descriptor instanceof Python3Descriptor) {
-      ((Python3Descriptor) descriptor).setSharedPreferences(mPreferences);
+    if (descriptor instanceof PythonDescriptor) {
+      ((PythonDescriptor) descriptor).setSharedPreferences(mPreferences);
     }
   }
 
@@ -49,8 +49,8 @@ public class Python3Installer extends InterpreterInstaller {
   protected boolean isInstalled() {
     if (mPreferences == null) {
       mPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-      if (mDescriptor instanceof Python3Descriptor) {
-        ((Python3Descriptor) mDescriptor).setSharedPreferences(mPreferences);
+      if (mDescriptor instanceof PythonDescriptor) {
+        ((PythonDescriptor) mDescriptor).setSharedPreferences(mPreferences);
       }
     }
     return mPreferences.getBoolean(InterpreterConstants.INSTALLED_PREFERENCE_KEY, false);
@@ -68,8 +68,8 @@ public class Python3Installer extends InterpreterInstaller {
         Log.e(mContext, "Setup failed.", e);
         return false;
       }
-      if (mDescriptor instanceof Python3Descriptor) {
-        Python3Descriptor descriptor = (Python3Descriptor) mDescriptor;
+      if (mDescriptor instanceof PythonDescriptor) {
+        PythonDescriptor descriptor = (PythonDescriptor) mDescriptor;
         Editor editor = mPreferences.edit();
         editor.putInt(PythonConstants.INSTALLED_VERSION_KEY, descriptor.getVersion());
         editor.putInt(PythonConstants.INSTALLED_EXTRAS_KEY, descriptor.getExtrasVersion());
@@ -77,7 +77,31 @@ public class Python3Installer extends InterpreterInstaller {
         editor.commit();
       }
     }
-
     return true;
+  }
+
+  private void saveVersionSetting(String key, int value) {
+    SharedPreferences storage = mContext.getSharedPreferences("python-installer", 0);
+    Editor editor = storage.edit();
+    editor.putInt(key, value);
+    editor.commit();
+  }
+
+  @Override
+  protected AsyncTask<Void, Integer, Long> extractInterpreter() throws Sl4aException {
+    saveVersionSetting("interpreter", ((PythonDescriptor) mDescriptor).getVersion(true));
+    return super.extractInterpreter();
+  }
+
+  @Override
+  protected AsyncTask<Void, Integer, Long> extractInterpreterExtras() throws Sl4aException {
+    saveVersionSetting("extras", ((PythonDescriptor) mDescriptor).getExtrasVersion(true));
+    return super.extractInterpreterExtras();
+  }
+
+  @Override
+  protected AsyncTask<Void, Integer, Long> extractScripts() throws Sl4aException {
+    saveVersionSetting("scripts", ((PythonDescriptor) mDescriptor).getScriptsVersion(true));
+    return super.extractScripts();
   }
 }
