@@ -1,5 +1,6 @@
-#!/usr/bin/python
-
+#!env python
+#
+# Copyright (C) 2015 Shimoda
 # Copyright (C) 2009 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -13,19 +14,20 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
-
+#
+from __future__ import print_function, unicode_literal
 import compileall
-import glob
 import os
 import re
 import subprocess
 import shutil
 import sys
 import zipfile
-from logging import info, debug
+from logging import (critical as crit, error as eror,
+                     info, debug as debg)
 
 
-VERSION={
+VERSION = {
     "": "",
     "scripts": "",
     "extra": "",
@@ -50,60 +52,70 @@ def options():
             cfg.fExtra = True
     return plat
 
-plat = options()
 
+def main():
+    cfg.plat = options()
 
-for i in ("scripts", "extra", "lib"):
-    if os.path.isfile("LATEST_VERSION_"+i.upper()):
-        VERSION[i] = "_"+open("LATEST_VERSION_"+i.upper()).read().strip()
+    # get version
+    for i in ("scripts", "extra", "lib"):
+        if os.path.isfile("LATEST_VERSION_"+i.upper()):
+            VERSION[i] = "_"+open("LATEST_VERSION_"+i.upper()).read().strip()
 
-if os.path.isfile("LATEST_VERSION"):
-    VERSION[""] = "_"+open("LATEST_VERSION").read().strip()
+    if os.path.isfile("LATEST_VERSION"):
+        VERSION[""] = "_"+open("LATEST_VERSION").read().strip()
+
+    pwd = os.getcwd()
+    install_py4a(pwd)
+    zipup_libs(pwd)
+
+    zipup_extra(pwd)
+    zipup_cleanup()
+    zipup_bin(pwd)
+    zipup_script(pwd)
+    info('Done.')
 
 
 def run(cmd, exit=True, cwd=None):
-  if True:
-    debug(cmd)
-  if subprocess.Popen(cmd.split(), cwd=cwd).wait() != 0:
-    if exit:
-      print 'Failed!'
-      sys.exit(1)
-    else:
-      print 'Ignoring failure.'
+    debg(cmd)
+    if subprocess.Popen(cmd.split(), cwd=cwd).wait() != 0:
+        if exit:
+            crit('Failed!')
+            sys.exit(1)
+        else:
+            eror('Ignoring failure.')
 
 
 def find(directory, pattern=None, exclude=None):
-  if True:
-    debug('Looking for paths in %r matching %r' % (directory, pattern))
-  matches = []
-  misses = []
-  if exclude is None:
-    exclude = []
-  directory = os.path.abspath(directory)
-  for root, dirs, files in os.walk(directory):
-    for basename in dirs + files:
-      if basename in exclude:
-        if basename in dirs:
-          dirs.remove(basename)
-        continue
-      path = os.path.join(root, basename)
-      if pattern is None or re.search(pattern, path):
-        matches.append(path)
-      else:
-        misses.append(path)
-  print 'Found %d matches and %d misses' % (len(matches), len(misses))
-  return matches, misses
+    debg('Looking for paths in %r matching %r' % (directory, pattern))
+    matches = []
+    misses = []
+    if exclude is None:
+        exclude = []
+    directory = os.path.abspath(directory)
+    for root, dirs, files in os.walk(directory):
+        for basename in dirs + files:
+            if basename in exclude:
+                if basename in dirs:
+                    dirs.remove(basename)
+                continue
+            path = os.path.join(root, basename)
+            if pattern is None or re.search(pattern, path):
+                matches.append(path)
+            else:
+                misses.append(path)
+    debg('Found %d matches and %d misses' % (len(matches), len(misses)))
+    return matches, misses
 
 
 def rm(path):
-  debug('Deleting %r' % path)
-  try:
-    if os.path.isdir(path):
-      shutil.rmtree(path)
-    else:
-      os.remove(path)
-  except OSError:
-    pass
+    debg('Deleting %r' % path)
+    try:
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+    except OSError:
+        pass
 
 
 def strip(path):
@@ -111,7 +123,7 @@ def strip(path):
     toolchain = os.path.join(
         ndkpath, "toolchains/arm-linux-androideabi-4.9/prebuilt/"
                  "linux-x86_64/arm-linux-androideabi")
-    if plat == "_x86":
+    if cfg.plat == "_x86":
         toolchain = os.path.join(
             ndkpath, "toolchains/x86-4.9/prebuilt/"
                      "linux-x86_64/i686-linux-android")
@@ -119,14 +131,13 @@ def strip(path):
 
 
 def zipup(out_path, in_path, top, exclude=None, prefix=''):
-  if True:
     info("zipup: %s" % out_path)
     # Remove an existing zip file.
     rm(out_path)
 
-  zip_file = zipfile.ZipFile(out_path, 'w', compression=zipfile.ZIP_DEFLATED)
-  for path in find(in_path, exclude=exclude)[0]:
-    if os.path.islink(path):
+    zip_file = zipfile.ZipFile(out_path, 'w', compression=zipfile.ZIP_DEFLATED)
+    for path in find(in_path, exclude=exclude)[0]:
+        if os.path.islink(path):
                 dest = os.readlink(path)
                 attr = zipfile.ZipInfo()
                 attr.filename = prefix + path[len(top):].lstrip('/')
@@ -134,94 +145,100 @@ def zipup(out_path, in_path, top, exclude=None, prefix=''):
                 # long type of hex say, symlink attr magic...
                 attr.external_attr = 0xA1ED0000L
                 zip_file.writestr(attr, dest)
-    elif not os.path.isdir(path):
-      arcname = prefix + path[len(top):].lstrip('/')
-      debug('Adding %s to %s' % (arcname, out_path))
-      zip_file.write(path, arcname)
-  zip_file.close()
+        elif not os.path.isdir(path):
+            arcname = prefix + path[len(top):].lstrip('/')
+            debg('Adding %s to %s' % (arcname, out_path))
+            zip_file.write(path, arcname)
+    zip_file.close()
 
 
-pwd = os.getcwd()
+def install_py4a(pwd):
+    info('Installing xmppy.')
+    xmpppy_path = os.path.join(pwd, 'python-libs', 'xmpppy', 'xmpp')
+    compileall.compile_dir(xmpppy_path)
+    shutil.copytree(xmpppy_path, 'output/usr/lib/python2.7/xmpp')
 
-print 'Installing xmppy.'
-xmpppy_path = os.path.join(pwd, 'python-libs', 'xmpppy', 'xmpp')
-compileall.compile_dir(xmpppy_path)
-shutil.copytree(xmpppy_path, 'output/usr/lib/python2.7/xmpp')
+    info('Installing BeautifulSoup.')
+    beautifulsoup_path = os.path.join(pwd, 'python-libs', 'BeautifulSoup')
+    compileall.compile_dir(beautifulsoup_path)
+    shutil.copy(os.path.join(beautifulsoup_path, 'BeautifulSoup.pyc'),
+                'output/usr/lib/python2.7/BeautifulSoup.pyc')
 
-print 'Installing BeautifulSoup.'
-beautifulsoup_path = os.path.join(pwd, 'python-libs','BeautifulSoup')
-compileall.compile_dir(beautifulsoup_path)
-shutil.copy(os.path.join(beautifulsoup_path, 'BeautifulSoup.pyc'),
-            'output/usr/lib/python2.7/BeautifulSoup.pyc')
+    info('Installing gdata.')
+    gdata_path = os.path.join(pwd, 'python-libs', 'gdata')
+    run('python setup.py build', cwd=gdata_path)
+    gdata_build_path = os.path.join(gdata_path, 'build')
+    gdata_result_path = os.path.join(gdata_build_path,
+                                     os.listdir(gdata_build_path)[0])
+    compileall.compile_dir(gdata_result_path)
+    shutil.copytree(os.path.join(gdata_result_path, 'gdata'),
+                    'output/usr/lib/python2.7/gdata')
+    shutil.copytree(os.path.join(gdata_result_path, 'atom'),
+                    'output/usr/lib/python2.7/atom')
 
-print 'Installing gdata.'
-gdata_path = os.path.join(pwd, 'python-libs', 'gdata')
-run('python setup.py build', cwd=gdata_path)
-gdata_build_path = os.path.join(gdata_path, 'build')
-gdata_result_path = os.path.join(gdata_build_path,
-                                 os.listdir(gdata_build_path)[0])
-compileall.compile_dir(gdata_result_path)
-shutil.copytree(os.path.join(gdata_result_path, 'gdata'),
-                'output/usr/lib/python2.7/gdata')
-shutil.copytree(os.path.join(gdata_result_path, 'atom'),
-                'output/usr/lib/python2.7/atom')
+    info('Installing python-twitter.')
+    twitter_path = os.path.join(pwd, 'python-libs', 'python-twitter')
+    compileall.compile_dir(twitter_path)
+    shutil.copy(os.path.join(twitter_path, 'twitter.pyc'),
+                'output/usr/lib/python2.7/twitter.pyc')
 
-print 'Installing python-twitter.'
-twitter_path = os.path.join(pwd, 'python-libs', 'python-twitter')
-compileall.compile_dir(twitter_path)
-shutil.copy(os.path.join(twitter_path, 'twitter.pyc'),
-            'output/usr/lib/python2.7/twitter.pyc')
+    info('Installing simplejson.')
+    simplejson_path = os.path.join(
+        pwd, 'python-libs', 'python-twitter', 'simplejson')
+    compileall.compile_dir(simplejson_path)
+    shutil.copytree(simplejson_path, 'output/usr/lib/python2.7/simplejson')
 
-print 'Installing simplejson.'
-simplejson_path = os.path.join(pwd, 'python-libs', 'python-twitter', 'simplejson')
-compileall.compile_dir(simplejson_path)
-shutil.copytree(simplejson_path, 'output/usr/lib/python2.7/simplejson')
-
-print 'Installing setuptools.'
-setuptools_path = os.path.join(pwd, 'python-libs', 'setuptools')
-compileall.compile_dir(setuptools_path)
-for i in os.listdir(setuptools_path):
-    i = os.path.join(setuptools_path, i)
-    if os.path.isfile(i) and i.endswith(".pyc"):
-	shutil.copy(i, 'output/usr/lib/python2.7/site-packages')
-shutil.copytree(os.path.join(setuptools_path, "setuptools"), 
-	'output/usr/lib/python2.7/setuptools')
-
-print 'Zipping up Python Libs for deployment.'
-output=os.path.join(pwd, 'output')
-shutil.copytree(output, 'output.temp')
-map(rm, find('output.temp', '\.py$', exclude=['setuptools', 'distutils'])[0])
-map(rm, find('output.temp/usr/lib/python2.7', '.*', exclude=['setuptools', 'distutils'])[0])
-map(rm, find('output.temp', 'python$', exclude=['setuptools', 'distutils'])[0])
-run("mkdir python", cwd="output.temp/usr")
-run("cp -r %s/python-libs/py4a python" % pwd, cwd="output.temp/usr")
-run("cp %s/setup.cfg ." % pwd, cwd="output.temp/usr")
-run("cp %s/prepare_setuptools.sh setup.sh" % pwd, cwd="output.temp/usr")
-if True:
-    run("cp %s/../sl4atools/standalone_python2.sh python.sh" % pwd,
-        cwd="output.temp/usr")
-zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION["lib"]),
-      os.path.join(pwd, 'output.temp', 'usr'),
-      os.path.join(pwd, 'output.temp', 'usr'))
-rm('output.temp')
-
-print 'Removing unecessary files and directories from installation.'
-map(rm, find('output', '\.py$')[0])
-map(rm, find('output', '\.c$')[0])
-map(rm, find('output', '\.pyo$')[0])
-map(rm, find('output','_locale.so$')[0]) # Locale not supported on Android.
-
-rm('output/usr/share')
-rm('output/usr/include')
-
-map(strip, find('output', '\.so$')[0])
-strip('output/usr/bin/python')
+    info('Installing setuptools.')
+    setuptools_path = os.path.join(pwd, 'python-libs', 'setuptools')
+    compileall.compile_dir(setuptools_path)
+    for i in os.listdir(setuptools_path):
+        i = os.path.join(setuptools_path, i)
+        if os.path.isfile(i) and i.endswith(".pyc"):
+            shutil.copy(i, 'output/usr/lib/python2.7/site-packages')
+    shutil.copytree(os.path.join(setuptools_path, "setuptools"),
+                    'output/usr/lib/python2.7/setuptools')
 
 
-def zipup_extra():
+def zipup_libs(pwd):
+    info('Zipping up Python Libs for deployment.')
+    output = os.path.join(pwd, 'output')
+    shutil.copytree(output, 'output.temp')
+    map(rm, find('output.temp', '\.py$',
+                 exclude=['setuptools', 'distutils'])[0])
+    map(rm, find('output.temp/usr/lib/python2.7', '.*',
+                 exclude=['setuptools', 'distutils'])[0])
+    map(rm, find('output.temp', 'python$',
+                 exclude=['setuptools', 'distutils'])[0])
+    run("mkdir python", cwd="output.temp/usr")
+    run("cp -r %s/python-libs/py4a python" % pwd, cwd="output.temp/usr")
+    run("cp %s/setup.cfg ." % pwd, cwd="output.temp/usr")
+    run("cp %s/prepare_setuptools.sh setup.sh" % pwd, cwd="output.temp/usr")
+    if True:
+        run("cp %s/../sl4atools/standalone_python2.sh python.sh" % pwd,
+            cwd="output.temp/usr")
+    zipup(os.path.join(pwd, 'python-lib%s.zip' % VERSION["lib"]),
+          os.path.join(pwd, 'output.temp', 'usr'),
+          os.path.join(pwd, 'output.temp', 'usr'))
+    rm('output.temp')
+
+    info('Removing unecessary files and directories from installation.')
+    map(rm, find('output', '\.py$')[0])
+    map(rm, find('output', '\.c$')[0])
+    map(rm, find('output', '\.pyo$')[0])
+    # Locale not supported on Android.
+    map(rm, find('output', '_locale.so$')[0])
+
+    rm('output/usr/share')
+    rm('output/usr/include')
+
+    map(strip, find('output', '\.so$')[0])
+    strip('output/usr/bin/python')
+
+
+def zipup_extra(pwd):
     if not cfg.fExtra:
         return
-    print 'Zipping up standard library.'
+    info('Zipping up standard library.')
     libs = os.path.join(pwd, 'output/usr/lib/python2.7')
     # Copy in ASE's Android module.
     shutil.copy(os.path.join(pwd, 'python-libs', 'ase', 'android.py'),
@@ -231,25 +248,31 @@ def zipup_extra():
           exclude=['lib-dynload'], prefix='python/')
 
 
-zipup_extra()
+def zipup_cleanup(pwd):
+    map(rm, find('output', '\.py$')[0])
+    map(rm, find('output', '\.pyc$')[0])
+    map(rm, find('output', '\.doc$')[0])
+    map(rm, find('output', '\.egg-info$')[0])
 
-map(rm, find('output', '\.py$')[0])
-map(rm, find('output', '\.pyc$')[0])
-map(rm, find('output', '\.doc$')[0])
-map(rm, find('output', '\.egg-info$')[0])
-def clean_library(lib):
-    rm(os.path.join(pwd, 'output', 'usr', 'lib', 'python2.7', lib))
-map (clean_library, ['ctypes', 'distutils', 'idlelib', 'plat-linux2', 'site-packages'])
+    def clean_library(lib):
+        rm(os.path.join(pwd, 'output', 'usr', 'lib', 'python2.7', lib))
 
-print 'Zipping up Python interpreter for deployment.'
-zipup(os.path.join(pwd, 'python%s%s.zip' % (VERSION[""], plat)),
-      os.path.join(pwd, 'output', 'usr'),
-      os.path.join(pwd, 'output', 'usr'),
-      exclude=['*.pyc',  '*.py'], prefix="python/")
+    map(clean_library,
+        ['ctypes', 'distutils', 'idlelib', 'plat-linux2', 'site-packages'])
 
-print 'Zipping up Python scripts.'
-zipup(os.path.join(pwd, 'python_scripts%s.zip' % VERSION["scripts"]),
-      os.path.join(pwd, 'python-libs', 'ase', 'scripts'),
-      os.path.join(pwd, 'python-libs', 'ase', 'scripts'))
 
-print 'Done.'
+def zipup_bin(pwd):
+    info('Zipping up Python interpreter for deployment.')
+    zipup(os.path.join(pwd, 'python%s%s.zip' % (VERSION[""], cfg.plat)),
+          os.path.join(pwd, 'output', 'usr'),
+          os.path.join(pwd, 'output', 'usr'),
+          exclude=['*.pyc',  '*.py'], prefix="python/")
+
+
+def zipup_script(pwd):
+    info('Zipping up Python scripts.')
+    zipup(os.path.join(pwd, 'python_scripts%s.zip' % VERSION["scripts"]),
+          os.path.join(pwd, 'python-libs', 'ase', 'scripts'),
+          os.path.join(pwd, 'python-libs', 'ase', 'scripts'))
+
+# vi: ft=python:et:ts=4:nowrap:fdm=marker
