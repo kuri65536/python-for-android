@@ -34,7 +34,7 @@ diff -ru Python-3.3.5/Lib/platform.py Python-3.3.5-android/Lib/platform.py
 +            output = subprocess.check_output(['/system/bin/getprop',
 +                                              _android_version_property])
 +            version = output.decode('ascii').strip()
-+            version_obtained = True
++            version_obtained = version and True or False
 +        except (subprocess.CalledProcessError, UnicodeDecodeError):
 +            pass
 +
@@ -52,7 +52,7 @@ diff -ru Python-3.3.5/Lib/platform.py Python-3.3.5-android/Lib/platform.py
 +        for line in open('/system/build.prop'):
 +            if '=' not in line:
 +                continue
-+            key, val = line.split('=')
++            key, val = line.split('=')[0:2]
 +            key = key.strip()
 +
 +            if not version_obtained and key == _android_version_property:
