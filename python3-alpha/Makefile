@@ -1,5 +1,5 @@
 
-.PHONY: build build_config build_bin build_install \
+.PHONY: build build_config build_bin build_install build_strip \
         error init clean_output cleanall \
         patch build_misc_sqlite3 build_misc_ncurses \
         build_misc_readline build_misc_bzip2 strip_bin
@@ -14,8 +14,8 @@ RELEASE_VERSION:=$(shell cat LATEST_VERSION)
 PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
-PYTHON_FOR_BUILD := $(CWD)/host/bin/python3
-HOSTPYTHON := $(dir $(dir PYTHON_FOR_BUILD))
+HOSTPYTHON := $(CWD)/host
+PYTHON_FOR_BUILD := $(HOSTPYTHON)/bin/python3
 
 ZIP_BINarm := python3_$(RELEASE_VERSION).zip
 ZIP_BINx86 := $(subst .zip,_x86.zip,$(ZIP_BINarm))
@@ -102,10 +102,11 @@ PYTHON_OPTIONAL_MODULES="bz2 lzma ssl"
 
 # build settings section 3 {{{1
 PYBINR := python3
-PYLIB := $(PYBINR)/lib/$(PYTHONLIB)
 
 ifneq (x$(CROSS),x)
     export PYBIN := $(CWD)/$(PYBINR)$(SFX)/$(PYBINR)
+    PYDYNR := $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
+    PYDYN := $(CWD)/$(PYBINR)$(SFX)/$(PYDYNR)
 
     export ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(_ANDROID_EABI)/prebuilt/$(host)/bin
     export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
@@ -122,7 +123,7 @@ ifneq (x$(CROSS),x)
     export LINKFORSHARED := -rdynamic -fPIE -pie \
                             -Xlinker -export-dynamic
 
-    export HOSTPGEN = $(PYTHONSRC)/Parser/hostpgen
+    export HOSTPGEN = $(HOSTPYTHON)/bin/hostpgen
 
     CROSS_COMPILE := $(HOSTARCH)-
     CROSS_COMPILE_TARGET := $(ARCH)
@@ -269,8 +270,9 @@ $(PYTHONTAR):
 	mkdir -p $(HOSTPYTHON)
 	cd Python-$(VERSION)/; ./configure --prefix=$(HOSTPYTHON)
 	make -C Python-$(VERSION)
+	make -C Python-$(VERSION) Parser/pgen
 	make -C Python-$(VERSION) install
-	cp Python-$(VERSION)/Parser/pgen $(HOSTPYTHON)
+	cp Python-$(VERSION)/Parser/pgen $(HOSTPYTHON)/bin/hostpgen
 	rm -rf Python-$(VERSION)
 	touch .build_host
 
@@ -319,10 +321,15 @@ build_bin: .build_openssl .build_misc
 build_install: .build_bin
 	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) install
 
-# strip_bin:
-# 	$(TARGET)-strip $(PYBIN)/bin/python3
-# 	for i in $(PYBIN)/lib/*.so*; do $(TARGET)-strip $$i; done
-# 	for i in $(PYLIB)/lib-dynload/*.so*; do $(TARGET)-strip $$i; done
+.build_strip: .build_install
+	make build_strip CROSS=arm PIE=yes
+	make build_strip CROSS=x86 PIE=yes
+	touch .build_strip
+build_strip: .build_install
+	$(TARGET)-strip $(PYBIN)/bin/python3
+	for i in $(PYBIN)/lib/*.so* $(PYDYN)/*.so*; do \
+	    if [ -L $$i ]; then continue; fi; \
+	    chmod 600 $$i; $(TARGET)-strip $$i; chmod 555 $$i; done
 
 # python3: packaging {{{1
 $(ZIP_BINarm): .build_install
@@ -330,7 +337,7 @@ $(ZIP_BINarm): .build_install
 $(ZIP_BINx86): .build_install
 	make CROSS=x86 PIE=yes build_zip
 
-build_zip: .build_install
+build_zip: .build_strip
 	@echo non-PIE: build the android libraries/executables
 	# make strip_bin CROSS=arm
 	@echo "Packing $(ZIPMAIN)"
@@ -342,13 +349,13 @@ build_zip: .build_install
 	cd $(PYBIN)/..; deps="libssl.so.1.0.0 libcrypto.so.1.0.0"; \
 	  for i in $$deps; do \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$$i; done
-	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYBINR)/lib/$(PYTHONLIB)/lib-dynload
+	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYDYNR)
 	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
 	          $(PYBINR)/include/python3.4m/pyconfig.h
 
 PYEXT_ := python3-extras
 PYEXT := $(PYEXT_)/$(PYBINR)
-$(ZIPEXTRA): $(ZIPMAIN)
+$(ZIPEXTRA): $(ZIPMAIN) .build_host
 	echo "Packing $(ZIPEXTRA)"
 	rm -f $(ZIPEXTRA)
 	rm -rf $(PYEXT_)
@@ -361,15 +368,21 @@ $(ZIPEXTRA): $(ZIPMAIN)
 	# cp $(PYBINR)/share/terminfo/v/vt320 $(PYEXT)/share/v
 	
 	cp python-libs/ase/android.py $(PYEXT)
-	cp -r $(CWD)/python3_arm/$(PYLIB)/* $(PYEXT)
+	cp -r $(CWD)/$(PYBINR)_arm/$(PYBINR)/lib/$(PYTHONLIB)/* $(PYEXT)
 	cp -r python-libs/* $(PYEXT)/site-packages
-	# $(PYTHON_FOR_BUILD) -m compileall $(PYEXT) || echo
+	rm -rf $(PYEXT)/site-packages/ase           # ignore ase
+	$(PYTHON_FOR_BUILD) -OO -m compileall -qf -x'tests*/.*' $(PYEXT) || echo
+	# FIXME: complex shell script: change __cache__/.pyo to .pyc
+	find $(PYEXT) -name *.pyo -exec sh -c \
+	    'cp $$0 $$(echo $$0 | sed "s/\/__pycache__//" | sed s/.cpython-34.pyo/.pyc/)' {} \;
 	
 	cd $(PYEXT_); \
-	zip -grx"*.so" -x"*.so.*" -x"test/*" -x"*/test/*" -x"*.pyc" \
-	               -x"*.pyo" $(CWD)/$@ *
-	zip -d $@ "*.pc" "*pkgconfig*" "*/libpython3.4m.a" \
-	          "*/test/*" "*.exe" "*.a" "bin/*" "*.la"
+	zip -Dqgrx"*.so" -x"test/*" -x"*/test/*" -x"*/tests/*" \
+	                 -x"*/turtledemo/*" -x"*/tkinter/*" -x"*/idlelib/*" \
+	                 -x"*.pyo" -x"*.py" -x"*/__pycache__/*" \
+	                 -x"*.so*" -x"*.exe" -x"*.a" $(CWD)/$@ *
+	# zip -d $@ "*.pc" "*pkgconfig*" "*/libpython3.4m.a" \
+	#           "*.a" "bin/*" "*.la"
 
 $(ZIPSCRIPTS):
 	echo "Packing $(ZIPSCRIPTS)"
