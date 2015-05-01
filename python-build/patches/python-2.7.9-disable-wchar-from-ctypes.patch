@@ -1,0 +1,89 @@
+diff --ignore-file-name-case -wuprN Python-2.7.9/Lib/ctypes/__init__.py python-src/Lib/ctypes/__init__.py
+--- Python-2.7.9/Lib/ctypes/__init__.py	2014-06-30 11:05:25.000000000 +0900
++++ python-src/Lib/ctypes/__init__.py	2015-03-15 08:59:51.726688195 +0900
+@@ -7,6 +7,14 @@ import os as _os, sys as _sys
+ 
+ __version__ = "1.1.0"
+ 
++import _ctypes
++odlopen = getattr(_ctypes, 'dlopen')
++def __dlopen(name, flag=_ctypes.RTLD_GLOBAL|_ctypes.RTLD_LOCAL):
++  if name:
++    return odlopen(name, flag)
++  return 0L
++_sys.modules["_ctypes"].dlopen=__dlopen
++
+ from _ctypes import Union, Structure, Array
+ from _ctypes import _Pointer
+ from _ctypes import CFuncPtr as _CFuncPtr
+@@ -276,7 +276,7 @@
+     if _os.name in ("nt", "ce"):
+         _win_functype_cache.clear()
+     # _SimpleCData.c_wchar_p_from_param
+-    POINTER(c_wchar).from_param = c_wchar_p.from_param
++    #POINTER(c_wchar).from_param = c_wchar_p.from_param
+     # _SimpleCData.c_char_p_from_param
+     POINTER(c_char).from_param = c_char_p.from_param
+     _pointer_type_cache[None] = c_void_p
+@@ -296,29 +296,30 @@
+     else:
+         set_conversion_mode("ascii", "strict")
+ 
+-    class c_wchar_p(_SimpleCData):
+-        _type_ = "Z"
++    #class c_wchar_p(_SimpleCData):
++    #    _type_ = "Z"
+ 
+-    class c_wchar(_SimpleCData):
+-        _type_ = "u"
++    #class c_wchar(_SimpleCData):
++    #    _type_ = "u"
++
++    #def create_unicode_buffer(init, size=None):
++    #    """create_unicode_buffer(aString) -> character array
++    #    create_unicode_buffer(anInteger) -> character array
++    #    create_unicode_buffer(aString, anInteger) -> character array
++    #    """
++    #    if isinstance(init, (str, unicode)):
++    #        if size is None:
++    #            size = len(init)+1
++    #        buftype = c_wchar * size
++    #        buf = buftype()
++    #        buf.value = init
++    #        return buf
++    #    elif isinstance(init, (int, long)):
++    #        buftype = c_wchar * init
++    #        buf = buftype()
++    #        return buf
++    #    raise TypeError(init)
+ 
+-    def create_unicode_buffer(init, size=None):
+-        """create_unicode_buffer(aString) -> character array
+-        create_unicode_buffer(anInteger) -> character array
+-        create_unicode_buffer(aString, anInteger) -> character array
+-        """
+-        if isinstance(init, (str, unicode)):
+-            if size is None:
+-                size = len(init)+1
+-            buftype = c_wchar * size
+-            buf = buftype()
+-            buf.value = init
+-            return buf
+-        elif isinstance(init, (int, long)):
+-            buftype = c_wchar * init
+-            buf = buftype()
+-            return buf
+-        raise TypeError(init)
+ 
+ # XXX Deprecated
+ def SetPointerType(pointer, cls):
+@@ -450,7 +458,7 @@ if _os.name in ("nt", "ce"):
+ elif _sys.platform == "cygwin":
+     pythonapi = PyDLL("libpython%d.%d.dll" % _sys.version_info[:2])
+ else:
+-    pythonapi = PyDLL(None)
++    pythonapi = PyDLL("libpython%d.%d.so" % _sys.version_info[:2])
+ 
+ 
+ if _os.name in ("nt", "ce"):
+

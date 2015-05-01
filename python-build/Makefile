@@ -90,7 +90,8 @@ $(PYTHONSRC): $(PYTHONTAR) .build_host
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
-	patch -p1 -i $(CWD)/Python-$(VERSION)-android.patch
+	patch -p1 -i $(CWD)/Python-$(VERSION)-android.patch; \
+	for i in $(CWD)/patches/*.patch; do patch -p1 -i $$i; done
 
 LIBS = site-packages encodings compiler hotshot \
     email email/mime \
@@ -200,14 +201,19 @@ build_copy_lib:
 # build python {{{1
 build_bin:
 	mkdir -p $(JNI_BIN)
-	cp -dp openssl/.build_$(__BUILD_ABI)/lib*.so* $(JNI_BIN)
-	cp -dp libffi/$(__BUILD_HST)/.libs/lib*.so* $(JNI_BIN)
 	
 	cd $(CWD)/python; \
 	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
 	    $(CWD)/python-src/Include/graminit.h \
 	    $(CWD)/python-src/Python/graminit.c
 	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) $(__APP_ABI)
+	
+	for i in libssl.so libssl.1.0 libcrypto.so libcrypto.so.1.0 \
+	         libffi.so.6.0.0 libffi.so; do \
+	    rm -f $(JNI_BIN)/$$i; done
+	cp openssl/.build_$(__BUILD_ABI)/libssl.so.1.0.0 $(JNI_BIN)
+	cp openssl/.build_$(__BUILD_ABI)/libcrypto.so.1.0.0 $(JNI_BIN)
+	cp libffi/$(__BUILD_HST)/.libs/libffi.so.6 $(JNI_BIN)
 	touch .build_bin$(__BUILD_ARCH)
 
 .build_bin_arm: $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
@@ -236,10 +242,10 @@ $(ZIP_LIB): $(ZIP_BIN_arm)
 $(ZIP_EXT): $(PYTHONSRC)
 	# optimize the python code for the light size of zip.
 	__BUILD_ARCH=_arm make build_copy
-	$(CWD)/host/bin/python -OO build.py pie extra
+	$(PYTHONHST_bin) -OO build.py pie extra
 
 $(ZIP_SCR): $(ZIP_EXT)
-	$(CWD)/host/bin/python build.py pie scripts
+	$(PYTHONHST_bin) build.py pie scripts
 
 # end of file {{{1
 # vi: ft=make:fdm=marker:et:ts=4:nowrap

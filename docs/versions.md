@@ -1,9 +1,19 @@
 * [Report issue](../README.md#create_issue)
 
+PythonForAndroid\_r22
+---
+* disable to use symbolic link, this is not valid with android unzip.
+* disable wchar from ctypes module. idea from [ML](https://groups.google.com/forum/?hl=en#!searchin/python-android/ctypes/python-android/vDaaJXNYz_A/eazMVI-DQSYJ)
+* strip shared binary again.
+
 PythonForAndroid\_r21
 ---
 * openssl with armv5te for old devices.
 * [compile SSL for armv5te](http://stackoverflow.com/questions/16810110/how-to-build-openssl-to-generate-libcrypto-a-with-android-ndk-and-windows)
+* enable zlib for python3
+
+  * [setup.py must be patched](http://code.activestate.com/lists/python-list/329410/)
+  * use boinc zlib. (strange version 1.2.3, patch may not work in the far future.)
 
 PythonForAndroid\_r20
 ---
