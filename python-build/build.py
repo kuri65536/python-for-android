@@ -333,7 +333,7 @@ def zipup_bin(pwd):                                         # {{{1
     copyre(cfg.path_bin, "^(?!lib).*\.so*$", output)
 
     info('Strip them...')
-    # map(strip, find(root, '\.so$')[0])
+    map(strip, find(root, '\.so$')[0])      # make 8M => 3M
     strip(root + '/python/bin/python')
 
     info('Removing unecessary files and directories from installation.')
