@@ -46,12 +46,12 @@ openssl/openssl-*.tar.gz
 openssl/openssl-src
 python3-alpha/host
 python{-build,3-alpha}/sqlite3.tar.gz
-python{-build,3-alpha}/sqlite3{,_arm,_x86,_arm_pie,_x86_pie}
+python{-build,3-alpha}/sqlite3{,_arm,_x86}
 python3-alpha/ncurses-5.9.tar.gz
 python3-alpha/readline-6.3.tar.gz
-python3-alpha/readline-6.3{_arm,_x86,_arm_pie,_x86_pie}
+python3-alpha/readline-6.3{_arm,_x86}
 python{-build,3-alpha}/bzip2-1.0.6.tar.gz
-python3-alpha/python3{_arm,_x86,_arm_pie,_x86_pie}
+python{-build,3-alpha}/python{,3}{_arm,_x86}
 python3-alpha/python3-extras
 android/Python3ForAndroid/gradle
 android/Python3ForAndroid/local.properties
@@ -64,6 +64,8 @@ python-build/libffi
 python-build/uClibc-*.tar.bz2
 python-build/uClibc-*/
 python-build/libcrypt
+bin
+python-build/python/obj/local
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc

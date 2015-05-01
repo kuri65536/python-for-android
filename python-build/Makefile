@@ -2,7 +2,7 @@ VERSION=2.7.9
 ndk_build = $(NDK_PATH)/ndk-build
 # set -ex
 CWD := $(shell pwd)
-OUT := $(CWD)/output
+OUT := $(CWD)/python$(__BUILD_ARCH)
 DEBUG=no
 
 RELEASE_VERSION:=$(shell cat LATEST_VERSION)
@@ -11,17 +11,22 @@ PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
 PYTHONLIB := python$(basename $(VERSION))
 PYTHONHST := $(CWD)/host
+PYTHONHST_bin := $(PYTHONHST)/bin/python
 TAR := tar xvfz
-ZIP := python_$(RELEASE_VERSION).zip \
-       python_$(RELEASE_VERSION)_x86.zip \
-       python_extras_$(shell cat LATEST_VERSION_EXTRA).zip \
-       python_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
+ZIP_BIN_arm := python_$(RELEASE_VERSION).zip
+ZIP_BIN_x86 := python_$(RELEASE_VERSION)_x86.zip
+ZIP_LIB := python_lib_$(RELEASE_VERSION).zip
+ZIP_EXT := python_extras_$(shell cat LATEST_VERSION_EXTRA).zip
+ZIP_SCR := python_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
+ZIP := $(ZIP_BIN_arm) $(ZIP_BIN_x86) $(ZIP_LIB) $(ZIP_EXT) $(ZIP_SCR)
 
-OUT_LIB := $(OUT)/usr/lib/$(PYTHONLIB)
+OUT_EXT := $(OUT)/python-ext/python
+OUT_INC := $(OUT)/python-lib/python/include/$(PYTHONLIB)
 
 PYBINR := python
 
-.PHONY: build error init clean_output cleanall build_bin build_zip
+.PHONY: build error init cleanall \
+        build_copy build_copy_lib build_bin build_zip
 
 ifeq (x$(NDK_PATH),x)
 build: error
@@ -29,10 +34,25 @@ else
 build: $(ZIP)
 endif
 
+ifeq (x$(__BUILD_ARCH),x_arm)
+    __BUILD_ABI := armeabi
+    __BUILD_HST := arm-unknown-linux-androideabi
+    __APP_ABI := 
+else
+ifeq (x$(__BUILD_ARCH),x_x86)
+    __BUILD_ABI := x86
+    __BUILD_HST := i686-pc-linux-android
+    __APP_ABI := APP_ABI=x86
+else
+endif
+endif
+
+JNI_BIN := ./python/obj/local/$(__BUILD_ABI)
+
 cleanall: clean
 	rm -f $(PYTHONTAR)
 
-clean: clean_output
+clean:
 	make -C openssl clean
 	rm -f .build_*
 	rm -rf $(PYTHONSRC)
@@ -150,66 +170,76 @@ uClibc-0.9.33.2.tar.bz2:
 	
 	touch $@
 
-# clean-up {{{1
-clean_output:
-	rm -rf $(OUT)*
-	mkdir -p $(OUT)/usr/bin
-	mkdir -p $(OUT_LIB)/lib-dynload
-	mkdir -p $(OUT)/usr/include/$(PYTHONLIB)
+# copy standard scripts and include {{{1
+build_copy:
+	[ x$(__BUILD_ARCH) != x ]       # stop at arch is not set.
+	rm -rf $(OUT)/python-ext
 	
 	for lib in $(LIBS); do \
 	    if [ -n "$$(find $(PYTHONSRC)/Lib/$$lib -maxdepth 1 -type f)" ]; then \
-	        mkdir -p $(OUT_LIB)/$$lib; \
+	        mkdir -p $(OUT_EXT)/$$lib; \
 	        cp $$(find $(PYTHONSRC)/Lib/$$lib -maxdepth 1 -type f) \
-	           $(OUT_LIB)/$$lib; \
+	           $(OUT_EXT)/$$lib; \
 	    fi; \
 	done
 	
-	cd $(PYTHONSRC); $(PYTHONHST)/bin/python Lib/sysconfig.py --generate-posix-vars
-	cp $(PYTHONSRC)/build/lib*/_sysconfigdata.py $(OUT_LIB)/
-	cp $$(find $(PYTHONSRC)/Lib/ -maxdepth 1 -type f) $(OUT_LIB)/
-	cp -r $(PYTHONSRC)/Include/* $(OUT)/usr/include/$(PYTHONLIB)/
-	cp $(PYTHONSRC)/pyconfig.h $(OUT)/usr/include/$(PYTHONLIB)/
+	cd $(PYTHONSRC); $(PYTHONHST_bin) Lib/sysconfig.py --generate-posix-vars
+	cp $(PYTHONSRC)/build/lib*/_sysconfigdata.py $(OUT_EXT)/
+	cp $$(find $(PYTHONSRC)/Lib/ -maxdepth 1 -type f) $(OUT_EXT)/
+	# Copy in ASE's Android module. (this code was moved from build.py)
+	cp python-libs/ase/android.py $(OUT_EXT)
+
+build_copy_lib:
+	[ x$(__BUILD_ARCH) != x ]       # stop at arch is not set.
+	rm -rf $(OUT)/python-lib
+	mkdir -p $(OUT_INC)
+	cp -r $(PYTHONSRC)/Include/* $(OUT_INC)/
+	cp $(PYTHONSRC)/pyconfig.h $(OUT_INC)/
 
 
 # build python {{{1
-build_zip:
-	cd $(CWD)/python; \
-	cp obj/local/$(ZIP_ARCH)/python $(OUT)/usr/bin; \
-	cp -dp obj/local/$(ZIP_ARCH)/lib*.so* $(OUT)/usr/lib; \
-	cp obj/local/$(ZIP_ARCH)/*.so $(OUT)/usr/lib/$(PYTHONLIB)/lib-dynload
-	$(CWD)/host/bin/python build.py $(BUILDPY_ARG)
-
 build_bin:
-	mkdir -p ./python/obj/local/{armeabi,x86}
-	cp -dp openssl/.build_armeabi/lib*.so* ./python/obj/local/armeabi
-	cp -dp openssl/.build_x86/lib*.so* ./python/obj/local/x86
-	cp -dp libffi/arm-unknown-linux-androideabi/.libs/lib*.so* ./python/obj/local/armeabi
-	cp -dp libffi/i686-pc-linux-android/.libs/lib*.so* ./python/obj/local/x86
+	mkdir -p $(JNI_BIN)
+	cp -dp openssl/.build_$(__BUILD_ABI)/lib*.so* $(JNI_BIN)
+	cp -dp libffi/$(__BUILD_HST)/.libs/lib*.so* $(JNI_BIN)
 	
 	cd $(CWD)/python; \
 	$(CWD)/host/pgen $(CWD)/python-src/Grammar/Grammar \
 	    $(CWD)/python-src/Include/graminit.h \
 	    $(CWD)/python-src/Python/graminit.c
-	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build)
-	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) APP_ABI:=x86
+	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) $(__APP_ABI)
+	touch .build_bin$(__BUILD_ARCH)
 
-# build & packaging {{{1
-$(ZIP): $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
+.build_bin_arm: $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
 	@echo PIE: build the android libraries/executables
-	# FIXME: do not build duplicated bins with non-PIE binary.
-	make build_bin __ENABLE_PIE=yes
-	touch .build_bin_pie
+	make build_bin __ENABLE_PIE=yes __BUILD_ARCH=_arm
 	
-	# arm: copy out all the needed files
-	make clean_output
-	make build_zip ZIP_ARCH=armeabi BUILDPY_ARG=pie
-	
-	# x86: copy out all the needed files
-	make clean_output
-	make build_zip ZIP_ARCH=x86 BUILDPY_ARG="pie x86"
-	
-	echo "Done"
+.build_bin_x86: $(PYTHONSRC) .build_openssl $(TARGET_LIBS)
+	@echo PIE: build the android libraries/executables
+	make build_bin __ENABLE_PIE=yes __BUILD_ARCH=_x86
+
+# packaging {{{1
+# zipup: binary: copy out all the needed files
+$(ZIP_BIN_arm): .build_bin_arm
+	rm -rf $(OUT)_arm/python-bin
+	$(PYTHONHST_bin) build.py pie bin
+
+$(ZIP_BIN_x86): .build_bin_x86
+	rm -rf $(OUT)_x86/python-bin
+	$(PYTHONHST_bin) build.py pie bin x86
+
+# zipup: scripts or another
+$(ZIP_LIB): $(ZIP_BIN_arm)
+	__BUILD_ARCH=_arm make build_copy_lib
+	$(PYTHONHST_bin) build.py pie lib
+
+$(ZIP_EXT): $(PYTHONSRC)
+	# optimize the python code for the light size of zip.
+	__BUILD_ARCH=_arm make build_copy
+	$(CWD)/host/bin/python -OO build.py pie extra
+
+$(ZIP_SCR): $(ZIP_EXT)
+	$(CWD)/host/bin/python build.py pie scripts
 
 # end of file {{{1
 # vi: ft=make:fdm=marker:et:ts=4:nowrap
