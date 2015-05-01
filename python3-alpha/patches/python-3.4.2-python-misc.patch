@@ -64,13 +64,24 @@ diff -ru Python-3.3.5/setup.py Python-3.3.5-android/setup.py
          lib = sysconfig.get_config_var('TIMEMODULE_LIB')
          if lib:
              time_libs.append(lib)
+@@ -631,7 +631,9 @@
+             missing.append('spwd')
+ 
+         # select(2); not on ancient System V
+-        exts.append( Extension('select', ['selectmodule.c']) )
++        # selecemodule.c calls the ceil(3) math function.
++        exts.append(Extension('select', ['selectmodule.c'],
++                              libraries=['m']))
+ 
+         # Fred Drake's interface to the Python parser
+         exts.append( Extension('parser', ['parsermodule.c']) )
 @@ -655,7 +658,8 @@
          # Operations on audio samples
          # According to #993173, this one should actually work fine on
          # 64-bit platforms.
 -        exts.append( Extension('audioop', ['audioop.c']) )
-+        exts.append( Extension('audioop', ['audioop.c'],
-+                               libraries=['m']) )
++        exts.append(Extension('audioop', ['audioop.c'],
++                              libraries=['m']))
 
          # readline
          do_readline = self.compiler.find_library_file(lib_dirs, 'readline')
