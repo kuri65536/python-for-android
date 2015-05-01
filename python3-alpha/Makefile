@@ -379,6 +379,7 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	cd $(PYEXT_); \
 	zip -Dqgrx"*.so" -x"test/*" -x"*/test/*" -x"*/tests/*" \
 	                 -x"*/turtledemo/*" -x"*/tkinter/*" -x"*/idlelib/*" \
+	                 -x"*/ensurepip/*" \
 	                 -x"*.pyo" -x"*.py" -x"*/__pycache__/*" \
 	                 -x"*.so*" -x"*.exe" -x"*.a" $(CWD)/$@ *
 	# zip -d $@ "*.pc" "*pkgconfig*" "*/libpython3.4m.a" \
