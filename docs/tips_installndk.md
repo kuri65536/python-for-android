@@ -6,6 +6,7 @@ How to install a cross-compiler toolchain for Android.
 
 Download the NDK from Android.
 ---
+* Download the [NDK from Android](http://developer.android.com/sdk/ndk/index.html).
 * Install. (typically would be in ~/android-ndk-r5 or similar)
 
 ```shell
@@ -15,8 +16,8 @@ $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --platform=android-9
 --install-dir=$ANDROID_NDK_TOOLCHAIN_ROOT
 ```
 
-NB: The ~ does not expand to your home folder in --install-dir. That's why I've put it in a shell
-variable, which we're going to be using later anyway.
+_NB: The ~ does not expand to your home folder in --install-dir.
+That's why I've put it in a shell variable, which we're going to be using later anyway._
 
 I picked the latest platform as an example, but anything reasonably sensible will do.
 

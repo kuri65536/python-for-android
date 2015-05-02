@@ -1,5 +1,15 @@
 ## This repository is in alpha development. forked from [Py4A on GoogleCode](https://code.google.com/p/python-for-android/)
 
+This is Python built to run on Android devices.
+It is made to be used together with SL4A (Scripting Layer For Android).
+
+Nearly all the actual non-python specific
+documentation can be found at [android-scripting](http://code.google.com/p/android-scripting/)
+
+For Python specific issues and enhancements _only_,
+please use the issues tab.
+
+
 Instruction for installation
 ===
 Requirements

@@ -82,19 +82,19 @@ size_t android_mbstowcs(wchar_t *dest, char * in, int maxlen)
 {
     wchar_t *out = dest;
     int size = 0;
-    if (in) 
+    if (in)
     {
       while(*in && size<maxlen) {
           if(*in < 128)
               *out++ = *in++;
           else
               *out++ = 0xdc00 + *in++;
-         size += 1;     
+         size += 1;
       }
-    }  
+    }
     *out = 0;
     return size;
-}  
+}
 
 size_t android_wcstombs(char * dest, wchar_t *source, int maxlen)
 {
@@ -108,16 +108,18 @@ size_t android_wcstombs(char * dest, wchar_t *source, int maxlen)
       /* UTF-8b surrogate */
       c-=0xdc00;
     }
-    if (dest) dest[i]=c;  
+    if (dest) dest[i]=c;
   }
-  return i;  
+  return i;
 }
-  
+
 #endif
+
 ```
 
-This is a rough and ready conversion taken from elsewhere in the python 3 code base. Then, in any
-file where mbstowcs or wcstombs were referenced, I added this header:
+This is a rough and ready conversion taken from elsewhere in the python 3
+code base. Then, in any file where mbstowcs or wcstombs were referenced,
+I added this header:
 
 ```C
 #ifdef ANDROID
