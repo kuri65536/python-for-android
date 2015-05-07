@@ -205,6 +205,20 @@ def test_alert_dialog_with_multi_choice_list():
   return True
 
 
+def test_ssl():
+    import ssl
+    # TODO: make test method
+    ssl             # missing ssl extension?
+    return True
+
+
+def test_ctypes():
+    import ctypes
+    # TODO: make test method
+    ctypes          # r17-22, this cause segfault error.
+    return True
+
+
 if __name__ == '__main__':
   for name, value in globals().items():
     if name.startswith('test_') and isinstance(value, types.FunctionType):

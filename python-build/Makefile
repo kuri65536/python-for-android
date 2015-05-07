@@ -244,7 +244,7 @@ $(ZIP_EXT): $(PYTHONSRC)
 	__BUILD_ARCH=_arm make build_copy
 	$(PYTHONHST_bin) -OO build.py pie extra
 
-$(ZIP_SCR): $(ZIP_EXT)
+$(ZIP_SCR): python-scripts/*.py
 	$(PYTHONHST_bin) build.py pie scripts
 
 # end of file {{{1

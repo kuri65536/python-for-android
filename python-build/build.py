@@ -346,10 +346,10 @@ def zipup_bin(pwd):                                         # {{{1
 
 
 def zipup_script(pwd):                                      # {{{1
+    root = os.path.join(pwd, 'python-scripts')
     info('Zipping up Python scripts.')
     zipup(os.path.join(pwd, 'python_scripts%s.zip' % VERSION["scripts"]),
-          os.path.join(pwd, 'python-libs', 'ase', 'scripts'),
-          os.path.join(pwd, 'python-libs', 'ase', 'scripts'))
+          root, root)
 
 
 if __name__ == "__main__":                                  # {{{1
