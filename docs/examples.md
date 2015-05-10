@@ -7,6 +7,8 @@ This page shows some Py4A snippets and examples.
 
 Simple Example
 ---
+* tested/in release
+
 ```python
 import android
 
@@ -18,6 +20,7 @@ print("Hello World!")
 
 Reading Phone State
 ---
+* tested
 eventWait() will block until an event occurs or an (optional) timeout (in ms) is exceeded.
 
 ```python
@@ -29,6 +32,20 @@ try:
     print(droid.eventWait(2000))
 finally:
     droid.stopTrackingPhoneState()
+```
+
+Video phonecall (skype)
+---
+* 
+need Skype app.
+
+```python
+import android
+
+username = "user to call"
+droid = android.Android()
+i = droid.makeIntent("android.intent.action.VIEW", "skype://" + username)
+droid.startActivityIntent(i)
 ```
 
 <!---

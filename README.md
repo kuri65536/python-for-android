@@ -1,5 +1,14 @@
-## This repository is in alpha development. forked from [Py4A on GoogleCode](https://code.google.com/p/python-for-android/)
+**This repository is in alpha development.**
+**forked from** [Py4A on GoogleCode](https://code.google.com/p/python-for-android/)
 
+Download
+===
+see [Releases page](../../releases), and select an installer:
+[PythonForAndroid-debug.apk](https://github.com/kuri65536/python-for-android/releases/download/r21/PythonForAndroid-debug.apk)
+.
+
+Description
+===
 This is Python built to run on Android devices.
 It is made to be used together with SL4A (Scripting Layer For Android).
 
@@ -58,13 +67,14 @@ Links
 ===
 Pages
 ---
+* [Examples](docs/examples.md) as cookbooks.
+* [Modules](docs/modules.md)
+* [fullscreenwrapper2](docs/fullscreenwrapper2.md)
+* [Versions](docs/versions.md)
 * [BuildingModules](docs/building_modules.md)
 * [BuildingPython](docs/building_python.md)
-* [Modules](docs/modules.md)
 * [Python3](python3-alpha/README.md)
-* [Versions](docs/versions.md)
-* [fullscreenwrapper2](docs/fullscreenwrapper2.md)
-* [Show all](docs/README.md)
+* [Show all articles](docs/README.md)
 
 External Links
 ---
