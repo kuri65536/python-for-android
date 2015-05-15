@@ -47,8 +47,8 @@ openssl/openssl-src
 python3-alpha/host
 python{-build,3-alpha}/sqlite3.tar.gz
 python{-build,3-alpha}/sqlite3{,_arm,_x86}
-python3-alpha/ncurses-5.9.tar.gz
-python3-alpha/readline-6.3.tar.gz
+python{-build,3-alpha}/ncurses-5.9.tar.gz
+python{-build,3-alpha}/readline-6.3.tar.gz
 python3-alpha/readline-6.3{_arm,_x86}
 python{-build,3-alpha}/bzip2-1.0.6.tar.gz
 python{-build,3-alpha}/python{,3}{_arm,_x86}
@@ -66,6 +66,9 @@ python-build/uClibc-*/
 python-build/libcrypt
 bin
 python-build/python/obj/local
+python-build/ncurses
+python-build/readline-6.3
+python-build/readline
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc

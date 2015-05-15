@@ -76,7 +76,6 @@ $(call build-module,  _codecs_hk ,  Modules/cjkcodecs/_codecs_hk.c )
 $(call build-module,  _codecs_iso2022 ,  Modules/cjkcodecs/_codecs_iso2022.c )
 $(call build-module,  _multiprocessing ,  Modules/_multiprocessing/multiprocessing.c Modules/_multiprocessing/socket_connection.c Modules/_multiprocessing/semaphore.c,,-DHAVE_SEM_OPEN )
 #$(call build-module,  ossaudiodev ,  Modules/ossaudiodev.c )
-#$(call build-module,  _ssl ,  Modules/_ssl.c, ssl crypto )
 
 $(call import-module, bzip2)
 LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
@@ -158,6 +157,32 @@ LOCAL_SRC_FILES := Modules/_sqlite/cache.c \
 	Modules/_sqlite/statement.c \
 	Modules/_sqlite/util.c
 LOCAL_SHARED_LIBRARIES := libpython2.7 libsqlite
+include $(BUILD_SHARED_LIBRARY)
+
+$(call import-module, ncurses)
+LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
+LOCAL_PATH := $(PYTHON_SRC_PATH)
+LOCAL_MODULE := curses
+LOCAL_MODULE_FILENAME := _curses
+LOCAL_SRC_FILES := Modules/_cursesmodule.c
+LOCAL_SHARED_LIBRARIES := libpython2.7 ncurses termcap
+include $(BUILD_SHARED_LIBRARY)
+
+LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
+LOCAL_PATH := $(PYTHON_SRC_PATH)
+LOCAL_MODULE := curses_panel
+LOCAL_MODULE_FILENAME := _curses_panel
+LOCAL_SRC_FILES := Modules/_curses_panel.c
+LOCAL_SHARED_LIBRARIES := libpython2.7 ncurses termcap ncurses_panel
+include $(BUILD_SHARED_LIBRARY)
+
+$(call import-module, readline)
+LOCAL_C_INCLUDES += $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
+LOCAL_PATH := $(PYTHON_SRC_PATH)
+LOCAL_MODULE := pyreadline
+LOCAL_MODULE_FILENAME := readline
+LOCAL_SRC_FILES := Modules/readline.c
+LOCAL_SHARED_LIBRARIES := libpython2.7 ncurses termcap readline history
 include $(BUILD_SHARED_LIBRARY)
 
 #$(call import-module, pwd_grp)

@@ -91,7 +91,7 @@ $(PYTHONSRC): $(PYTHONTAR) .build_host
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
 	patch -p1 -i $(CWD)/Python-$(VERSION)-android.patch; \
-	for i in $(CWD)/patches/*.patch; do patch -p1 -i $$i; done
+	for i in $(CWD)/patches/python*.patch; do patch -p1 -i $$i; done
 
 LIBS = site-packages encodings compiler hotshot \
     email email/mime \
@@ -103,9 +103,12 @@ LIBS = site-packages encodings compiler hotshot \
     multiprocessing multiprocessing/dummy \
     plat-linux2 \
     xml xml/dom xml/etree xml/parsers xml/sax \
+    curses
 
 # libraries {{{1
 TARGET_LIBS := .build_misc_sqlite3 \
+               .build_misc_ncurses \
+               .build_misc_readline \
                .build_misc_bzip2 \
                .build_misc_expat \
                .build_misc_libffi \
@@ -123,6 +126,10 @@ libffi-3.2.1.tar.gz:
 	wget ftp://sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
 uClibc-0.9.33.2.tar.bz2:
 	wget http://www.uclibc.org/downloads/uClibc-0.9.33.2.tar.bz2
+ncurses-5.9.tar.gz:
+	wget http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz
+readline-6.3.tar.gz:
+	wget ftp://ftp.gnu.org/gnu/readline/readline-6.3.tar.gz
 
 # sqlite3 {{{1
 .build_misc_sqlite3: sqlite3.tar.gz
@@ -156,6 +163,30 @@ uClibc-0.9.33.2.tar.bz2:
 	make -C libffi -f ../libffi.mk build_sep_arm
 	make -C libffi -f ../libffi.mk build_sep_x86
 	touch $@
+# ncurses {{{1
+.build_misc_ncurses: ncurses-5.9.tar.gz
+	rm -rf ncurses
+	tar xfz $<
+	mv $(call targz,$<) ncurses
+	cp ncurses.mk ncurses/Android.mk
+	cd ncurses; for i in ../patches/ncurses*; do patch -p1 -i $$i; done
+	make -C ncurses -f Android.mk build_arm TARGET_ARCH_ABI=armeabi \
+	                                        NCURSES_PATH=$(CWD)/ncurses
+	make -C ncurses -f Android.mk build_x86 TARGET_ARCH_ABI=x86 \
+	                                        NCURSES_PATH=$(CWD)/ncurses
+	touch $@
+# readline {{{1
+.build_misc_readline: readline-6.3.tar.gz .build_misc_ncurses 
+	rm -rf readline
+	tar xfz $<
+	mv $(call targz,$<) readline
+	cp readline.mk readline/Android.mk
+	cd readline; patch -p1 < ../patches/readline-6.3-pre.patch
+	make -C readline -f Android.mk build_arm TARGET_ARCH_ABI=armeabi \
+	             NCURSES_PATH=$(CWD)/ncurses READLINE_PATH=$(CWD)/readline
+	make -C readline -f Android.mk build_x86 TARGET_ARCH_ABI=x86 \
+	             NCURSES_PATH=$(CWD)/ncurses READLINE_PATH=$(CWD)/readline
+	touch $@
 # libcrypt {{{1
 .build_misc_libcrypt: uClibc-0.9.33.2.tar.bz2
 	rm -rf $(subst .tar.bz2,,$<)
@@ -175,6 +206,8 @@ uClibc-0.9.33.2.tar.bz2:
 build_copy:
 	[ x$(__BUILD_ARCH) != x ]       # stop at arch is not set.
 	rm -rf $(OUT)/python-ext
+	
+	cd python-libs; sh setuptools.sh
 	
 	for lib in $(LIBS); do \
 	    if [ -n "$$(find $(PYTHONSRC)/Lib/$$lib -maxdepth 1 -type f)" ]; then \
@@ -209,11 +242,18 @@ build_bin:
 	cd $(CWD)/python; NDK_MODULE_PATH=$(shell pwd) $(ndk_build) $(__APP_ABI)
 	
 	for i in libssl.so libssl.1.0 libcrypto.so libcrypto.so.1.0 \
+	         libncurses.so libpanel.so libtinfo.so \
+	         libreadline.so libhistory.so \
 	         libffi.so.6.0.0 libffi.so; do \
 	    rm -f $(JNI_BIN)/$$i; done
 	cp openssl/.build_$(__BUILD_ABI)/libssl.so.1.0.0 $(JNI_BIN)
 	cp openssl/.build_$(__BUILD_ABI)/libcrypto.so.1.0.0 $(JNI_BIN)
 	cp libffi/$(__BUILD_HST)/.libs/libffi.so.6 $(JNI_BIN)
+	cp ncurses/lib-$(__BUILD_ABI)/python/lib/libncurses.so.5 $(JNI_BIN)
+	cp ncurses/lib-$(__BUILD_ABI)/python/lib/libtinfo.so.5 $(JNI_BIN)
+	cp ncurses/lib-$(__BUILD_ABI)/python/lib/libpanel.so.5 $(JNI_BIN)
+	cp readline/lib-$(__BUILD_ABI)/lib/libreadline.so.6 $(JNI_BIN)
+	cp readline/lib-$(__BUILD_ABI)/lib/libhistory.so.6 $(JNI_BIN)
 	touch .build_bin$(__BUILD_ARCH)
 
 .build_bin_arm: $(PYTHONSRC) .build_openssl $(TARGET_LIBS)

@@ -1,0 +1,29 @@
+--- ncurses-5.9/ncurses/base/lib_instr.c	2009-10-25 07:55:45.000000000 +0900
++++ lib_instr.c	2015-05-10 08:45:31.291814912 +0900
+@@ -78,7 +78,14 @@
+ 		    if (getcchar(cell, wch, &attrs, &pair, 0) == OK) {
+ 
+ 			init_mb(state);
++#if !defined(ANDROID)
+ 			n3 = wcstombs(0, wch, 0);
++#else
++            // need for < ANDROID 9
++            mbstate_t mbs;
++            memset(&mbs, 0, sizeof(mbs));
++            n3 = wcsrtombs(0, wch, 0, &mbs);
++#endif
+ 			if (!isEILSEQ(n3) && (n3 != 0)) {
+ 			    if (((int) n3 + i) > n) {
+ 				done = TRUE;
+@@ -86,7 +93,11 @@
+ 				done = TRUE;
+ 			    } else {
+ 				init_mb(state);
++#if !defined(ANDROID)
+ 				wcstombs(tmp, wch, n3);
++#else
++                wcsrtombs(tmp, wch, n3, &mbs);
++#endif
+ 				for (i3 = 0; i3 < n3; ++i3)
+ 				    str[i++] = tmp[i3];
+ 				free(tmp);

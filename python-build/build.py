@@ -48,7 +48,7 @@ class cfg:
 def options():
     import logging
     l = logging.getLogger("")
-    l.setLevel(logging.INFO)
+    l.setLevel(logging.DEBUG)
 
     for arg in sys.argv:
         if arg in ("x86", ):
@@ -300,8 +300,13 @@ def zipup_bin(pwd):                                         # {{{1
     info('Zipping up Python interpreter for deployment.')
     root = os.path.join(cfg.dest, "python-bin")
     outlib = os.path.join(root, "python/lib")
+    outtic = os.path.join(root, "python/share/terminfo")
     output = os.path.join(outlib, "python2.7/lib-dynload")
     run("mkdir -p %s" % (root + "/python/bin"))
+    run("mkdir -p %s" % outtic + "/a")
+    run("mkdir -p %s" % outtic + "/u")
+    run("mkdir -p %s" % outtic + "/v")
+    run("mkdir -p %s" % outtic + "/x")
     run("mkdir -p %s" % output)
 
     def pickup(src, dst, later=False):
@@ -312,6 +317,7 @@ def zipup_bin(pwd):                                         # {{{1
             linkto = os.readlink(src)
             os.symlink(linkto, _dst)
             return
+        debg("pickup: %s" % src)
         shutil.copy2(src, _dst)
 
     def copyre(path, pat, dst):
@@ -329,6 +335,12 @@ def zipup_bin(pwd):                                         # {{{1
     info('python => %s' % (cfg.path_bin + "python"))
     shutil.copy2(cfg.path_bin + "python", root + "/python/bin/python")
 
+    ticpath = ("ncurses/lib-armeabi/data/data/"
+               "com.googlecode.pythonforandroid/files/python/share/terminfo")
+    copyre(ticpath + "/a", "^ansi$", outtic + "/a")
+    copyre(ticpath + "/u", "^unknown$", outtic + "/u")
+    copyre(ticpath + "/v", "^vt100$|^vt320$", outtic + "/v")
+    copyre(ticpath + "/x", "^xterm$", outtic + "/x")
     copyre(cfg.path_bin, "^lib.*\.so.*$", outlib)
     copyre(cfg.path_bin, "^(?!lib).*\.so*$", output)
 
