@@ -199,7 +199,7 @@ def install_py4a(pwd):                                      # {{{1
             ('xmpppy', 'xmpp'), False, PathInfo(False, '', 'xmpp')),
         'Installing BeautifulSoup.': PkgInfo(
             ('BeautifulSoup', ), False,
-            PathInfo(True, 'BeautifulSoup.pyc', '')),
+            PathInfo(True, 'BeautifulSoup.py', '')),
         'Installing gdata.': PkgInfo(
             ('gdata', ), True,
             PathInfo(False, "build/lib/gdata", "gdata"),
