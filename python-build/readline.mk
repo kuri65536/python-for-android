@@ -27,8 +27,10 @@ NDK_BUILDARCH := $(BUILDOS)-$(BUILDMACHINE)
 BUILDARCH := $(BUILDMACHINE)-pc-$(BUILDOS)-gnu
 OPTS_CFG = --host=$(HOSTARCH) --build=$(BUILDARCH) \
            --prefix=$(READLINE_PATH)/lib-$(TARGET_ARCH_ABI) \
-           --enable-shared --disable-static --enable-multibyte \
-           --with-curses
+           --enable-shared --disable-static \
+           --with-curses=$(NCURSES_PATH)/lib-$(TARGET_ARCH_ABI)/python \
+           --enable-multibyte
+
 export CFLAGS = -DANDROID --sysroot=$(SYSROOT) \
                 -I$(NCURSES_PATH)/lib-$(TARGET_ARCH_ABI)/python/include \
                 -fPIE -fvisibility=default

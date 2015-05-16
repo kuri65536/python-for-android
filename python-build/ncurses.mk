@@ -36,7 +36,8 @@ OPTS_CFG = --host=$(HOSTARCH) --build=$(BUILDARCH) \
     --without-progs --without-tests \
     --with-termlib --enable-termcap \
     --disable-home-terminfo \
-    --with-default-terminfo-dir=$(__TERMPATH)
+    --with-default-terminfo-dir=$(__TERMPATH) \
+    --with-terminfo-dirs=$(__TERMPATH)
 export CFLAGS = --sysroot=$(SYSROOT) -DANDROID
 export LDFLAGS = --sysroot=$(SYSROOT)
 

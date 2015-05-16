@@ -272,7 +272,6 @@ def test_ctypes():
 
 
 def test_readline():
-    return False
     try:
         import readline
     except:
@@ -286,7 +285,8 @@ def test_curses():
     import os
     if not os.environ.get("TERM", ""):
         os.environ["TERM"] = "vt100"
-        os.environ["TERMINFO"] = "/data/data/com.googlecode.pythonforandroid/files/python/share/terminfo"
+        os.environ["TERMINFO"] = ("/data/data/com.googlecode.pythonforandroid"
+                                  "/files/python/share/terminfo")
     try:
         import _curses
     except:

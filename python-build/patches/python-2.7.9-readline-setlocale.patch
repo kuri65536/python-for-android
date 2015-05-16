@@ -1,0 +1,46 @@
+iff -r 4b97092aa4bd Modules/readline.c
+--- a/Modules/readline.c    Sun Apr 27 18:02:35 2014 +0100
++++ b/Modules/readline.c    Wed Apr 30 11:51:42 2014 +0200
+@@ -22,7 +22,7 @@
+ #endif
+ 
+ #ifdef SAVE_LOCALE
+-#  define RESTORE_LOCALE(sl) { setlocale(LC_CTYPE, sl); free(sl); }
++#  define RESTORE_LOCALE(sl) { if (sl) { setlocale(LC_CTYPE, sl); free(sl); } }
+ #else
+ #  define RESTORE_LOCALE(sl)
+ #endif
+@@ -972,9 +972,12 @@ static void
+ setup_readline(readlinestate *mod_state)
+ {
+ #ifdef SAVE_LOCALE
+-    char *saved_locale = strdup(setlocale(LC_CTYPE, NULL));
+-    if (!saved_locale)
+-        Py_FatalError("not enough memory to save locale");
++    char *saved_locale = setlocale(LC_CTYPE, NULL);
++    if (saved_locale != NULL) {
++        saved_locale = strdup(saved_locale);
++        if (!saved_locale)
++            Py_FatalError("not enough memory to save locale");
++    }
+ #endif
+ 
+ #ifdef __APPLE__
+@@ -1159,10 +1162,13 @@ call_readline(FILE *sys_stdin, FILE *sys
+     int signal;
+ 
+ #ifdef SAVE_LOCALE
+-    char *saved_locale = strdup(setlocale(LC_CTYPE, NULL));
+-    if (!saved_locale)
+-        Py_FatalError("not enough memory to save locale");
+-    setlocale(LC_CTYPE, "");
++    char *saved_locale = setlocale(LC_CTYPE, NULL);
++    if (saved_locale != NULL) {
++        saved_locale = strdup(saved_locale);
++        if (!saved_locale)
++            Py_FatalError("not enough memory to save locale");
++        setlocale(LC_CTYPE, "");
++    }
+ #endif
+ 
+     if (sys_stdin != rl_instream || sys_stdout != rl_outstream) {
