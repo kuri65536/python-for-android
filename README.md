@@ -31,13 +31,16 @@ How to install
 ---
 1. Download [SL4A Application](https://github.com/kuri65536/sl4a), such as
    [sl4a-r6x04-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6x04/sl4a-r6x04-arm-debug.apk)
-2. Downlaod [Py4A Application](https://github.com/kuri65536/python-for-android/releases), such as
-   [PythonForAndroid-debug.apk](https://github.com/kuri65536/python-for-android/releases/download/r21/PythonForAndroid-debug.apk)
+2. Download [Py4A Application](../../releases), such as
+   [PythonForAndroid-debug.apk](../../releases/download/r21/PythonForAndroid-debug.apk)
 3. Enable "Unknown Sources" in your device settings.
-4. Open 1. apk to install.
-5. Open 2. apk to install.
+4. Open 1. apk to install. (sl4a)
+5. Open 2. apk to install. (py4a)
 6. Open PythonForAndroid application
 7. Click Install to download and install python binaries.
+8. Launch sl4a, Select 'Menu' >> 'View' >> 'Interpreters'
+   and Select 'Python 2.7.?'.
+9. Python will be launched, have fun!
 
 
 <a name="create_issue"></a>Please tell me issues
@@ -143,12 +146,19 @@ r17
 * Make a release in github and Upload the binaries to it.
   Please be careful to match the release name and
   confirmed binary versions.
-* Install sl4a to your device.
-* Install py4a to your device.
-* Launch sl4a, Select 'Menu' >> 'View' >> 'Interpreters'
-  and Select 'Python 2.7.?'.
-* Python will be launched, have fun!
 
+### Local install (direct extracting)
+* Requirements: root is required.
+* Requirements: python already install.
+* Requirements: unzip is needed for extract.
+
+How to run:
+* after build, move current directory to python2: `cd python-build`
+* run scripts
+```shell
+$ sd=/sdcard adb=~/install/android-sdk-linux/platform-tools/adb \
+  sh ../tools/localinstall.sh
+```
 
 <!---
  vi: ft=markdown:et:ts=4:nowrap
