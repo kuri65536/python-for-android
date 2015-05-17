@@ -19,10 +19,13 @@ def patch_distutils():
 	cflags+=" -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os"
 	cflags+=" -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64"
 	cflags+=" -DANDROID  -Wa,--noexecstack -O2 -DNDEBUG -g"
+        cflags += " --sysroot=%s" % os.environ["PY4A_ROOT"]
 	cc = "arm-linux-androideabi-gcc"
+        os.environ["CC"] = cc
 	cxx = "arm-linux-androideabi-g++"
 	cpp = "arm-linux-androideabi-cpp"
 	ldshared= "%s -shared" % cxx
+        ldshared += " --sysroot=%s" % os.environ["PY4A_ROOT"]
 	ldshared+=" -lc -lstdc++ -lm -Wl,--no-undefined -Wl,-z,noexecstack -lsupc++ -lpython2.7"
 	ldshared+=" -L%s " % os.environ["PY4A_LIB"]
 	ccshared = sysconfig.get_config_vars("CCSHARED")

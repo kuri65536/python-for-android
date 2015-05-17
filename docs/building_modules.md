@@ -7,10 +7,13 @@ Setup
 
 Download the latest python-lib from our Downloads section, At time of writing, this is:
 
-python-lib\_r14.zip
+* python-lib\_r24.zip
+* python\_r24.zip
 
-Unzip this into python-modules/python-lib
+Unzip this into python-modules
+
 Using setuptools - Creating Egg
+===
 
 NDK setup
 ---
@@ -29,8 +32,8 @@ First you need to monkey patch setuptools, we provide with a helper script for t
 setup.py and add this lines before calling setup
 
 ```python
-from py4a import patch\_distutils
-patch\_distutils()
+from py4a import patch_distutils
+patch_distutils()
 ```
 
 You also need to either pass -p linux-armv or create a file setup.cfg inside the same folder than
@@ -49,15 +52,23 @@ this script is called setup.sh and is part of the python-lib package.
 
 So supposing we're working on projectX, and our folder structure is this:
 
-python-lib
-..........setup.sh
+```
+python
+..........bin
+......................setup.sh
+..........lib
+......................libpython2.7.so
+......................python2.7/py4a/__init__.py
 projectX
 ..........setup.py
 ..........setup.cfg
+```
 
 Then you would do from projectX.
 
-source ../python-lib/setup.sh
+```shell
+source ../python/bin/setup.sh
+```
 
 Cooking your eggs
 ---
