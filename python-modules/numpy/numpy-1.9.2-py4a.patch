@@ -1,0 +1,12 @@
+diff -uprN a/setup.py b/setup.py
+--- a/setup.py	2015-05-17 16:18:03.631971737 +0900
++++ b/setup.py	2015-05-17 16:19:23.543229981 +0900
+@@ -30,6 +30,8 @@
+ else:
+     import __builtin__ as builtins
+ 
++from py4a import patch_distutils
++patch_distutils()
+ 
+ CLASSIFIERS = """\
+ Development Status :: 5 - Production/Stable

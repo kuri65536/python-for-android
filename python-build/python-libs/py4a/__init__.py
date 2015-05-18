@@ -13,20 +13,23 @@ def patch_distutils():
     setattr(sysconfig, 'get_python_inc', get_python_inc)
 
     def customize_compiler(compiler):
+        sysroot = " --sysroot=%s" % os.environ["PY4A_ROOT"]
 	cflags = "-I%s/python2.7" % os.environ["PY4A_INC"]
 	cflags+=" -MMD -MP -MF -fpic -ffunction-sections -funwind-tables -fstack-protector"
 	cflags+=" -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__"
 	cflags+=" -Wno-psabi -march=armv5te -mtune=xscale -msoft-float -mthumb -Os"
 	cflags+=" -fomit-frame-pointer -fno-strict-aliasing -finline-limit=64"
 	cflags+=" -DANDROID  -Wa,--noexecstack -O2 -DNDEBUG -g"
-        cflags += " --sysroot=%s" % os.environ["PY4A_ROOT"]
+        cflags += sysroot
 	cc = "arm-linux-androideabi-gcc"
         os.environ["CC"] = cc
 	cxx = "arm-linux-androideabi-g++"
 	cpp = "arm-linux-androideabi-cpp"
 	ldshared= "%s -shared" % cxx
-        ldshared += " --sysroot=%s" % os.environ["PY4A_ROOT"]
-	ldshared+=" -lc -lstdc++ -lm -Wl,--no-undefined -Wl,-z,noexecstack -lsupc++ -lpython2.7"
+        ldshared += sysroot
+        # removed -lsupc++
+        ldshared += (" -lc -lstdc++ -lm -lpython2.7"
+                     " -Wl,--no-undefined -Wl,-z,noexecstack")
 	ldshared+=" -L%s " % os.environ["PY4A_LIB"]
 	ccshared = sysconfig.get_config_vars("CCSHARED")
 	so_ext = "so"
@@ -48,7 +51,7 @@ def patch_distutils():
             compiler_so=cc_cmd + ' ' + ' '.join(ccshared),
             compiler_cxx=cxx,
             linker_so=ldshared,
-            linker_exe=cc)
+            linker_exe=cc + ' ' + sysroot)
 
         compiler.shared_lib_extension = so_ext
     setattr(sysconfig, 'customize_compiler', customize_compiler)

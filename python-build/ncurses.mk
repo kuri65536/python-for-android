@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This makefile builds both for host and target, and so all the
-# common definitions are factored out into a separate file to
+# This makefile builds the two archtechture shared libraries.
 # minimize duplication between the build rules.
 
 LOCAL_PATH := $(call my-dir)/lib-$(TARGET_ARCH_ABI)/python
