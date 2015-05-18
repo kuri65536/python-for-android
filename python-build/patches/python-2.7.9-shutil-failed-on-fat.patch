@@ -1,0 +1,64 @@
+diff --ignore-file-name-case -wuprN a/Lib/shutil.py b/Lib/shutil.py
+--- a/Lib/shutil.py	2015-05-18 13:35:34.916976312 +0900
++++ b/Lib/shutil.py	2015-05-18 13:41:54.236568425 +0900
+@@ -85,18 +85,58 @@ def copyfile(src, dst):
+ 
+ def copymode(src, dst):
+     """Copy mode bits from src to dst"""
+-    if hasattr(os, 'chmod'):
++    if hasattr(os, 'chmod') and copymode_available(dst):
+         st = os.stat(src)
+         mode = stat.S_IMODE(st.st_mode)
+         os.chmod(dst, mode)
+ 
++
++__fat_path = []
++
++
++def copymode_available(dst):
++    """Check the path can accept chmod"""
++    if __fat_path:
++        dst = os.path.abspath(dst)
++        dst = os.path.realpath(dst)
++        for p in __fat_path:
++            if dst.startswith(p):
++                return False
++        return False
++
++    # collect and find vfat filesystem in mount and cache it.
++    from subprocess import check_output
++    try:
++        src = check_output("/system/bin/mount").splitlines()
++    except OSError:
++        src = ""
++    __fat_path.append("/dummy")
++    for l in src:
++        n, path = 0, ""
++        for arg in l.split(" "):
++            if not arg.strip():
++                continue
++            n += 1
++            if n == 2:
++                path = arg
++            elif n != 3:
++                continue
++            elif "fat" in arg:
++                __fat_path.append(path)
++                break
++            else:
++                break
++    # try again.
++    return copymode_available(dst)
++
++
+ def copystat(src, dst):
+     """Copy all stat info (mode bits, atime, mtime, flags) from src to dst"""
+     st = os.stat(src)
+     mode = stat.S_IMODE(st.st_mode)
+     if hasattr(os, 'utime'):
+         os.utime(dst, (st.st_atime, st.st_mtime))
+-    if hasattr(os, 'chmod'):
++    if hasattr(os, 'chmod') and copymode_available(dst):
+         os.chmod(dst, mode)
+     if hasattr(os, 'chflags') and hasattr(st, 'st_flags'):
+         try:
