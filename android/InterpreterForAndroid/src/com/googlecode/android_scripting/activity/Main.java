@@ -173,6 +173,7 @@ public abstract class Main extends Activity {
     try {
       installTask = getInterpreterInstaller(mDescriptor, Main.this, mTaskListener);
     } catch (Sl4aException e) {
+      mCurrentTask = null;
       Log.e(this, e.getMessage(), e);
       return;
     }
