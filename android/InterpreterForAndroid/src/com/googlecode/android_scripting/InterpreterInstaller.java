@@ -178,15 +178,21 @@ public abstract class InterpreterInstaller extends AsyncTask<Void, Void, Boolean
     }
 
     if (mDescriptor.hasInterpreterArchive()) {
-      mTaskQueue.offer(RequestCode.DOWNLOAD_INTERPRETER);
+      if (!mDescriptor.isLocalInstall()) {
+        mTaskQueue.offer(RequestCode.DOWNLOAD_INTERPRETER);
+      }
       mTaskQueue.offer(RequestCode.EXTRACT_INTERPRETER);
     }
     if (mDescriptor.hasExtrasArchive()) {
-      mTaskQueue.offer(RequestCode.DOWNLOAD_INTERPRETER_EXTRAS);
+      if (!mDescriptor.isLocalInstall()) {
+        mTaskQueue.offer(RequestCode.DOWNLOAD_INTERPRETER_EXTRAS);
+      }
       mTaskQueue.offer(RequestCode.EXTRACT_INTERPRETER_EXTRAS);
     }
     if (mDescriptor.hasScriptsArchive()) {
-      mTaskQueue.offer(RequestCode.DOWNLOAD_SCRIPTS);
+      if (!mDescriptor.isLocalInstall()) {
+        mTaskQueue.offer(RequestCode.DOWNLOAD_SCRIPTS);
+      }
       mTaskQueue.offer(RequestCode.EXTRACT_SCRIPTS);
     }
   }
@@ -213,9 +219,12 @@ public abstract class InterpreterInstaller extends AsyncTask<Void, Void, Boolean
 
     File root = new File(mInterpreterRoot);
     if (root.exists()) {
-      FileUtils.delete(root);
+      // try to clear the previous extras folder, another files will be keep.
+      File extras = new File(mInterpreterRoot,
+              InterpreterConstants.INTERPRETER_EXTRAS_ROOT);
+      FileUtils.delete(extras);
     }
-    if (!root.mkdirs()) {
+    else if (!root.mkdirs()) {
       Log.e("Failed to make directories: " + root.getAbsolutePath());
       return false;
     }
@@ -305,10 +314,15 @@ public abstract class InterpreterInstaller extends AsyncTask<Void, Void, Boolean
     return preferences.getBoolean(InterpreterConstants.INSTALLED_PREFERENCE_KEY, false);
   }
 
+  /**
+   * clean up installation files if installation was failed.
+   */
   private void cleanup() {
     List<File> directories = new ArrayList<File>();
 
-    directories.add(new File(mInterpreterRoot));
+    File extras = new File(mInterpreterRoot,
+            InterpreterConstants.INTERPRETER_EXTRAS_ROOT);
+    directories.add(extras);
 
     if (mDescriptor.hasInterpreterArchive()) {
       if (!mTaskQueue.contains(RequestCode.EXTRACT_INTERPRETER)) {

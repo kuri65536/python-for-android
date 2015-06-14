@@ -128,4 +128,9 @@ public interface InterpreterDescriptor {
    * Returns true if interpreter can be executed in interactive mode.
    */
   public boolean hasInteractiveMode();
+
+  /**
+   * Returns true if interpreter can be executed in local install mode.
+   */
+  public boolean isLocalInstall();
 }

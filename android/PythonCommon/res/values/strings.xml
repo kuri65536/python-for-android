@@ -3,4 +3,12 @@
     <string name="hello">Hello World, Main!</string>
     <string name="host_version">Host Version</string>
     <string name="server_version">Server Version</string>
+    <string name="Mod_import">Import Module</string>
+    <string name="Mod_browse">Browse...</string>
+    <string name="Mod_uninstall">Uninstall...</string>
+    <string name="Mod_title">Modules</string>
+    <string name="Itp_install">Install</string>
+    <string name="Itp_title">Interpreter</string>
+    <string name="Itp_LocalInstall">Local Install</string>
+    <string name="Itp_LocalInstall_Ready">Run Local Install</string>
 </resources>

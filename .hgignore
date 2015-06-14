@@ -69,6 +69,7 @@ python-build/python/obj/local
 python-build/ncurses
 python-build/readline-6.3
 python-build/readline
+python-modules/numpy/numpy-*
 syntax: regexp
 (python|lua|python3-alpha)/.*\.o
 python/.*\.pyc

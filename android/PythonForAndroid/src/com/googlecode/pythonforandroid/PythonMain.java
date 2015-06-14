@@ -51,10 +51,6 @@ import com.googlecode.android_scripting.pythoncommon.PythonUninstaller;
 // means of uninstalling as well. Import handling could well be a separate activity, too.
 public class PythonMain
        extends com.googlecode.android_scripting.pythoncommon.PythonMain {
-    @Override
-    protected String nameButtonInstall() {
-        return "Install Python";
-    }
 
     @Override
     protected InterpreterDescriptor getDescriptor() {

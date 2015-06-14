@@ -20,6 +20,7 @@ package com.googlecode.android_scripting.pythoncommon;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.googlecode.android_scripting.Log;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
 import com.googlecode.android_scripting.interpreter.InterpreterUtils;
 import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
@@ -28,21 +29,23 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class PythonDescriptor extends Sl4aHostedInterpreter {
 
   protected static final String PYTHON_BIN = "bin/python";
-  private static final int LATEST_VERSION = -1;
+  private static final int LATEST_VERSION_FAILED = -1;
   private int cache_version = -1;
   private int cache_extras_version = -1;
   private int cache_scripts_version = -1;
   private SharedPreferences mPreferences;
+  public boolean mfLocalInstall = false;
 
   // path in devices.
     protected String pathBin() {
-        return "/bin/python";
+        return "/" + PYTHON_BIN;
     }
 
     protected String pathEgg() {
@@ -104,50 +107,60 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
                     what.toUpperCase());
       BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
       return Integer.parseInt(reader.readLine().substring(1).trim());
+    } catch (UnknownHostException e) {
+      Log.i("can't resolve host: " + this.urlSrc());
+      return LATEST_VERSION_FAILED;
     } catch (Exception e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
-      return LATEST_VERSION;
+      return LATEST_VERSION_FAILED;
     }
-
   }
 
   public int getVersion() {
-    cache_version = __resolve_version("");
-    return cache_version;
+    if (cache_version > -1) {
+      return cache_version;
+    }
+    return getVersion(false);
   }
 
   public int getVersion(boolean usecache) {
     if (usecache && cache_version > -1) {
       return cache_version;
     }
-    return this.getVersion();
+    cache_version = __resolve_version("");
+    return cache_version;
   }
 
   @Override
   public int getExtrasVersion() {
-    cache_extras_version = __resolve_version("_extra");
-    return cache_extras_version;
+    if (cache_extras_version > -1) {
+      return cache_extras_version;
+    }
+    return getExtrasVersion(false);
   }
 
   public int getExtrasVersion(boolean usecache) {
     if (usecache && cache_extras_version > -1) {
       return cache_extras_version;
     }
-    return this.getExtrasVersion();
+    cache_extras_version = __resolve_version("_extra");
+    return cache_extras_version;
   }
 
   @Override
   public int getScriptsVersion() {
-    cache_scripts_version = __resolve_version("_scripts");
-    return cache_scripts_version;
+    if (cache_scripts_version > -1) {
+      return cache_scripts_version;
+    }
+    return getScriptsVersion(false);
   }
 
   public int getScriptsVersion(boolean usecache) {
     if (usecache && cache_scripts_version > -1) {
       return cache_scripts_version;
     }
-    return getScriptsVersion();
+    cache_scripts_version = __resolve_version("_scripts");
+    return cache_scripts_version;
   }
 
   @Override
@@ -183,7 +196,15 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
         throw new UnsupportedOperationException("not implemented in sub-class.");
   }
 
-  public void setSharedPreferences(SharedPreferences preferences) {
-    mPreferences = preferences;
+  public void setSharedPreferences(SharedPreferences prefs) {
+    mPreferences = prefs;
+    cache_version = prefs.getInt(PythonConstants.AVAIL_VERSION_KEY, -1);
+    cache_extras_version = prefs.getInt(PythonConstants.AVAIL_EXTRAS_KEY, -1);
+    cache_scripts_version =
+            prefs.getInt(PythonConstants.AVAIL_SCRIPTS_KEY, -1);
+  }
+
+  public boolean isLocalInstall() {
+    return this.mfLocalInstall;
   }
 }

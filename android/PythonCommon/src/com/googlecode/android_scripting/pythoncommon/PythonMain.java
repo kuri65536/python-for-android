@@ -96,10 +96,12 @@ import java.util.zip.ZipFile;
 // process. Needs some means of checking that these are properly formatted zip files, and probably a
 // means of uninstalling as well. Import handling could well be a separate activity, too.
 public abstract class PythonMain extends Main {
+  Button mButtonLocalInstall;
   Button mButtonInstallScripts;
   Button mButtonInstallModules;
   Button mButtonUninstallModule;
   File mDownloads;
+  File mLocalInstallRoot;
 
   private Dialog mDialog;
   protected String mModule;
@@ -112,10 +114,6 @@ public abstract class PythonMain extends Main {
     public int getId() {
       return ordinal() + Menu.FIRST;
     }
-  }
-
-  protected String nameButtonInstall() {
-    return "Install Python2";
   }
 
   private String readFirstLine(File target) {
@@ -192,8 +190,7 @@ public abstract class PythonMain extends Main {
 
   @Override
   protected void initializeViews() {
-    super.initializeViews();
-    // mButton.setVisibility(View.GONE);
+    setContentView(R.layout.main);
 
     mDownloads = FileUtils.getExternalDownload();
     if (!mDownloads.exists()) {
@@ -207,17 +204,20 @@ public abstract class PythonMain extends Main {
         }
       }
     }
+    mLocalInstallRoot = new File(
+            InterpreterConstants.SDCARD_ROOT, getPackageName());
 
-    MarginLayoutParams marginParams =
-        new MarginLayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
-    final float scale = getResources().getDisplayMetrics().density;
-    int marginPixels = (int) (MARGIN_DIP * scale + 0.5f);
-    marginParams.setMargins(marginPixels, marginPixels, marginPixels, marginPixels);
+    mButton = (Button)findViewById(R.id.btnItpInstall);
+    // set by super class.
 
-    mButtonInstallScripts = new Button(this);
-    mButtonInstallScripts.setLayoutParams(marginParams);
-    mButtonInstallScripts.setText(this.nameButtonInstall());
-    // mLayout.addView(mButtonInstallScripts);
+    mButtonLocalInstall = (Button)findViewById(R.id.btnItpLocalInstall);
+    mButtonLocalInstall.setOnClickListener(new OnClickListener() {
+      public void onClick(View v) {
+        doLocalInstall();
+      }
+    });
+
+    mButtonInstallScripts = (Button)findViewById(R.id.btnItpInstall);
     mButtonInstallScripts.setOnClickListener(new OnClickListener() {
       public void onClick(View v) {
         if (mCurrentTask != null) {
@@ -237,50 +237,39 @@ public abstract class PythonMain extends Main {
       }
     });
 
-    mButtonInstallModules = new Button(this);
-    mButtonInstallModules.setLayoutParams(marginParams);
-    mButtonInstallModules.setText("Import Modules");
-    mLayout.addView(mButtonInstallModules);
+    mButtonInstallModules = (Button)findViewById(R.id.btnModule);
     mButtonInstallModules.setOnClickListener(new OnClickListener() {
       public void onClick(View v) {
         doImportModule();
       }
     });
 
-    mButtonBrowse = new Button(this);
-    mButtonBrowse.setLayoutParams(marginParams);
-    mButtonBrowse.setText("Browse Modules");
-    mLayout.addView(mButtonBrowse);
+    mButtonBrowse = (Button)findViewById(R.id.btnModBrowse);
     mButtonBrowse.setOnClickListener(new OnClickListener() {
       public void onClick(View v) {
         doBrowseModule();
       }
     });
 
-    mButtonUninstallModule = new Button(this);
-    mButtonUninstallModule.setLayoutParams(marginParams);
-    mButtonUninstallModule.setText("Uninstall Module");
-    mLayout.addView(mButtonUninstallModule);
+    mButtonUninstallModule = (Button)findViewById(R.id.btnModUninstall);
     mButtonUninstallModule.setOnClickListener(new OnClickListener() {
       public void onClick(View v) {
         doDeleteModule();
       }
     });
 
-    mVersions = new TextView(this);
-    mVersions.setLayoutParams(marginParams);
-    updateVersions();
-    mLayout.addView(mVersions);
+    mVersions = (TextView)findViewById(R.id.tvHostVersion);
     doCheckVersion();
   }
 
   void updateVersions() {
     mDescriptor.setSharedPreferences(mPreferences);
+
     mVersions.setText("Version Available: Bin: " +
-            mDescriptor.getVersion() + " Extra: " +
-            mDescriptor.getExtrasVersion() + " Scripts: " +
-            mDescriptor.getScriptsVersion() + "\n"
-        + "Version Installed: " + getInstalledVersion());
+            mDescriptor.getVersion(true) + " Extra: " +
+            mDescriptor.getExtrasVersion(true) + " Scripts: " +
+            mDescriptor.getScriptsVersion(true) + "\n"
+            + "Version Installed: " + getInstalledVersion());
   }
 
   @Override
@@ -307,6 +296,27 @@ public abstract class PythonMain extends Main {
       result = "Unknown";
     }
     return result;
+  }
+
+  /** doLocalInstall: <!-- {{{1 -->
+   *
+   * @return t: failure, f: success.
+   */
+  protected boolean doLocalInstall() {
+    if (mCurrentTask != null) {
+      return true;
+    }
+    String txt = getString(R.string.Itp_LocalInstall_Ready);
+    if (mButtonLocalInstall.getText().equals(txt)) {
+      // run install.
+      mDescriptor.mfLocalInstall = true;
+      this.install();
+      return false;
+    }
+
+    // check local zip versions.
+    (new CheckLocalVersion(this)).execute();
+    return false;
   }
 
   protected void doBrowseModule() {
@@ -840,9 +850,133 @@ public abstract class PythonMain extends Main {
     @Override
     protected void onProgressUpdate(String... values) {
       if (values.length > 0) {
-        Toast.makeText(parent, values[0], Toast.LENGTH_SHORT).show();
+        // 16 = version updated.
+        int time = values[0].length() < 17 ? Toast.LENGTH_SHORT:
+                                             Toast.LENGTH_LONG;
+        Toast.makeText(parent, values[0], time).show();
       }
       super.onProgressUpdate(values);
+    }
+  }
+
+  class CheckLocalVersion extends CheckVersion {
+    int mWhich;
+
+    CheckLocalVersion(PythonMain parent) {
+      super(parent);
+    }
+
+    @Override
+    protected Boolean doInBackground(Integer... params) {
+      publishProgress("Checking folder for Updates");
+
+      if (!mLocalInstallRoot.exists() ||
+              !mLocalInstallRoot.isDirectory() ||
+              !mLocalInstallRoot.canRead() ||
+              !mLocalInstallRoot.canWrite()) {
+        this.publishProgress("Please put zips to: " +
+                mLocalInstallRoot.getAbsolutePath());
+        return false;
+      }
+
+      ArrayList<File> itps = new ArrayList<File>();
+      ArrayList<File> exts = new ArrayList<File>();
+      ArrayList<File> scrs = new ArrayList<File>();
+
+      for(final File fname: mLocalInstallRoot.listFiles()) {
+        if (!fname.getName().endsWith(".zip")) { continue; }
+        if (!fname.isFile()) { continue; }
+        if (!fname.canRead()) { continue; }
+
+        if (fname.getName().startsWith("python_r")) {
+          itps.add(fname);
+        }
+        if (fname.getName().startsWith("python_extras_r")) {
+          exts.add(fname);
+        }
+        if (fname.getName().startsWith("python_scripts_r")) {
+          scrs.add(fname);
+        }
+      }
+      String msgFailed = "";
+      if (itps.size() < 1) { msgFailed += ",bin"; }
+      if (exts.size() < 1) { msgFailed += ",extras"; }
+      if (scrs.size() < 1) { msgFailed += ",scripts"; }
+      if (!msgFailed.equals("")) {
+        this.publishProgress("Please put " +
+                msgFailed.substring(1) + " zips to: " +
+                mLocalInstallRoot.getAbsolutePath());
+        return false;
+      }
+
+      // pop-up for select the binaries.
+      File itp = doSelectZip(itps, "Interpreter");
+      File ext = doSelectZip(exts, "External modules");
+      File scr = doSelectZip(scrs, "Sample scripts");
+
+      version = doExtractVersion(itp, "python_r");
+      extras = doExtractVersion(ext, "pyrhon_extras_r");
+      scripts = doExtractVersion(scr, "python_scripts_r");
+      publishProgress("Versions Updated");
+
+      parent.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          String txt = getString(R.string.Itp_LocalInstall_Ready);
+          parent.mButtonLocalInstall.setText(txt);
+        }
+      });
+      return true;
+    }
+
+    public File doSelectZip(ArrayList<File> seq, final String title) {
+      assert(seq.size() > 0);
+      if (seq.size() < 2) {
+        return seq.get(0);    // there is only one file, good case!
+      }
+      // show users to select zip.
+      final CharSequence[] items = seq.toArray(new CharSequence[seq.size()]);
+      parent.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          new AlertDialog.Builder(parent)
+                  .setTitle("Select " + title)
+                  .setSingleChoiceItems(items, 0, null)
+                  .setPositiveButton(
+                          "Select",
+                          new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                      mWhich = which;
+                    }
+                  })
+                  .show();
+        }
+      });
+
+      File ret = seq.get(mWhich);
+      return ret;
+    }
+
+    public int doExtractVersion(File fname, String pre) {
+      String name = fname.getName();
+      // remove prefix
+      if (name.length() < pre.length()) {
+        return 0;
+      }
+      name = name.substring(pre.length());
+      // remove .zip
+      if (name.length() < 4) {
+        return 0;
+      }
+      name = name.substring(0, name.length() - 4);
+
+      // parse to version integer.
+      try {
+        return Integer.parseInt(name);
+      } catch (NumberFormatException e) {
+        return 0;
+      }
     }
   }
 }
