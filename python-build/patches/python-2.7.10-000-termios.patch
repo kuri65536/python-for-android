@@ -1,0 +1,31 @@
+diff --ignore-file-name-case -wuprN a/Modules/termios.c b/Modules/termios.c
+--- a/Modules/termios.c	2014-06-30 11:05:44.000000000 +0900
++++ b/Modules/termios.c	2015-03-15 09:03:50.626560502 +0900
+@@ -227,6 +227,7 @@ termios_tcsendbreak(PyObject *self, PyOb
+     return Py_None;
+ }
+ 
++#if 0  // No tcdrain defined for Android.
+ PyDoc_STRVAR(termios_tcdrain__doc__,
+ "tcdrain(fd) -> None\n\
+ \n\
+@@ -246,6 +247,7 @@ termios_tcdrain(PyObject *self, PyObject
+     Py_INCREF(Py_None);
+     return Py_None;
+ }
++#endif
+ 
+ PyDoc_STRVAR(termios_tcflush__doc__,
+ "tcflush(fd, queue) -> None\n\
+@@ -301,8 +303,8 @@ static PyMethodDef termios_methods[] =
+      METH_VARARGS, termios_tcsetattr__doc__},
+     {"tcsendbreak", termios_tcsendbreak,
+      METH_VARARGS, termios_tcsendbreak__doc__},
+-    {"tcdrain", termios_tcdrain,
+-     METH_VARARGS, termios_tcdrain__doc__},
++    // {"tcdrain", termios_tcdrain,
++    //  METH_VARARGS, termios_tcdrain__doc__},
+     {"tcflush", termios_tcflush,
+      METH_VARARGS, termios_tcflush__doc__},
+     {"tcflow", termios_tcflow,
+

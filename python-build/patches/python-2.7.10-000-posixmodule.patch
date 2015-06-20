@@ -1,0 +1,19 @@
+diff --ignore-file-name-case -wuprN a/Modules/posixmodule.c b/Modules/posixmodule.c
+--- a/Modules/posixmodule.c	2014-06-30 11:05:43.000000000 +0900
++++ b/Modules/posixmodule.c	2015-03-15 09:01:30.302921874 +0900
+@@ -155,7 +155,7 @@ corresponding Unix manual entries for mo
+ #endif
+ #define HAVE_SYSTEM     1
+ #define HAVE_WAIT       1
+-#define HAVE_TTYNAME    1
++#undef HAVE_TTYNAME
+ #endif  /* PYOS_OS2 && PYCC_GCC && __VMS */
+ #endif  /* _MSC_VER */
+ #endif  /* __BORLANDC__ */
+@@ -9508,5 +9508,3 @@ INITFUNC(void)
+ #ifdef __cplusplus
+ }
+ #endif
+-
+-
+

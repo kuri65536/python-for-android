@@ -1,0 +1,13 @@
+diff --ignore-file-name-case -wuprN a/Modules/_ctypes/ctypes.h b/Modules/_ctypes/ctypes.h
+--- a/Modules/_ctypes/ctypes.h	2014-06-30 11:05:40.000000000 +0900
++++ b/Modules/_ctypes/ctypes.h	2015-03-15 08:59:51.727688157 +0900
+@@ -412,7 +412,7 @@ extern char *_ctypes_conversion_errors;
+ #endif
+ 
+ /* Python's PyUnicode_*WideChar functions are broken ... */
+-#if defined(Py_USING_UNICODE) && defined(HAVE_WCHAR_H)
++#if defined(Py_USING_UNICODE) && defined(HAVE_WCHAR_H) && !defined(ANDROID)
+ #  define CTYPES_UNICODE
+ #endif
+ 
+

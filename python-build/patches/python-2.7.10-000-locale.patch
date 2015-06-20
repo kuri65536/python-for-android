@@ -1,0 +1,64 @@
+diff --ignore-file-name-case -wuprN a/Objects/stringlib/formatter.h b/Objects/stringlib/formatter.h
+--- a/Objects/stringlib/formatter.h	2014-06-30 11:05:45.000000000 +0900
++++ b/Objects/stringlib/formatter.h	2015-03-15 10:42:10.031807251 +0900
+@@ -640,10 +640,9 @@ get_locale_info(int type, LocaleInfo *lo
+ {
+     switch (type) {
+     case LT_CURRENT_LOCALE: {
+-        struct lconv *locale_data = localeconv();
+-        locale_info->decimal_point = locale_data->decimal_point;
+-        locale_info->thousands_sep = locale_data->thousands_sep;
+-        locale_info->grouping = locale_data->grouping;
++        locale_info->decimal_point = ".";
++        locale_info->thousands_sep = ",";
++        locale_info->grouping = "\3";
+         break;
+     }
+     case LT_DEFAULT_LOCALE:
+diff --ignore-file-name-case -wuprN a/Objects/stringlib/localeutil.h b/Objects/stringlib/localeutil.h
+--- a/Objects/stringlib/localeutil.h	2014-06-30 11:05:45.000000000 +0900
++++ b/Objects/stringlib/localeutil.h	2015-03-15 10:46:49.957073210 +0900
+@@ -202,9 +202,8 @@ _Py_InsertThousandsGroupingLocale(STRING
+                                   Py_ssize_t n_digits,
+                                   Py_ssize_t min_width)
+ {
+-        struct lconv *locale_data = localeconv();
+-        const char *grouping = locale_data->grouping;
+-        const char *thousands_sep = locale_data->thousands_sep;
++        const char *grouping = "3";
++        const char *thousands_sep = ",";
+ 
+         return _Py_InsertThousandsGrouping(buffer, n_buffer, digits, n_digits,
+                                            min_width, grouping, thousands_sep);
+
+diff --ignore-file-name-case -wuprN a/Python/pystrtod.c b/Python/pystrtod.c
+--- a/Python/pystrtod.c	2014-06-30 11:05:47.000000000 +0900
++++ b/Python/pystrtod.c	2015-03-15 09:11:26.374147669 +0900
+@@ -126,7 +126,6 @@ _PyOS_ascii_strtod(const char *nptr, cha
+ {
+     char *fail_pos;
+     double val = -1.0;
+-    struct lconv *locale_data;
+     const char *decimal_point;
+     size_t decimal_point_len;
+     const char *p, *decimal_point_pos;
+@@ -138,8 +137,7 @@ _PyOS_ascii_strtod(const char *nptr, cha
+ 
+     fail_pos = NULL;
+ 
+-    locale_data = localeconv();
+-    decimal_point = locale_data->decimal_point;
++    decimal_point = ".";
+     decimal_point_len = strlen(decimal_point);
+ 
+     assert(decimal_point_len != 0);
+@@ -375,8 +373,7 @@ PyOS_string_to_double(const char *s,
+ Py_LOCAL_INLINE(void)
+ change_decimal_from_locale_to_dot(char* buffer)
+ {
+-    struct lconv *locale_data = localeconv();
+-    const char *decimal_point = locale_data->decimal_point;
++    const char *decimal_point = ".";
+ 
+     if (decimal_point[0] != '.' || decimal_point[1] != 0) {
+         size_t decimal_point_len = strlen(decimal_point);

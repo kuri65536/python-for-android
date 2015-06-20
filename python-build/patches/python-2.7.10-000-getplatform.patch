@@ -1,0 +1,40 @@
+diff --ignore-file-name-case -wuprN a/Python/getplatform.c b/Python/getplatform.c
+--- a/Python/getplatform.c	2014-06-30 11:05:47.000000000 +0900
++++ b/Python/getplatform.c	2015-03-15 08:59:51.727688157 +0900
+@@ -1,6 +1,30 @@
+-
+ #include "Python.h"
+ 
++#ifdef ANDROID
++#include <sys/utsname.h>
++#include <string.h>
++char PLATFORM[20]={0}; // taken as base linux-armv7l-2.6
++
++const char *
++Py_GetPlatform(void)
++{
++    if (PLATFORM[0]!=0)
++	return PLATFORM;
++
++    struct utsname u;
++    int i;
++    if ( uname(&u) < 0 )
++	return "unknown";
++
++    strcat (PLATFORM, u.sysname);
++    strcat (PLATFORM, "-");
++    strcat (PLATFORM, u.machine);
++    for (i=0; PLATFORM[i]; i++)
++	PLATFORM[i]=tolower(PLATFORM[i]);
++    return PLATFORM;
++}
++#else
++
+ #ifndef PLATFORM
+ #define PLATFORM "unknown"
+ #endif
+@@ -10,3 +34,4 @@ Py_GetPlatform(void)
+ {
+ 	return PLATFORM;
+ }
++#endif

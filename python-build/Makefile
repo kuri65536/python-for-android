@@ -90,7 +90,6 @@ $(PYTHONSRC): $(PYTHONTAR) .build_host
 	$(TAR) $(PYTHONTAR)
 	mv Python-$(VERSION) $(PYTHONSRC)
 	cd $(PYTHONSRC); \
-	patch -p1 -i $(CWD)/Python-$(VERSION)-android.patch; \
 	for i in $(CWD)/patches/python*.patch; do patch -p1 -i $$i; done
 
 LIBS = site-packages encodings compiler hotshot \

@@ -1,0 +1,21 @@
+diff --ignore-file-name-case -wuprN a/Modules/pwdmodule.c b/Modules/pwdmodule.c
+--- a/Modules/pwdmodule.c	2014-06-30 11:05:43.000000000 +0900
++++ b/Modules/pwdmodule.c	2015-03-15 09:02:42.453165216 +0900
+@@ -68,14 +68,14 @@ mkpwent(struct passwd *p)
+ #define SETS(i,val) sets(v, i, val)
+ 
+     SETS(setIndex++, p->pw_name);
+-#ifdef __VMS
++#if defined(__VMS) || defined(ANDROID)
+     SETS(setIndex++, "");
+ #else
+     SETS(setIndex++, p->pw_passwd);
+ #endif
+     PyStructSequence_SET_ITEM(v, setIndex++, _PyInt_FromUid(p->pw_uid));
+     PyStructSequence_SET_ITEM(v, setIndex++, _PyInt_FromGid(p->pw_gid));
+-#ifdef __VMS
++#if defined(__VMS) || defined(ANDROID)
+     SETS(setIndex++, "");
+ #else
+     SETS(setIndex++, p->pw_gecos);
+
