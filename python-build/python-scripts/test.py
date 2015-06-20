@@ -92,6 +92,21 @@ def test_075_httpserver():                      # issue #75 {{{1
     return True
 
 
+def test_013s_scanBarcode():                # issue sl4a #13 {{{1
+    if not skip_gui:
+        code = droid.scanBarcode()
+        ext = code.result.get('extras', None)
+        if ext is None:
+            return False
+        if 'SCAN_RESULT_BYTES' not in ext or 'SCAN_RESULT' not in ext:
+            print("no results:" % ext)
+            return False
+        bts = ext['SCAN_RESULT_BYTES']
+        msg = ext['SCAN_RESULT']
+        print(msg, bts, len(bts))
+    return True
+
+
 def test_009s_airplanemode():               # issue sl4a #9 {{{1
     # this cause null pointer exception in Anroid 4.4>
     droid.toggleAirplaneMode(True)
