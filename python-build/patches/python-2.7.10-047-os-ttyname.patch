@@ -1,0 +1,16 @@
+--- python-src/Lib/os.py.orig	2015-06-19 06:57:40.371755449 +0900
++++ python-src/Lib/os.py	2015-06-19 07:01:22.608924634 +0900
+@@ -740,3 +740,13 @@ try:
+                      _make_statvfs_result)
+ except NameError: # statvfs_result may not exist
+     pass
++
++
++def ttyname(fd):
++    """Android (4.1) bionic library has no ttyname or ttyname_r.
++        So these are dummy results.
++    """
++    if fd == 0:
++        return "/dev/stdin"
++    return "/dev/pts"
++__all__.append("ttyname")
