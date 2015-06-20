@@ -62,6 +62,36 @@ def test_071_anydbm():                          # issue #71 {{{1
     return True
 
 
+def test_075_httpserver():                      # issue #75 {{{1
+    import time
+    import threading
+    import BaseHTTPServer
+    fname = "/sdcard/sl4a/test_075.html"
+    port = 9090
+
+    class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+        def do_GET(s):
+            file(fname, "w").write("""
+                <html><head></head><body>fine 075</body></html>""")
+            html = open(fname, 'rb')
+            s.send_response(200)
+            s.send_header("Content-Type", "text/html")
+            s.end_headers()
+            s.wfile.write(html.read())
+
+    server_class = BaseHTTPServer.HTTPServer
+    httpd = server_class(('', port), Handler)
+    if not skip_gui:
+        # and manual test has passed, open http://127.0.0.1:9090 in browser.
+        th = threading.Thread(target=httpd.serve_forever)
+        th.start()
+        droid.startActivity('android.intent.action.VIEW',
+                            'http://127.0.0.1:9090/')
+        time.sleep(3)
+        httpd.shutdown()
+    return True
+
+
 def test_009s_airplanemode():               # issue sl4a #9 {{{1
     # this cause null pointer exception in Anroid 4.4>
     droid.toggleAirplaneMode(True)
