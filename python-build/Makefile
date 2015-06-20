@@ -1,4 +1,4 @@
-VERSION=2.7.9
+VERSION=2.7.10
 ndk_build = $(NDK_PATH)/ndk-build
 # set -ex
 CWD := $(shell pwd)
@@ -103,7 +103,7 @@ LIBS = site-packages encodings compiler hotshot \
     multiprocessing multiprocessing/dummy \
     plat-linux2 \
     xml xml/dom xml/etree xml/parsers xml/sax \
-    curses
+    curses setuptools
 
 # libraries {{{1
 TARGET_LIBS := .build_misc_sqlite3 \

@@ -1,5 +1,28 @@
 * [Report issue](../README.md#create_issue)
 
+Feature request
+===
+## Modules
+* Numpy -- compillation was succeed, but not work...
+* Matplotlib -- GUI is not impossible with SL4A, but image generation can.
+* Pillow #9 -- may be useful with webview or another python modules.
+* IPython Notebook server #61
+* [paramiko](https://github.com/paramiko/paramiko) #44
+* PyGame #55 -- GUI is not impossible with SL4A
+
+History
+===
+
+PythonForAndroid\_r25
+---
+* Python 2.7.9 => 2.7.10 (no patch modification is needed.)
+
+PythonForAndroid\_r24
+---
+
+PythonForAndroid\_r23
+---
+
 PythonForAndroid\_r22
 ---
 * disable to use symbolic link, this is not valid with android unzip.

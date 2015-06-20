@@ -1,5 +1,7 @@
+from __future__ import print_function, unicode_literals
 import sys
 import types
+import traceback
 
 # Test imports.
 import android
@@ -7,6 +9,55 @@ import time
 
 droid = android.Android()
 skip_gui = False
+
+
+# tests for python modification for android {{{1
+def test_029_isfile():                          # issue #29 {{{1
+    import os
+    # FIXME: determine path to sdcard. like: path = os.environ[""]
+    path = "/sdcard"
+    fname = os.path.join(path, "sl4a", "test_isfile")
+    file(fname, "w").write("this is test")
+    os.path.isfile(fname)
+    os.remove(fname)
+    try:
+        assert os.path.isfile(fname) is False
+    except Exception as e:
+        print(e)
+        return False
+    return True
+
+
+def test_047_ttyname():                         # issue #47 {{{1
+    import os
+    try:
+        os.ttyname(0)
+        os.ttyname(1)
+    except Exception as e:
+        print(e)
+        return False
+    return True
+
+
+def test_071_anydbm():                          # issue #71 {{{1
+    import os
+    import anydbm
+    # FIXME: determine path to sdcard. like: path = os.environ[""]
+    path = "/sdcard"
+    fname = os.path.join(path, "sl4a", "test_anydbm.dbm")
+    try:
+        os.remove(fname + ".dat")
+    except:
+        pass
+    anydbm.open(fname, "n")
+    os.remove(fname + ".dat")
+    return True
+
+
+def test_009s_airplanemode():               # issue sl4a #9 {{{1
+    # this cause null pointer exception in Anroid 4.4>
+    droid.toggleAirplaneMode(True)
+    return True
 
 
 # tests for some facade {{{1
@@ -141,7 +192,7 @@ def test_get_running_packages():
 def test_usb():                                             # {{{2
     result = droid.usbserialDeviceList()
     if result.error is None:
-        print result.data
+        print(result.data)
         return True
     return False
 
@@ -150,7 +201,7 @@ def test_usb():                                             # {{{2
 def test_alert_dialog():                                    # {{{2
     global skip_gui
     if skip_gui:
-        return
+        return None
     title = 'User Interface'
     message = 'Welcome to the SL4A integration test.'
     droid.dialogCreateAlert(title, message)
@@ -160,10 +211,10 @@ def test_alert_dialog():                                    # {{{2
     return True
 
 
-def test_alert_dialog_with_buttons():                       # {{{2
+def test__alert_dialog_with_buttons():                      # {{{2
     global skip_gui
     if skip_gui:
-        return
+        return None
     title = 'Alert'
     message = ('This alert box has 3 buttons and '
                'will wait for you to press one.')
@@ -175,7 +226,7 @@ def test_alert_dialog_with_buttons():                       # {{{2
     response = droid.dialogGetResponse().result
 
     assert response['which'] in ('positive', 'negative', 'neutral')
-    # print "debug:", response
+    # print("debug:", response)
     skip_gui = response['which'] == "negative"
     return True
 
@@ -202,25 +253,25 @@ def test_horizontal_progress():                             # {{{2
   return True
 
 
-def test_alert_dialog_with_list():                          # {{{2
+def test__alert_dialog_with_list():                         # {{{2
     global skip_gui
     if skip_gui:
-        return
+        return None
     title = 'Alert'
     droid.dialogCreateAlert(title)
     droid.dialogSetItems(['foo', 'bar', 'baz'])
     droid.dialogShow()
     response = droid.dialogGetResponse().result
 
-    # print "debug:", response
+    # print("debug:", response)
     skip_gui = response.item == 1
     return True
 
 
-def test_alert_dialog_with_single_choice_list():            # {{{2
+def test__alert_dialog_with_single_choice_list():           # {{{2
     global skip_gui
     if skip_gui:
-        return
+        return None
     title = 'GUI Test?'
     droid.dialogCreateAlert(title)
     droid.dialogSetSingleChoiceItems(['Continue', 'Skip', 'baz'])
@@ -233,10 +284,10 @@ def test_alert_dialog_with_single_choice_list():            # {{{2
     return True
 
 
-def test_alert_dialog_with_multi_choice_list():             # {{{2
+def test__alert_dialog_with_multi_choice_list():            # {{{2
     global skip_gui
     if skip_gui:
-        return
+        return None
     title = 'Alert'
     droid.dialogCreateAlert(title)
     droid.dialogSetMultiChoiceItems(['foo', 'bar', 'baz'], [])
@@ -245,7 +296,7 @@ def test_alert_dialog_with_multi_choice_list():             # {{{2
     response = droid.dialogGetResponse().result
 
     choices = droid.dialogGetSelectedItems().result
-    # print "debug:", choices
+    # print("debug:", choices)
     skip_gui = 1 in choices
     return True
 
@@ -281,7 +332,7 @@ def test_readline():
     return True
 
 
-def test_curses():
+def test0_curses():                                        # {{{2
     import os
     if not os.environ.get("TERM", ""):
         os.environ["TERM"] = "vt100"
@@ -357,13 +408,39 @@ def test_xmpp():
     return True
 
 
-if __name__ == '__main__':
-  for name, value in globals().items():
-    if name.startswith('test_') and isinstance(value, types.FunctionType):
-      print 'Running %s...' % name,
-      sys.stdout.flush()
-      if value():
-        print ' PASS'
-      else:
-        print ' FAIL'
+if __name__ == '__main__':                                  # {{{1
+    def boilerplate(f):
+        try:
+            ret = f()
+        except:
+            print(traceback.format_exc(3))
+            return False
+        return ret
+
+    fOutName = False
+
+    seq = globals().items()
+    seq = [i for i in seq if i[0].startswith("test_")]
+    seq = [i for i in seq if isinstance(i[1], types.FunctionType)]
+    seq.sort(key=lambda x: x[0])
+    for name, value in seq:
+        if fOutName:
+            print('Running %s...' % name, end="")
+            f = boilerplate(value)
+            sys.stdout.flush()
+            if f is True:
+                print(' PASS')
+            elif f is None:
+                print(' SKIP')
+            else:
+                print(' FAIL')
+        else:
+            sys.stdout.flush()
+            f = boilerplate(value)
+            if f is True:
+                print(".", end="")
+            elif f is None:
+                print("S", end="")
+            else:
+                print("F:%s" % name, end="")
 # vi: ft=python:et:ts=4:fdm=marker

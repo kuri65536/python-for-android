@@ -21,16 +21,16 @@ please use the issues tab.
 
 Instruction for installation
 ===
-Requirements
----
+## Normal install
+### Requirements
 * python2: an Android Device 1.6 >=
 * python3: an Android Device 2.3.1 >=
+* internet access
 * [SL4A](http://github.com/kuri65536/sl4a) was installed.
 
-How to install
----
+### How to install
 1. Download [SL4A Application](https://github.com/kuri65536/sl4a), such as
-   [sl4a-r6x04-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6x04/sl4a-r6x04-arm-debug.apk)
+   [sl4a-r6x05-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6x05/sl4a-r6x05-arm-debug.apk)
 2. Download [Py4A Application](../../releases), such as
    [PythonForAndroid-debug.apk](../../releases/download/r21/PythonForAndroid-debug.apk)
 3. Enable "Unknown Sources" in your device settings.
@@ -41,6 +41,27 @@ How to install
 8. Launch sl4a, Select 'Menu' >> 'View' >> 'Interpreters'
    and Select 'Python 2.7.?'.
 9. Python will be launched, have fun!
+
+## Local install
+
+* if you device is not connected to internet, please try this way.
+
+### How to install
+1. Download sl4a apk
+2. Download py4a apk
+3. Download py4a zips, [interpreter - python_r24.zip](../../releases/r24/python_r24.zip),
+   [modules - python_extras_r24.zip](../../releases/r25/python_extras_r25.zip),
+   [sample scripts - python_scripts_r24.zip](../../releases/r24/python_scripts_r24.zip).
+4. Enable "Unknown Sources" in your device settings.
+5. Open 1. apk to install. (sl4a)
+6. Open 2. apk to install. (py4a)
+7. Open PythonForAndroid application
+8. push 3. zips to device's /sdcard/com.googlecode.pythonforandroid.
+   (be sure /sdcard path to fit your device.)
+9. Click "Local install" to check zips and install python binaries.
+10. Launch sl4a, Select 'Menu' >> 'View' >> 'Interpreters'
+    and Select 'Python 2.7.?'.
+11. Python will be launched, have fun!
 
 
 <a name="create_issue"></a>Please tell me issues
@@ -147,7 +168,7 @@ r17
   Please be careful to match the release name and
   confirmed binary versions.
 
-### Local install (direct extracting)
+### Local install for confirm the build (direct extracting)
 * Requirements: root is required.
 * Requirements: python already install.
 * Requirements: unzip is needed for extract.
