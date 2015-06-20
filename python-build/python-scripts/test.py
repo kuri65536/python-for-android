@@ -43,14 +43,22 @@ def test_071_anydbm():                          # issue #71 {{{1
     import os
     import anydbm
     # FIXME: determine path to sdcard. like: path = os.environ[""]
-    path = "/sdcard"
-    fname = os.path.join(path, "sl4a", "test_anydbm.dbm")
-    try:
+    del os.chmod
+    for fname in (
+        # failed: this is not SL4A application folder...
+        # os.path.join("/data/data/com.googlecode.pythonforandroid",
+        #              "files", "test_anydbm.dbm"),
+        # OK: _chmod work well.
+        # os.path.join("/data/local/abc", "test_anydbm.dbm"),
+        # failed: _chmod not worked in FAT (SD card)
+        os.path.join("/sdcard", "sl4a", "test_anydbm.dbm"),
+    ):
+        try:
+            os.remove(fname + ".dat")
+        except:
+            pass
+        anydbm.open(fname, "n")
         os.remove(fname + ".dat")
-    except:
-        pass
-    anydbm.open(fname, "n")
-    os.remove(fname + ".dat")
     return True
 
 
@@ -413,7 +421,7 @@ if __name__ == '__main__':                                  # {{{1
         try:
             ret = f()
         except:
-            print(traceback.format_exc(3))
+            print(traceback.format_exc())
             return False
         return ret
 
