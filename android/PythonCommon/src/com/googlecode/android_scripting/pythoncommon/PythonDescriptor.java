@@ -84,7 +84,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   public String getNiceName() {
-    return "Python 2.7.9";
+    return "Python 2.7.10";
   }
 
   public boolean hasInterpreterArchive() {

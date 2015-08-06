@@ -57,14 +57,20 @@ public abstract class Sl4aHostedInterpreter implements InterpreterDescriptor {
 
     public String getPlatformString() {
         String ret = System.getProperty("os.arch");
-        if (ret.startsWith("arm")) {
+        ret = ret.toLowerCase();
+        if (ret.startsWith("arm") || ret.startsWith("aarch64")) {
             ret = "";
         }
-        else if (ret.startsWith("i686")) {
+        else if (ret.startsWith("i686") ||
+                 ret.startsWith("x86_64") ||
+                 ret.startsWith("amd64")) {
             ret = "_x86";
         }
         else if (ret.startsWith("mips")) {
             ret = "_mips";
+        }
+        else {
+            ret = "";
         }
         return ret;
     }
