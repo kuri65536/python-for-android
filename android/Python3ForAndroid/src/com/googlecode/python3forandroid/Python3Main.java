@@ -50,10 +50,6 @@ import com.googlecode.android_scripting.pythoncommon.PythonMain;
 // process. Needs some means of checking that these are properly formatted zip files, and probably a
 // means of uninstalling as well. Import handling could well be a separate activity, too.
 public class Python3Main extends PythonMain {
-  @Override
-  protected String nameButtonInstall() {
-    return "Install Python3";
-  }
 
   @Override
   protected InterpreterDescriptor getDescriptor() {
