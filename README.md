@@ -4,7 +4,7 @@
 Download
 ===
 see [Releases page](../../releases), and select an installer:
-[PythonForAndroid-debug.apk](https://github.com/kuri65536/python-for-android/releases/download/r21/PythonForAndroid-debug.apk)
+[PythonForAndroid-debug.apk](https://github.com/kuri65536/python-for-android/releases/download/r26/PythonForAndroid-debug-r26.apk)
 .
 
 Description
@@ -30,9 +30,9 @@ Instruction for installation
 
 ### How to install
 1. Download [SL4A Application](https://github.com/kuri65536/sl4a), such as
-   [sl4a-r6x05-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6x05/sl4a-r6x05-arm-debug.apk)
+   [sl4a-r6.1.1-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6.1.1/sl4a-r6.1.1-arm-debug.apk)
 2. Download [Py4A Application](../../releases), such as
-   [PythonForAndroid-debug.apk](../../releases/download/r21/PythonForAndroid-debug.apk)
+   [PythonForAndroid-debug.apk](../../releases/download/r26/PythonForAndroid-debug-r26.apk)
 3. Enable "Unknown Sources" in your device settings.
 4. Open 1. apk to install. (sl4a)
 5. Open 2. apk to install. (py4a)
@@ -49,9 +49,9 @@ Instruction for installation
 ### How to install
 1. Download sl4a apk
 2. Download py4a apk
-3. Download py4a zips, [interpreter - python_r24.zip](../../releases/r24/python_r24.zip),
-   [modules - python_extras_r24.zip](../../releases/r25/python_extras_r25.zip),
-   [sample scripts - python_scripts_r24.zip](../../releases/r24/python_scripts_r24.zip).
+3. Download py4a zips, [interpreter - python_r25.zip](../../releases/r25/python_r25.zip),
+   [modules - python_extras_r25.zip](../../releases/r25/python_extras_r25.zip),
+   [sample scripts - python_scripts_r25.zip](../../releases/r25/python_scripts_r25.zip).
 4. Enable "Unknown Sources" in your device settings.
 5. Open 1. apk to install. (sl4a)
 6. Open 2. apk to install. (py4a)
