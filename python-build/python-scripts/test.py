@@ -9,6 +9,7 @@ import time
 
 droid = android.Android()
 skip_gui = False
+fOutName = True
 
 
 # tests for python modification for android {{{1
@@ -109,7 +110,14 @@ def test_013s_scanBarcode():                # issue sl4a #13 {{{1
 
 def test_009s_airplanemode():               # issue sl4a #9 {{{1
     # this cause null pointer exception in Anroid 4.4>
-    droid.toggleAirplaneMode(True)
+    ret = droid.checkAirplaneMode()
+    if ret.error:
+        return False
+    if fOutName:
+        print("%s" % ret.result, end="")
+    ret = droid.toggleAirplaneMode(True)
+    if ret.error:
+        return False
     return True
 
 
@@ -168,11 +176,13 @@ def test_gps():
 
 
 def test_sensors():
-  droid.startSensing()
-  try:
-    return event_loop()
-  finally:
-    droid.stopSensing()
+    ret = droid.startSensingTimed(1, 20)
+    if ret.error:
+        return False
+    try:
+        return event_loop()
+    finally:
+        droid.stopSensing()
 
 
 def test_speak():
@@ -295,15 +305,15 @@ def test_spinner_progress():                                # {{{2
 
 
 def test_horizontal_progress():                             # {{{2
-  title = 'Horizontal'
-  message = 'This is simple horizontal progress.'
-  droid.dialogCreateHorizontalProgress(title, message, 50)
-  droid.dialogShow()
-  for x in range(0, 50):
-    time.sleep(0.1)
-    droid.dialogSetCurrentProgress(x)
-  droid.dialogDismiss()
-  return True
+    title = 'Horizontal'
+    message = 'This is simple horizontal progress.'
+    droid.dialogCreateHorizontalProgress(title, message, 50)
+    droid.dialogShow()
+    for x in range(0, 15):
+        time.sleep(0.1)
+        droid.dialogSetCurrentProgress(x)
+    droid.dialogDismiss()
+    return True
 
 
 def test__alert_dialog_with_list():                         # {{{2
@@ -469,8 +479,6 @@ if __name__ == '__main__':                                  # {{{1
             print(traceback.format_exc())
             return False
         return ret
-
-    fOutName = False
 
     seq = globals().items()
     seq = [i for i in seq if i[0].startswith("test_")]
