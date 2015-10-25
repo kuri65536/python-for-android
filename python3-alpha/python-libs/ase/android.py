@@ -32,7 +32,7 @@ class Android(object):
     if addr is None:
       addr = HOST, PORT
     self.conn = socket.create_connection(addr)
-    self.client = self.conn.makefile('rw')
+    self.client = self.conn.makefile('rw', encoding='utf-8')
     self.id = 0
     if HANDSHAKE is not None:
       self._authenticate(HANDSHAKE)
