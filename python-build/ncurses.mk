@@ -38,6 +38,7 @@ OPTS_CFG = --host=$(HOSTARCH) --build=$(BUILDARCH) \
     --with-default-terminfo-dir=$(__TERMPATH) \
     --with-terminfo-dirs=$(__TERMPATH)
 export CFLAGS = --sysroot=$(SYSROOT) -DANDROID
+export CPPFLAGS = -P
 export LDFLAGS = --sysroot=$(SYSROOT)
 
 build_arm: export HOSTARCH := arm-linux-androideabi
