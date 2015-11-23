@@ -11,7 +11,7 @@ export ANDROID_NDK_SYSROOT=$(ANDROID_SYSROOT)
 export ANDROID_DEV=$(ANDROID_SYSROOT)/usr
 # export PATH=$(ANDROID_TOOLCHAIN):$(PATH)
 
-OPENSSL_VERSION := 1.0.2a
+OPENSSL_VERSION := 1.0.2d
 OPENSSL_DIR = openssl-$(OPENSSL_VERSION)
 OPENSSL_SRC = openssl-$(OPENSSL_VERSION).tar.gz
 
@@ -54,7 +54,7 @@ clean:
 	make -C .build_x86 clean
 
 $(OPENSSL_SRC):
-	wget https://www.openssl.org/source/openssl-1.0.2a.tar.gz
+	wget https://www.openssl.org/source/$(OPENSSL_SRC)
 	wget https://wiki.openssl.org/images/7/70/Setenv-android.sh
 
 # setup arch depended variables: arm

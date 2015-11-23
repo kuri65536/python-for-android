@@ -93,6 +93,33 @@ def test_075_httpserver():                      # issue #75 {{{1
     return True
 
 
+def test_106_https_certification_failed():      # issue #106 {{{1
+    import urllib2
+    import os
+    import take_cacert_pem
+    if take_cacert_pem.main():
+        return False
+    os.environ["SSL_CERT_FILE"] = "/mnt/sdcard/cacert.pem"
+    # input = input.replace("!web ", "")
+    url = "https://ccc.de/"
+    # url = "https://www.openssl.org/"
+    req = urllib2.Request(url)
+    info = urllib2.urlopen(req).read()
+    info
+    # Message.Chat.SendMessage("" + info)
+
+    '''not worked...
+    import httplib
+    c = httplib.HTTPSConnection("ccc.de")
+    c.request("GET", "/")
+    response = c.getresponse()
+    print("%s,%s" % (response.status, response.reason))
+    data = response.read()
+    print(data)
+    '''
+    return True
+
+
 def test_013s_scanBarcode():                # issue sl4a #13 {{{1
     if not skip_gui:
         code = droid.scanBarcode()
