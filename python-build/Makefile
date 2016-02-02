@@ -153,7 +153,7 @@ readline-6.3.tar.gz:
 	tar xfz $<
 	mv expat-2.1.0 expat
 	cp expat.mk expat/Android.mk
-	cd expat; ./configure --host=arm-linux-androideabi
+	cd expat; ./configure --build=arm-linux-androideabi
 	touch $@
 # ffi {{{1
 .build_misc_libffi: libffi-3.2.1.tar.gz
