@@ -4,7 +4,7 @@
 
 PACKAGE="setuptools"
 VERSION="0.6c11"
-URL="http://pypi.python.org/packages/source/s/"
+URL="https://pypi.python.org/packages/source/s"
 
 if [ ! -f ${PACKAGE}-${VERSION}.tar.gz ]; then
     wget -O ${PACKAGE}-${VERSION}.tar.gz $URL/${PACKAGE}/${PACKAGE}-${VERSION}.tar.gz
