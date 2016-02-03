@@ -208,7 +208,7 @@ build_copy:
 	[ x$(__BUILD_ARCH) != x ]       # stop at arch is not set.
 	rm -rf $(OUT)/python-ext
 	
-	cd python-libs; sh setuptools.sh
+	cd python-libs; ./setuptools.sh
 	
 	for lib in $(LIBS); do \
 	    if [ -n "$$(find $(PYTHONSRC)/Lib/$$lib -maxdepth 1 -type f)" ]; then \
