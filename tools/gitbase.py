@@ -16,6 +16,7 @@
 #
 import sys
 import os
+import StringIO
 from ConfigParser import SafeConfigParser
 import logging
 from logging import error as eror, info
@@ -120,8 +121,9 @@ def main_git(drepo):                                        # {{{1
         if line.startswith("\t"):
             line = line.lstrip()
         src += line
+    src = StringIO.StringIO(src)
     cfg = SafeConfigParser()
-    cfg.read(src)
+    cfg.readfp(src)
 
     for sec in cfg.sections():
         info("check %s..." % sec)
