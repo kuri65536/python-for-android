@@ -49,9 +49,9 @@ Instruction for installation
 ### How to install
 1. Download sl4a apk
 2. Download py4a apk
-3. Download py4a zips, [interpreter - python_r25.zip](../../releases/r25/python_r25.zip),
-   [modules - python_extras_r25.zip](../../releases/r25/python_extras_r25.zip),
-   [sample scripts - python_scripts_r25.zip](../../releases/r25/python_scripts_r25.zip).
+3. Download py4a zips, [interpreter - python_r26.zip](../../releases/download/r26/python_r26.zip),
+   [modules - python_extras_r26.zip](../../releases/download/r26/python_extras_r26.zip),
+   [sample scripts - python_scripts_r26.zip](../../releases/download/r26/python_scripts_r26.zip).
 4. Enable "Unknown Sources" in your device settings.
 5. Open 1. apk to install. (sl4a)
 6. Open 2. apk to install. (py4a)
