@@ -1,4 +1,4 @@
-VERSION=2.7.10
+VERSION=2.7.11
 ndk_build = $(NDK_PATH)/ndk-build
 # set -ex
 CWD := $(shell pwd)
@@ -56,7 +56,7 @@ clean:
 	make -C openssl clean
 	rm -f .build_*
 	rm -rf $(PYTHONSRC)
-	rm -rf python python_arm python_x86
+	rm -rf python/obj python_arm python_x86
 	rm -rf ncurses readline libffi libcrypt sqlite3 uClibc-0.9.33.2 expat bzip2
 
 error:
