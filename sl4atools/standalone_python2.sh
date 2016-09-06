@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /system/bin/sh
 st=`for i in /mnt/storage /mnt/sdcard /sdcard; do [ -d $i ] && echo $i && break; done`
 if [ x$api != x ]; then :
 elif ! type \cut > /dev/null; then api=14; else
