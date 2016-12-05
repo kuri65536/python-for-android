@@ -124,7 +124,7 @@ Requirements for build
 * In order to build Py4A you first need to build python for Android platform,
   make sure you have all the dependencies needed for building python 2.7 for your
   distro in Ubuntu run: sudo apt-get build-dep python2.7
-* Android NDK >= r10d
+* Android NDK >= r10e, maybe < r13 (r13 series does not contain GCC)
 * Android SDK >= 21.1.2
 * Gradle >= 2.0 (included in Android Studio >= 1.0.2)
 

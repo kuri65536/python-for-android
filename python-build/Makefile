@@ -37,11 +37,14 @@ endif
 ifeq (x$(__BUILD_ARCH),x_arm)
     __BUILD_ABI := armeabi
     __BUILD_HST := arm-unknown-linux-androideabi
+    __BUILD_HST := $(__BUILD_HST2)
     __APP_ABI := 
 else
 ifeq (x$(__BUILD_ARCH),x_x86)
     __BUILD_ABI := x86
-    __BUILD_HST := i686-pc-linux-android
+    # __BUILD_HST := i686-pc-linux-android
+    __BUILD_HST2 := i686-pc-linux-android
+    __BUILD_HST := i686-linux-android
     __APP_ABI := APP_ABI=x86
 else
 endif
@@ -249,7 +252,7 @@ build_bin:
 	    rm -f $(JNI_BIN)/$$i; done
 	cp openssl/.build_$(__BUILD_ABI)/libssl.so.1.0.0 $(JNI_BIN)
 	cp openssl/.build_$(__BUILD_ABI)/libcrypto.so.1.0.0 $(JNI_BIN)
-	cp libffi/$(__BUILD_HST)/.libs/libffi.so.6 $(JNI_BIN)
+	cp libffi/$(__BUILD_HST2)/.libs/libffi.so.6 $(JNI_BIN)
 	cp ncurses/lib-$(__BUILD_ABI)/python/lib/libncurses.so.5 $(JNI_BIN)
 	cp ncurses/lib-$(__BUILD_ABI)/python/lib/libtinfo.so.5 $(JNI_BIN)
 	cp ncurses/lib-$(__BUILD_ABI)/python/lib/libpanel.so.5 $(JNI_BIN)
