@@ -49,8 +49,8 @@ Instruction for installation
 ### How to install
 1. Download sl4a apk
 2. Download py4a apk
-3. Download py4a zips, [interpreter - python_r26.zip](../../releases/download/r26/python_r26.zip),
-   [modules - python_extras_r26.zip](../../releases/download/r26/python_extras_r26.zip),
+3. Download py4a zips, [interpreter - python_r28.zip](../../releases/download/r28/python_r28.zip),
+   [modules - python_extras_r26.zip](../../releases/download/r26/python_extras_r28.zip),
    [sample scripts - python_scripts_r26.zip](../../releases/download/r26/python_scripts_r26.zip).
 4. Enable "Unknown Sources" in your device settings.
 5. Open 1. apk to install. (sl4a)
@@ -130,6 +130,11 @@ Requirements for build
 
 How to build
 ---
+* Check the dependencies of library (sample of Ubuntu)
+```shell
+$ sudo apt install libzlib-dev
+```
+
 * Clone this project.
 ```shell
 for Mercurial uesr (with hg-git plugin)

@@ -1,4 +1,4 @@
-VERSION=2.7.11
+VERSION=2.7.12
 ndk_build = $(NDK_PATH)/ndk-build
 # set -ex
 CWD := $(shell pwd)
@@ -37,7 +37,7 @@ endif
 ifeq (x$(__BUILD_ARCH),x_arm)
     __BUILD_ABI := armeabi
     __BUILD_HST := arm-unknown-linux-androideabi
-    __BUILD_HST := $(__BUILD_HST2)
+    __BUILD_HST2 := $(__BUILD_HST)
     __APP_ABI := 
 else
 ifeq (x$(__BUILD_ARCH),x_x86)
@@ -63,8 +63,8 @@ clean:
 	rm -rf ncurses readline libffi libcrypt sqlite3 uClibc-0.9.33.2 expat bzip2
 
 error:
-	@echo please set NDK_PATH to android-ndk-r10d or later::
-	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10d make build"
+	@echo please set NDK_PATH to android-ndk-r10e or later::
+	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10e make build"
 
 
 $(PYTHONTAR):

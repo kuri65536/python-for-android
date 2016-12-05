@@ -1,11 +1,15 @@
 LOCAL_PATH := $(call my-dir)
+__APPPATH := /data/data/com.googlecode.pythonforandroid/files
 
 include $(CLEAR_VARS)
 
 PYTHON_SRC_PATH := $(LOCAL_PATH)/../python-src
 LOCAL_C_INCLUDES := $(PYTHON_SRC_PATH) $(PYTHON_SRC_PATH)/Include
 LOCAL_PATH := $(PYTHON_SRC_PATH)
-LOCAL_CFLAGS := -DPYTHONPATH='""' -DVERSION='"2.7"' -DENABLE_IPV6
+LOCAL_CFLAGS := -DPYTHONPATH='""' -DVERSION='"2.7"' -DENABLE_IPV6 \
+                -DPREFIX='"'$(__APPPATH)'"' \
+                -DEXEC_PREFIX='"'$(__APPPATH)/bin'"' \
+                -DVPATH='"'$(LOCAL_PATH)/python-src'"'
 LOCAL_SRC_FILES := \
 		Parser/acceler.c \
 		Parser/grammar1.c \
