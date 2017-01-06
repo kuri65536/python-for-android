@@ -4,19 +4,19 @@ Running Python from a shell
 ===
 The necessary environment settings required to run python from a shell script can be found here:
 
-* for Python2: [../sl4atools/standalone_python2.sh](../sl4atools/standalone_python2.sh)
-* for Python3: [../sl4atools/standalone_python3.sh](../sl4atools/standalone_python3.sh)
+* for Python2: [../sl4atools/python2.sh](../sl4atools/python2.sh)
+* for Python3: [../sl4atools/python3.sh](../sl4atools/python3.sh)
 
 To use, make the script executable and run from the shell:
 
 ```shell
-chmod a+x standalone_python2.sh
-./standalone_python2.sh
+chmod a+x python2.sh
+./python2.sh
 ```
 
 or, if that doesn't work (and it may not, depending on filesystem) just:
 
-`sh /sdcard/standalone_python2.sh`
+`sh /sdcard/python2.sh`
 
 The script at time of writing looks like this:
 
@@ -36,7 +36,7 @@ export LD_LIBRARY_PATH=/data/data/com.googlecode.pythonforandroid/files/python/l
 
 Note that you can pass arguments to python, ie:
 
-`./standalone_python2.sh hello.Py`
+`./python2.sh hello.Py`
 
 Why is it so complicated?
 ---

@@ -254,7 +254,7 @@ def zipup_libs(pwd):                                        # {{{1
     # run("cp %s/setup.cfg ." % pwd, cwd="output.temp/usr")
     shutil.copy2("prepare_setuptools.sh",
                  root + "/python/bin/setup.sh")
-    shutil.copy2("../sl4atools/standalone_python2.sh",
+    shutil.copy2("../sl4atools/python2.sh",
                  root + "/python/bin/python.sh")
     zipup('python_lib%s.zip' % VERSION[""],
           root, root)
