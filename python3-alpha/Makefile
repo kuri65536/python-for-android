@@ -5,7 +5,8 @@
         build_misc_readline build_misc_bzip2 strip_bin
 
 # build settings section 1 {{{1
-VERSION=3.4.3
+VER_MAJ=3.6
+VERSION=$(VER_MAJ).0
 # set -ex
 CWD := $(shell pwd)
 DEBUG=no
@@ -123,7 +124,10 @@ ifneq (x$(CROSS),x)
     export LINKFORSHARED := -rdynamic -fPIE -pie \
                             -Xlinker -export-dynamic
 
-    export HOSTPGEN = $(HOSTPYTHON)/bin/hostpgen
+    export PYTHON_FOR_BUILD = $(HOSTPYTHON)/bin/python3
+    export PGEN_FOR_BUILD = $(HOSTPYTHON)/bin/hostpgen
+    # export HOSTPGEN = $(HOSTPYTHON)/bin/hostpgen
+    export HOSTFILIB = $(HOSTPYTHON)/bin/host_freeze_importlib
 
     CROSS_COMPILE := $(HOSTARCH)-
     CROSS_COMPILE_TARGET := $(ARCH)
@@ -257,23 +261,23 @@ build_misc_bzip2: bzip2-1.0.6.tar.gz
 # python3: download and build for current host  {{{1
 $(PYTHONTAR):
 	@echo "Building Python VM For Android Release $(RELEASE_VERSION)"
-	if [ ! -f $(CWD)/Python-$(VERSION).tar.bz2 ]; then \
-	    URL="http://www.python.org/ftp/python/$(VERSION)/$(PYTHONNET)"; \
+	URL="http://www.python.org/ftp/python/$(VERSION)/$(PYTHONNET)"; \
 	    wget -O $(PYTHONTAR) $$URL; \
-	fi
 
 .build_host: $(PYTHONTAR)
 	# we need to build the host python and host pgen so we can
 	# generate the correct grammar and some other stuff
 	echo "Decompressing Python-$(VERSION)"
 	$(TAR) $(PYTHONTAR)
+	mv Python-$(VERSION) host-src
 	mkdir -p $(HOSTPYTHON)
-	cd Python-$(VERSION)/; ./configure --prefix=$(HOSTPYTHON)
-	make -C Python-$(VERSION)
-	make -C Python-$(VERSION) Parser/pgen
-	make -C Python-$(VERSION) install
-	cp Python-$(VERSION)/Parser/pgen $(HOSTPYTHON)/bin/hostpgen
-	rm -rf Python-$(VERSION)
+	cd host-src/; ./configure --prefix=$(HOSTPYTHON)
+	make -C host-src
+	make -C host-src Parser/pgen
+	make -C host-src install
+	cp host-src/Parser/pgen $(HOSTPYTHON)/bin/hostpgen
+	cp host-src/Programs/_freeze_importlib \
+	    $(HOSTPYTHON)/bin/host_freeze_importlib
 	touch .build_host
 
 # python3: patching-configure-build {{{1
@@ -312,7 +316,7 @@ build_config:
 	make build_bin CROSS=x86 PIE=yes
 	touch .build_bin
 build_bin: .build_openssl .build_misc
-	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC)
+	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) sharedmods # build
 
 .build_install: .build_bin
 	make build_install CROSS=arm PIE=yes
@@ -344,14 +348,16 @@ build_zip: .build_strip
 	rm -f $(ZIPMAIN)
 	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYBINR)/bin/python3; \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.so; \
-	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.4m.so
+	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython$(VER_MAJ)m.so
 	cd $(PYBIN)/..; echo $(ndk_depends) $(PYBINR)/bin/python3
 	cd $(PYBIN)/..; deps="libssl.so.1.0.0 libcrypto.so.1.0.0"; \
 	  for i in $$deps; do \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$$i; done
 	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYDYNR)
-	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$(PYTHONLIB)/config-3.4m/Makefile \
-	          $(PYBINR)/include/python3.4m/pyconfig.h
+	cd $(PYBIN)/..; \
+	  zip -g ../$(ZIPMAIN) \
+	    $(PYBINR)/lib/$(PYTHONLIB)/config-$(VER_MAJ)m/Makefile \
+	    $(PYBINR)/include/python$(VER_MAJ)m/pyconfig.h
 
 PYEXT_ := python3-extras
 PYEXT := $(PYEXT_)/$(PYBINR)
@@ -382,7 +388,7 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	                 -x"*/ensurepip/*" \
 	                 -x"*.pyo" -x"*.py" -x"*/__pycache__/*" \
 	                 -x"*.so*" -x"*.exe" -x"*.a" $(CWD)/$@ *
-	# zip -d $@ "*.pc" "*pkgconfig*" "*/libpython3.4m.a" \
+	# zip -d $@ "*.pc" "*pkgconfig*" "*/libpython$(VER_MAJ)m.a" \
 	#           "*.a" "bin/*" "*.la"
 
 $(ZIPSCRIPTS):

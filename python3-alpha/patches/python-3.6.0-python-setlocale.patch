@@ -1,0 +1,32 @@
+diff -ru python-src_arm/Modules/main.c.orig python-src_arm/Modules/main.c
+--- python-src_arm/Modules/main.c.orig	2017-01-10 02:39:21.250224900 +0900
++++ python-src_arm/Modules/main.c	2017-01-10 02:42:19.207341662 +0900
+@@ -557,7 +557,14 @@
+             Py_FatalError(
+                "not enough memory to copy PYTHONWARNINGS");
+         strcpy(buf, p);
+-        oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
++        oldloc = setlocale(LC_ALL, NULL);
++        if (oldloc) {
++            oldloc = _PyMem_RawStrdup(oldloc);
++            if (!oldloc) {
++                Py_FatalError(
++                    "not enough memory to copy setlocale");
++            }
++        }
+         setlocale(LC_ALL, "");
+         for (p = strtok(buf, ","); p != NULL; p = strtok(NULL, ",")) {
+ #if defined(__APPLE__) || defined(__ANDROID__)
+@@ -574,8 +581,10 @@
+             PySys_AddWarnOptionUnicode(unicode);
+             Py_DECREF(unicode);
+         }
+-        setlocale(LC_ALL, oldloc);
+-        PyMem_RawFree(oldloc);
++        if (oldloc) {
++            setlocale(LC_ALL, oldloc);
++            PyMem_RawFree(oldloc);
++        }
+         PyMem_RawFree(buf);
+     }
+ #endif

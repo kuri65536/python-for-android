@@ -17,41 +17,6 @@ diff -ru Python-3.3.5/Lib/test/test_pwd.py Python-3.3.5-android/Lib/test/test_pw
      def test_errors(self):
          self.assertRaises(TypeError, pwd.getpwuid)
          self.assertRaises(TypeError, pwd.getpwuid, 3.14)
-diff -ru Python-3.4.2/Modules/python.c Python-3.4.2-android/Modules/python.c
---- Python-3.4.2/Modules/python.c	2015-02-24 22:42:37.000000000 +0100
-+++ Python-3.4.2-android/Modules/python.c	2015-02-24 23:04:27.000000000 +0100
-@@ -44,10 +44,13 @@
-     fpsetmask(m & ~FP_X_OFL);
- #endif
- 
--    oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
--    if (!oldloc) {
--        fprintf(stderr, "out of memory\n");
--        return 1;
-+    oldloc = setlocale(LC_ALL, NULL);
-+    if (oldloc) {
-+        oldloc = _PyMem_RawStrdup(oldloc);
-+        if (!oldloc) {
-+            fprintf(stderr, "out of memory\n");
-+            return 1;
-+        }
-     }
- 
-     setlocale(LC_ALL, "");
-@@ -64,8 +67,11 @@
-     }
-     argv_copy2[argc] = argv_copy[argc] = NULL;
- 
--    setlocale(LC_ALL, oldloc);
--    PyMem_RawFree(oldloc);
-+    if (oldloc) {
-+        setlocale(LC_ALL, oldloc);
-+        PyMem_RawFree(oldloc);
-+    }
-+
-     res = Py_Main(argc, argv_copy);
-     for (i = 0; i < argc; i++) {
-         PyMem_RawFree(argv_copy2[i]);
 diff -ru Python-3.3.5/setup.py Python-3.3.5-android/setup.py
 --- Python-3.3.5/setup.py	2014-03-09 09:40:35.000000000 +0100
 +++ Python-3.3.5-android/setup.py	2014-08-04 22:14:36.000000000 +0200
@@ -75,16 +40,6 @@ diff -ru Python-3.3.5/setup.py Python-3.3.5-android/setup.py
  
          # Fred Drake's interface to the Python parser
          exts.append( Extension('parser', ['parsermodule.c']) )
-@@ -655,7 +658,8 @@
-         # Operations on audio samples
-         # According to #993173, this one should actually work fine on
-         # 64-bit platforms.
--        exts.append( Extension('audioop', ['audioop.c']) )
-+        exts.append(Extension('audioop', ['audioop.c'],
-+                              libraries=['m']))
-
-         # readline
-         do_readline = self.compiler.find_library_file(lib_dirs, 'readline')
 @@ -1339,7 +1336,10 @@
          #
          # You can upgrade zlib to version 1.1.4 yourself by going to
@@ -106,13 +61,3 @@ diff -ru Python-3.3.5/setup.py Python-3.3.5-android/setup.py
                      if host_platform == "darwin":
                          zlib_extra_link_args = ('-Wl,-search_paths_first',)
                      else:
-@@ -1928,7 +1932,8 @@
-                         sources=sources,
-                         depends=depends)
-         ext_test = Extension('_ctypes_test',
--                             sources=['_ctypes/_ctypes_test.c'])
-+                             sources=['_ctypes/_ctypes_test.c'],
-+                             libraries=['m'])
-         self.extensions.extend([ext, ext_test])
-
-         if not '--with-system-ffi' in sysconfig.get_config_var("CONFIG_ARGS"):

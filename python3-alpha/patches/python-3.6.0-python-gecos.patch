@@ -1,0 +1,12 @@
+diff -ur python-src_arm/Modules/pwdmodule.c.orig python-src_arm/Modules/pwdmodule.c
+--- python-src_arm/Modules/pwdmodule.c.orig	2017-01-10 03:07:25.319707458 +0900
++++ python-src_arm/Modules/pwdmodule.c	2017-01-10 03:31:42.200210252 +0900
+@@ -82,7 +82,7 @@
+ #endif
+     PyStructSequence_SET_ITEM(v, setIndex++, _PyLong_FromUid(p->pw_uid));
+     PyStructSequence_SET_ITEM(v, setIndex++, _PyLong_FromGid(p->pw_gid));
+-#if defined(HAVE_STRUCT_PASSWD_PW_GECOS)
++#if defined(HAVE_STRUCT_PASSWD_PW_GECOS) && !defined(__ANDROID__)
+     SETS(setIndex++, p->pw_gecos);
+ #else
+     SETS(setIndex++, "");

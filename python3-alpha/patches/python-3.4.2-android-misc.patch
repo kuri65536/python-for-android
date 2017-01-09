@@ -89,77 +89,6 @@ diff -ru Python-3.3.5/Lib/subprocess.py Python-3.3.5-android/Lib/subprocess.py
 
              if executable is None:
                  executable = args[0]
-diff -ru Python-3.3.5/Lib/test/test_subprocess.py Python-3.3.5-android/Lib/test/test_subprocess.py
---- Python-3.3.5/Lib/test/test_subprocess.py	2014-03-09 09:40:19.000000000 +0100
-+++ Python-3.3.5-android/Lib/test/test_subprocess.py	2014-08-04 22:19:36.000000000 +0200
-@@ -17,6 +17,7 @@
- import shutil
- import gc
- import textwrap
-+import platform
-
- try:
-     import resource
-@@ -1356,7 +1357,10 @@
-         fd, fname = mkstemp()
-         # reopen in text mode
-         with open(fd, "w", errors="surrogateescape") as fobj:
--            fobj.write("#!/bin/sh\n")
-+            if platform.android_version()[0]:
-+                fobj.write('#!/system/bin/sh\n')
-+            else:
-+                fobj.write("#!/bin/sh\n")
-             fobj.write("exec '%s' -c 'import sys; sys.exit(47)'\n" %
-                        sys.executable)
-         os.chmod(fname, 0o700)
-@@ -1401,7 +1405,10 @@
-         fd, fname = mkstemp()
-         # reopen in text mode
-         with open(fd, "w", errors="surrogateescape") as fobj:
--            fobj.write("#!/bin/sh\n")
-+            if platform.android_version()[0]:
-+                fobj.write('#!/system/bin/sh\n')
-+            else:
-+                fobj.write("#!/bin/sh\n")
-             fobj.write("exec '%s' -c 'import sys; sys.exit(47)'\n" %
-                        sys.executable)
-         os.chmod(fname, 0o700)
-diff -ru Python-3.4.2/Modules/pwdmodule.c Python-3.4.2-android/Modules/pwdmodule.c
---- Python-3.4.2/Modules/pwdmodule.c	2015-02-24 23:06:31.000000000 +0100
-+++ Python-3.4.2-android/Modules/pwdmodule.c	2015-02-24 23:09:14.000000000 +0100
-@@ -72,7 +72,11 @@
-     SETS(setIndex++, p->pw_passwd);
-     PyStructSequence_SET_ITEM(v, setIndex++, _PyLong_FromUid(p->pw_uid));
-     PyStructSequence_SET_ITEM(v, setIndex++, _PyLong_FromGid(p->pw_gid));
-+#if !defined(__ANDROID__)
-     SETS(setIndex++, p->pw_gecos);
-+#else
-+    SETS(setIndex++, "");
-+#endif
-     SETS(setIndex++, p->pw_dir);
-     SETS(setIndex++, p->pw_shell);
- 
-diff -ru Python-3.3.5/Modules/socketmodule.c Python-3.3.5-android/Modules/socketmodule.c
---- Python-3.3.5/Modules/socketmodule.c	2014-03-09 09:40:28.000000000 +0100
-+++ Python-3.3.5-android/Modules/socketmodule.c	2014-08-04 22:19:36.000000000 +0200
-@@ -150,7 +150,7 @@
-    On the other hand, not all Linux versions agree, so there the settings
-    computed by the configure script are needed! */
-
--#ifndef linux
-+#if !defined(linux) || __ANDROID__
- # undef HAVE_GETHOSTBYNAME_R_3_ARG
- # undef HAVE_GETHOSTBYNAME_R_5_ARG
- # undef HAVE_GETHOSTBYNAME_R_6_ARG
-@@ -169,7 +169,7 @@
- #  define HAVE_GETHOSTBYNAME_R_3_ARG
- # elif defined(__sun) || defined(__sgi)
- #  define HAVE_GETHOSTBYNAME_R_5_ARG
--# elif defined(linux)
-+# elif defined(linux) && !__ANDROID__
- /* Rely on the configure script */
- # else
- #  undef HAVE_GETHOSTBYNAME_R
 diff -ru Python-3.3.5/Modules/posixmodule.c Python-3.3.5-android/Modules/posixmodule.c
 --- Python-3.3.5/Modules/posixmodule.c	2014-03-09 08:40:28.000000000 +0000
 +++ Python-3.3.5-android/Modules/posixmodule.c	2015-02-24 19:57:05.368843433 +0000
@@ -175,18 +104,6 @@ diff -ru Python-3.3.5/Modules/posixmodule.c Python-3.3.5-android/Modules/posixmo
  
  #ifdef MS_WINDOWS
  static int
-diff -ru Python-3.3.5/Python/pytime.c Python-3.3.5-android/Python/pytime.c
---- Python-3.3.5/Python/pytime.c    2015-02-23 11:54:25.000000000 -0500
-+++ Python-3.3.5-android/Python/pytime.c    2015-02-23 11:55:19.000000000 -0500
-@@ -3,7 +3,7 @@
- #include <windows.h>
- #endif
- 
--#if defined(__APPLE__) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_FTIME)
-+#if (defined(__APPLE__) || defined(__ANDROID__)) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_FTIME)
-   /*
-    * _PyTime_gettimeofday falls back to ftime when getttimeofday fails because the latter
-    * might fail on some platforms. This fallback is unwanted on MacOSX because
 diff -ru Python-3.4.2/configure Python-3.4.2-android/configure
 --- Python-3.4.2/configure	2015-02-24 23:18:31.000000000 +0100
 +++ Python-3.4.2-android/configure	2015-03-01 20:15:02.000000000 +0100
@@ -225,22 +142,6 @@ diff -ru Python-3.4.2/configure Python-3.4.2-android/configure
  
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking LIBRARY" >&5
-@@ -5650,7 +5678,14 @@
- 		SOVERSION=`echo $SOVERSION|cut -d "." -f 1`
- 		;;
- 	  esac
--	  INSTSONAME="$LDLIBRARY".$SOVERSION
-+
-+	  if test "$with_android" != yes
-+	  then
-+		INSTSONAME="$LDLIBRARY".$SOVERSION
-+	  else
-+		INSTSONAME="$LDLIBRARY"
-+	  fi
-+
- 	  if test "$with_pydebug" != yes
-           then
- 	      PY3LIBRARY=libpython3.so
 diff -ru Python-3.4.2/configure.ac Python-3.4.2-android/configure.ac
 --- Python-3.4.2/configure.ac	2015-02-24 23:18:31.000000000 +0100
 +++ Python-3.4.2-android/configure.ac	2015-03-01 20:14:54.000000000 +0100
@@ -266,23 +167,6 @@ diff -ru Python-3.4.2/configure.ac Python-3.4.2-android/configure.ac
  
  AC_SUBST(LIBRARY)
  AC_MSG_CHECKING(LIBRARY)
-@@ -970,7 +985,14 @@
- 		SOVERSION=`echo $SOVERSION|cut -d "." -f 1`
- 		;;
- 	  esac
--	  INSTSONAME="$LDLIBRARY".$SOVERSION
-+
-+	  if test "$with_android" != yes
-+	  then
-+		INSTSONAME="$LDLIBRARY".$SOVERSION
-+	  else
-+		INSTSONAME="$LDLIBRARY"
-+	  fi
-+
- 	  if test "$with_pydebug" != yes
-           then
- 	      PY3LIBRARY=libpython3.so
-
 diff -ru Python-3.4.2/Makefile.pre.in Python-3.4.2-android/Makefile.pre.in
 --- Python-3.4.2/Makefile.pre.in	2015-03-04 16:25:36.000000000 +0100
 +++ Python-3.4.2-android/Makefile.pre.in	2015-03-04 16:27:27.000000000 +0100

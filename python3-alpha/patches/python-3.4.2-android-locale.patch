@@ -90,71 +90,6 @@ diff -ru Python-3.3.5/Modules/main.c Python-3.3.5-android/Modules/main.c
              /* Use utf-8 on Mac OS X */
              unicode = PyUnicode_FromString(p);
  #else
-diff -ru Python-3.3.5/Objects/unicodeobject.c Python-3.3.5-android/Objects/unicodeobject.c
---- Python-3.3.5/Objects/unicodeobject.c	2014-03-09 09:40:30.000000000 +0100
-+++ Python-3.3.5-android/Objects/unicodeobject.c	2014-08-04 22:16:29.000000000 +0200
-@@ -3295,13 +3295,22 @@
- static int
- locale_error_handler(const char *errors, int *surrogateescape)
- {
-+
-     if (errors == NULL) {
-+#ifdef __ANDROID__
-+        *surrogateescape = 1;
-+#else
-         *surrogateescape = 0;
-+#endif
-         return 0;
-     }
-
-     if (strcmp(errors, "strict") == 0) {
-+#ifdef __ANDROID__
-+        *surrogateescape = 1;
-+#else
-         *surrogateescape = 0;
-+#endif
-         return 0;
-     }
-     if (strcmp(errors, "surrogateescape") == 0) {
-@@ -3429,7 +3438,7 @@
- {
- #ifdef HAVE_MBCS
-     return PyUnicode_EncodeCodePage(CP_ACP, unicode, NULL);
--#elif defined(__APPLE__)
-+#elif defined(__APPLE__) || defined(__ANDROID__)
-     return _PyUnicode_AsUTF8String(unicode, "surrogateescape");
- #else
-     PyInterpreterState *interp = PyThreadState_GET()->interp;
-@@ -3709,7 +3718,7 @@
- {
- #ifdef HAVE_MBCS
-     return PyUnicode_DecodeMBCS(s, size, NULL);
--#elif defined(__APPLE__)
-+#elif defined(__APPLE__) || defined(__ANDROID__)
-     return PyUnicode_DecodeUTF8Stateful(s, size, "surrogateescape", NULL);
- #else
-     PyInterpreterState *interp = PyThreadState_GET()->interp;
-@@ -4835,7 +4844,7 @@
-     return NULL;
- }
-
--#ifdef __APPLE__
-+#if defined(__APPLE__) || defined(__ANDROID__)
-
- /* Simplified UTF-8 decoder using surrogateescape error handler,
-    used to decode the command line arguments on Mac OS X.
-diff -ru Python-3.3.5/Python/bltinmodule.c Python-3.3.5-android/Python/bltinmodule.c
---- Python-3.3.5/Python/bltinmodule.c	2014-03-09 09:40:32.000000000 +0100
-+++ Python-3.3.5-android/Python/bltinmodule.c	2014-08-04 22:16:29.000000000 +0200
-@@ -24,7 +24,7 @@
- #ifdef HAVE_MBCS
- const char *Py_FileSystemDefaultEncoding = "mbcs";
- int Py_HasFileSystemDefaultEncoding = 1;
--#elif defined(__APPLE__)
-+#elif defined(__APPLE__) || defined(__ANDROID__)
- const char *Py_FileSystemDefaultEncoding = "utf-8";
- int Py_HasFileSystemDefaultEncoding = 1;
- #else
 diff -ru Python-3.3.5/Python/fileutils.c Python-3.3.5-android/Python/fileutils.c
 --- Python-3.3.5/Python/fileutils.c	2014-03-09 09:40:32.000000000 +0100
 +++ Python-3.3.5-android/Python/fileutils.c	2014-08-04 22:16:29.000000000 +0200
@@ -251,15 +186,3 @@ diff -ru Python-3.3.5/Python/pystrtod.c Python-3.3.5-android/Python/pystrtod.c
 
      if (decimal_point[0] != '.' || decimal_point[1] != 0) {
          size_t decimal_point_len = strlen(decimal_point);
-diff -ru Python-3.3.5/Python/pythonrun.c Python-3.3.5-android/Python/pythonrun.c
---- Python-3.3.5/Python/pythonrun.c	2014-03-09 09:40:33.000000000 +0100
-+++ Python-3.3.5-android/Python/pythonrun.c	2014-08-04 22:16:29.000000000 +0200
-@@ -188,6 +188,8 @@
-         return NULL;
-     }
-     return get_codec_name(codeset);
-+#elif __ANDROID__
-+    return get_codec_name("UTF-8");
- #else
-     PyErr_SetNone(PyExc_NotImplementedError);
-     return NULL;

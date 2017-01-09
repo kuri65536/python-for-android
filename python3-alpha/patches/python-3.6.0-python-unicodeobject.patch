@@ -1,0 +1,42 @@
+diff -ur python-src_arm/Objects/unicodeobject.c.orig python-src_arm/Objects/unicodeobject.c
+--- python-src_arm/Objects/unicodeobject.c.orig	2016-12-23 11:21:22.000000000 +0900
++++ python-src_arm/Objects/unicodeobject.c	2017-01-10 03:01:43.641879139 +0900
+@@ -3393,7 +3393,11 @@
+     switch (error_handler)
+     {
+     case _Py_ERROR_STRICT:
++#if defined(__ANDROID__)
++        *surrogateescape = 1;
++#else
+         *surrogateescape = 0;
++#endif
+         return 0;
+     case _Py_ERROR_SURROGATEESCAPE:
+         *surrogateescape = 1;
+@@ -3520,7 +3524,7 @@
+ PyObject *
+ PyUnicode_EncodeFSDefault(PyObject *unicode)
+ {
+-#if defined(__APPLE__)
++#if defined(__APPLE__) || defined(__ANDROID__)
+     return _PyUnicode_AsUTF8String(unicode, Py_FileSystemDefaultEncodeErrors);
+ #else
+     PyInterpreterState *interp = PyThreadState_GET()->interp;
+@@ -3829,7 +3833,7 @@
+ PyObject*
+ PyUnicode_DecodeFSDefaultAndSize(const char *s, Py_ssize_t size)
+ {
+-#if defined(__APPLE__)
++#if defined(__APPLE__) || defined(__ANDROID__)
+     return PyUnicode_DecodeUTF8Stateful(s, size, Py_FileSystemDefaultEncodeErrors, NULL);
+ #else
+     PyInterpreterState *interp = PyThreadState_GET()->interp;
+@@ -5083,7 +5087,7 @@
+     return NULL;
+ }
+ 
+-#ifdef __APPLE__
++#if defined(__APPLE__) || defined(__ANDROID__)
+ 
+ /* Simplified UTF-8 decoder using surrogateescape error handler,
+    used to decode the command line arguments on Mac OS X.
