@@ -167,15 +167,3 @@ diff -ru Python-3.4.2/configure.ac Python-3.4.2-android/configure.ac
  
  AC_SUBST(LIBRARY)
  AC_MSG_CHECKING(LIBRARY)
-diff -ru Python-3.4.2/Makefile.pre.in Python-3.4.2-android/Makefile.pre.in
---- Python-3.4.2/Makefile.pre.in	2015-03-04 16:25:36.000000000 +0100
-+++ Python-3.4.2-android/Makefile.pre.in	2015-03-04 16:27:27.000000000 +0100
-@@ -568,7 +568,7 @@
- 	    *\ -s*|s*) quiet="-q";; \
- 	    *) quiet="";; \
- 	esac; \
--	$(RUNSHARED) CC='$(CC)' LDSHARED='$(BLDSHARED)' OPT='$(OPT)' \
-+	$(RUNSHARED) CC='$(CC)' LDSHARED='$(BLDSHARED) -lpython$(LDVERSION)' OPT='$(OPT)' \
- 		_TCLTK_INCLUDES='$(TCLTK_INCLUDES)' _TCLTK_LIBS='$(TCLTK_LIBS)' \
- 		$(PYTHON_FOR_BUILD) $(srcdir)/setup.py $$quiet build
- 

@@ -316,7 +316,7 @@ build_config:
 	make build_bin CROSS=x86 PIE=yes
 	touch .build_bin
 build_bin: .build_openssl .build_misc
-	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) sharedmods # build
+	CFLAGS=$(CFLAGS) CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) sharedmods # build
 
 .build_install: .build_bin
 	make build_install CROSS=arm PIE=yes

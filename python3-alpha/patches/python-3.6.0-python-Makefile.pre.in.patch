@@ -1,0 +1,15 @@
+diff -ru python-src_arm/Makefile.pre.in.orig python-src_arm/Makefile.pre.in
+--- python-src_arm/Makefile.pre.in.orig	2017-01-10 03:35:50.729625699 +0900
++++ python-src_arm/Makefile.pre.in	2017-01-10 17:14:22.379438976 +0900
+@@ -229,9 +229,9 @@
+ 
+ PYTHON_FOR_GEN=@PYTHON_FOR_GEN@
+ PYTHON_FOR_BUILD=@PYTHON_FOR_BUILD@
+-_PYTHON_HOST_PLATFORM=@_PYTHON_HOST_PLATFORM@
++export _PYTHON_HOST_PLATFORM=@_PYTHON_HOST_PLATFORM@
+ BUILD_GNU_TYPE=	@build@
+-HOST_GNU_TYPE=	@host@
++export HOST_GNU_TYPE=	@host@
+ 
+ # Tcl and Tk config info from --with-tcltk-includes and -libs options
+ TCLTK_INCLUDES=	@TCLTK_INCLUDES@

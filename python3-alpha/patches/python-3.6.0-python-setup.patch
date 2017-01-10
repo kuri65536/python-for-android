@@ -1,0 +1,477 @@
+diff -ur python-src_arm/setup.py.orig python-src_arm/setup.py
+--- python-src_arm/setup.py.orig	2016-12-23 11:21:22.000000000 +0900
++++ python-src_arm/setup.py	2017-01-10 10:10:54.267076652 +0900
+@@ -20,9 +20,14 @@
+ 
+ # Add special CFLAGS reserved for building the interpreter and the stdlib
+ # modules (Issue #21121).
++cflags_android = '-fvisibility=default -fPIE --sysroot=' + os.environ['SYSROOT']
+ cflags = sysconfig.get_config_var('CFLAGS')
+ py_cflags_nodist = sysconfig.get_config_var('PY_CFLAGS_NODIST')
+-sysconfig.get_config_vars()['CFLAGS'] = cflags + ' ' + py_cflags_nodist
++sysconfig.get_config_vars()['CFLAGS'] = (cflags + ' ' +
++                                         cflags_android + ' ' +
++                                         py_cflags_nodist)
++sysconfig.get_config_vars()['CC'] = os.environ["CC"]
++sysconfig.get_config_vars()['HOST_GNU_TYPE'] = os.environ["HOST_GNU_TYPE"]
+ 
+ class Dummy:
+     """Hack for parallel build"""
+@@ -600,63 +605,66 @@
+         #
+ 
+         # array objects
+-        exts.append( Extension('array', ['arraymodule.c']) )
++        exts.append( Extension('array', ['Modules/arraymodule.c']) )
+ 
+         shared_math = 'Modules/_math.o'
+         # complex math library functions
+-        exts.append( Extension('cmath', ['cmathmodule.c'],
++        exts.append( Extension('cmath', ['Modules/cmathmodule.c'],
+                                extra_objects=[shared_math],
+-                               depends=['_math.h', shared_math],
++                               depends=['Modules/_math.h', shared_math],
+                                libraries=math_libs) )
+         # math library functions, e.g. sin()
+-        exts.append( Extension('math',  ['mathmodule.c'],
++        exts.append( Extension('math',  ['Modules/mathmodule.c'],
+                                extra_objects=[shared_math],
+-                               depends=['_math.h', shared_math],
++                               depends=['Modules/_math.h', shared_math],
+                                libraries=math_libs) )
+ 
+         # time libraries: librt may be needed for clock_gettime()
+-        time_libs = []
++        time_libs = ['m']
+         lib = sysconfig.get_config_var('TIMEMODULE_LIB')
+         if lib:
+             time_libs.append(lib)
+ 
+         # time operations and variables
+-        exts.append( Extension('time', ['timemodule.c'],
++        exts.append( Extension('time', ['Modules/timemodule.c'],
+                                libraries=time_libs) )
+         # math_libs is needed by delta_new() that uses round() and by accum()
+         # that uses modf().
+-        exts.append( Extension('_datetime', ['_datetimemodule.c'],
++        exts.append( Extension('_datetime', ['Modules/_datetimemodule.c'],
+                                libraries=math_libs) )
+         # random number generator implemented in C
+-        exts.append( Extension("_random", ["_randommodule.c"]) )
++        exts.append( Extension("_random", ["Modules/_randommodule.c"]) )
+         # bisect
+-        exts.append( Extension("_bisect", ["_bisectmodule.c"]) )
++        exts.append( Extension("_bisect", ["Modules/_bisectmodule.c"]) )
+         # heapq
+-        exts.append( Extension("_heapq", ["_heapqmodule.c"]) )
++        exts.append( Extension("_heapq", ["Modules/_heapqmodule.c"]) )
+         # C-optimized pickle replacement
+-        exts.append( Extension("_pickle", ["_pickle.c"]) )
++        exts.append( Extension("_pickle", ["Modules/_pickle.c"]) )
+         # atexit
+-        exts.append( Extension("atexit", ["atexitmodule.c"]) )
++        exts.append( Extension("atexit", ["Modules/atexitmodule.c"]) )
+         # _json speedups
+-        exts.append( Extension("_json", ["_json.c"]) )
++        exts.append( Extension("_json", ["Modules/_json.c"]) )
+         # Python C API test module
+-        exts.append( Extension('_testcapi', ['_testcapimodule.c'],
+-                               depends=['testcapi_long.h']) )
++        exts.append( Extension('_testcapi', ['Modules/_testcapimodule.c'],
++                               depends=['Modules/testcapi_long.h']) )
+         # Python PEP-3118 (buffer protocol) test module
+-        exts.append( Extension('_testbuffer', ['_testbuffer.c']) )
++        exts.append( Extension('_testbuffer', ['Modules/_testbuffer.c']) )
+         # Test loading multiple modules from one compiled file (http://bugs.python.org/issue16421)
+-        exts.append( Extension('_testimportmultiple', ['_testimportmultiple.c']) )
++        exts.append( Extension('_testimportmultiple',
++                               ['Modules/_testimportmultiple.c']))
+         # Test multi-phase extension module init (PEP 489)
+-        exts.append( Extension('_testmultiphase', ['_testmultiphase.c']) )
++        exts.append( Extension('_testmultiphase',
++                               ['Modules/_testmultiphase.c']) )
+         # profiler (_lsprof is for cProfile.py)
+-        exts.append( Extension('_lsprof', ['_lsprof.c', 'rotatingtree.c']) )
++        exts.append( Extension('_lsprof',
++                               ['Modules/_lsprof.c', 'Modules/rotatingtree.c']))
+         # static Unicode character database
+-        exts.append( Extension('unicodedata', ['unicodedata.c'],
++        exts.append( Extension('unicodedata', ['Modules/unicodedata.c'],
+                                depends=['unicodedata_db.h', 'unicodename_db.h']) )
+         # _opcode module
+-        exts.append( Extension('_opcode', ['_opcode.c']) )
++        exts.append( Extension('_opcode', ['Modules/_opcode.c']) )
+         # asyncio speedups
+-        exts.append( Extension("_asyncio", ["_asynciomodule.c"]) )
++        exts.append( Extension("_asyncio", ["Modules/_asynciomodule.c"]) )
+ 
+         # Modules with some UNIX dependencies -- on by default:
+         # (If you have a really backward UNIX, select and socket may not be
+@@ -667,30 +675,33 @@
+         if (config_h_vars.get('FLOCK_NEEDS_LIBBSD', False)):
+             # May be necessary on AIX for flock function
+             libs = ['bsd']
+-        exts.append( Extension('fcntl', ['fcntlmodule.c'], libraries=libs) )
++        exts.append(Extension('fcntl', ['Modules/fcntlmodule.c'],
++                              libraries=libs) )
+         # pwd(3)
+-        exts.append( Extension('pwd', ['pwdmodule.c']) )
++        exts.append(Extension('pwd', ['Modules/pwdmodule.c']) )
+         # grp(3)
+-        exts.append( Extension('grp', ['grpmodule.c']) )
++        exts.append(Extension('grp', ['Modules/grpmodule.c']) )
+         # spwd, shadow passwords
+         if (config_h_vars.get('HAVE_GETSPNAM', False) or
+                 config_h_vars.get('HAVE_GETSPENT', False)):
+-            exts.append( Extension('spwd', ['spwdmodule.c']) )
++            exts.append( Extension('spwd', ['Modules/spwdmodule.c']) )
+         else:
+             missing.append('spwd')
+ 
+         # select(2); not on ancient System V
+-        exts.append( Extension('select', ['selectmodule.c']) )
++        # selecemodule.c calls the ceil(3) math function.
++        exts.append(Extension('select', ['Modules/selectmodule.c'],
++                              libraries=['m']))
+ 
+         # Fred Drake's interface to the Python parser
+-        exts.append( Extension('parser', ['parsermodule.c']) )
++        exts.append( Extension('parser', ['Modules/parsermodule.c']) )
+ 
+         # Memory-mapped files (also works on Win32).
+-        exts.append( Extension('mmap', ['mmapmodule.c']) )
++        exts.append( Extension('mmap', ['Modules/mmapmodule.c']) )
+ 
+         # Lance Ellinghaus's syslog module
+         # syslog daemon interface
+-        exts.append( Extension('syslog', ['syslogmodule.c']) )
++        exts.append( Extension('syslog', ['Modules/syslogmodule.c']) )
+ 
+         #
+         # Here ends the simple stuff.  From here on, modules need certain
+@@ -706,7 +717,7 @@
+         # 64-bit platforms.
+         #
+         # audioop needs math_libs for floor() in multiple functions.
+-        exts.append( Extension('audioop', ['audioop.c'],
++        exts.append( Extension('audioop', ['Modules/audioop.c'],
+                                libraries=math_libs) )
+ 
+         # readline
+@@ -785,7 +796,7 @@
+                                                      ['/usr/lib/termcap'],
+                                                      'termcap'):
+                 readline_libs.append('termcap')
+-            exts.append( Extension('readline', ['readline.c'],
++            exts.append( Extension('readline', ['Modules/readline.c'],
+                                    library_dirs=['/usr/lib/termcap'],
+                                    extra_link_args=readline_extra_link_args,
+                                    libraries=readline_libs) )
+@@ -798,17 +809,19 @@
+             libs = ['crypt']
+         else:
+             libs = []
+-        exts.append( Extension('_crypt', ['_cryptmodule.c'], libraries=libs) )
++        exts.append( Extension('_crypt', ['Modules/_cryptmodule.c'],
++                               libraries=libs) )
+ 
+         # CSV files
+-        exts.append( Extension('_csv', ['_csv.c']) )
++        exts.append( Extension('_csv', ['Modules/_csv.c']) )
+ 
+         # POSIX subprocess module helper.
+-        exts.append( Extension('_posixsubprocess', ['_posixsubprocess.c']) )
++        exts.append( Extension('_posixsubprocess',
++                               ['Modules/_posixsubprocess.c']) )
+ 
+         # socket(2)
+-        exts.append( Extension('_socket', ['socketmodule.c'],
+-                               depends = ['socketmodule.h']) )
++        exts.append( Extension('_socket', ['Modules/socketmodule.c'],
++                               depends = ['Modules/socketmodule.h']) )
+         # Detect SSL support for the socket module (via _ssl)
+         search_for_ssl_incs_in = [
+                               '/usr/local/ssl/include',
+@@ -869,8 +882,8 @@
+             if have_usable_openssl:
+                 # The _hashlib module wraps optimized implementations
+                 # of hash functions from the OpenSSL library.
+-                exts.append( Extension('_hashlib', ['_hashopenssl.c'],
+-                                       depends = ['hashlib.h'],
++                exts.append( Extension('_hashlib', ['Modules/_hashopenssl.c'],
++                                       depends = ['Modules/hashlib.h'],
+                                        include_dirs = ssl_incs,
+                                        library_dirs = ssl_libs,
+                                        libraries = ['ssl', 'crypto']) )
+@@ -882,14 +895,14 @@
+         # We always compile these even when OpenSSL is available (issue #14693).
+         # It's harmless and the object code is tiny (40-50 KB per module,
+         # only loaded when actually used).
+-        exts.append( Extension('_sha256', ['sha256module.c'],
+-                               depends=['hashlib.h']) )
+-        exts.append( Extension('_sha512', ['sha512module.c'],
+-                               depends=['hashlib.h']) )
+-        exts.append( Extension('_md5', ['md5module.c'],
+-                               depends=['hashlib.h']) )
+-        exts.append( Extension('_sha1', ['sha1module.c'],
+-                               depends=['hashlib.h']) )
++        exts.append( Extension('_sha256', ['Modules/sha256module.c'],
++                               depends=['Modules/hashlib.h']) )
++        exts.append( Extension('_sha512', ['Modules/sha512module.c'],
++                               depends=['Modules/hashlib.h']) )
++        exts.append( Extension('_md5', ['Modules/md5module.c'],
++                               depends=['Modules/hashlib.h']) )
++        exts.append( Extension('_sha1', ['Modules/sha1module.c'],
++                               depends=['Modules/hashlib.h']) )
+ 
+         blake2_deps = glob(os.path.join(os.getcwd(), srcdir,
+                                         'Modules/_blake2/impl/*'))
+@@ -901,9 +914,9 @@
+             blake2_macros.append(('BLAKE2_USE_SSE', '1'))
+ 
+         exts.append( Extension('_blake2',
+-                               ['_blake2/blake2module.c',
+-                                '_blake2/blake2b_impl.c',
+-                                '_blake2/blake2s_impl.c'],
++                               ['Modules/_blake2/blake2module.c',
++                                'Modules/_blake2/blake2b_impl.c',
++                                'Modules/_blake2/blake2s_impl.c'],
+                                define_macros=blake2_macros,
+                                depends=blake2_deps) )
+ 
+@@ -911,7 +924,7 @@
+                                       'Modules/_sha3/kcp/*'))
+         sha3_deps.append('hashlib.h')
+         exts.append( Extension('_sha3',
+-                               ['_sha3/sha3module.c'],
++                               ['Modules/_sha3/sha3module.c'],
+                                depends=sha3_deps))
+ 
+         # Modules that provide persistent dictionary-like semantics.  You will
+@@ -1324,9 +1337,9 @@
+         # Unix-only modules
+         if host_platform != 'win32':
+             # Steen Lumholt's termios module
+-            exts.append( Extension('termios', ['termios.c']) )
++            exts.append( Extension('termios', ['Modules/termios.c']) )
+             # Jeremy Hylton's rlimit interface
+-            exts.append( Extension('resource', ['resource.c']) )
++            exts.append( Extension('resource', ['Modules/resource.c']) )
+ 
+             # Sun yellow pages. Some systems have the functions in libc.
+             if (host_platform not in ['cygwin', 'qnx6'] and
+@@ -1410,7 +1423,10 @@
+         #
+         # You can upgrade zlib to version 1.1.4 yourself by going to
+         # http://www.gzip.org/zlib/
+-        zlib_inc = find_file('zlib.h', [], inc_dirs)
++        sysroot = os.environ["SYSROOT"]
++        _inc_dirs = inc_dirs + [sysroot + "/usr/include"]
++        _lib_dirs = lib_dirs + [sysroot + "/usr/lib"]
++        zlib_inc = find_file('zlib.h', [], _inc_dirs)
+         have_zlib = False
+         if zlib_inc is not None:
+             zlib_h = zlib_inc[0] + '/zlib.h'
+@@ -1427,12 +1443,12 @@
+                         version = line.split()[2]
+                         break
+             if version >= version_req:
+-                if (self.compiler.find_library_file(lib_dirs, 'z')):
++                if (self.compiler.find_library_file(_lib_dirs, 'z')):
+                     if host_platform == "darwin":
+                         zlib_extra_link_args = ('-Wl,-search_paths_first',)
+                     else:
+                         zlib_extra_link_args = ()
+-                    exts.append( Extension('zlib', ['zlibmodule.c'],
++                    exts.append( Extension('zlib', ['Modules/zlibmodule.c'],
+                                            libraries = ['z'],
+                                            extra_link_args = zlib_extra_link_args))
+                     have_zlib = True
+@@ -1453,7 +1469,7 @@
+             extra_compile_args = []
+             libraries = []
+             extra_link_args = []
+-        exts.append( Extension('binascii', ['binascii.c'],
++        exts.append( Extension('binascii', ['Modules/binascii.c'],
+                                extra_compile_args = extra_compile_args,
+                                libraries = libraries,
+                                extra_link_args = extra_link_args) )
+@@ -1500,27 +1516,27 @@
+                 ('HAVE_EXPAT_CONFIG_H', '1'),
+             ]
+             expat_lib = []
+-            expat_sources = ['expat/xmlparse.c',
+-                             'expat/xmlrole.c',
+-                             'expat/xmltok.c']
+-            expat_depends = ['expat/ascii.h',
+-                             'expat/asciitab.h',
+-                             'expat/expat.h',
+-                             'expat/expat_config.h',
+-                             'expat/expat_external.h',
+-                             'expat/internal.h',
+-                             'expat/latin1tab.h',
+-                             'expat/utf8tab.h',
+-                             'expat/xmlrole.h',
+-                             'expat/xmltok.h',
+-                             'expat/xmltok_impl.h'
++            expat_sources = ['Modules/expat/xmlparse.c',
++                             'Modules/expat/xmlrole.c',
++                             'Modules/expat/xmltok.c']
++            expat_depends = ['Modules/expat/ascii.h',
++                             'Modules/expat/asciitab.h',
++                             'Modules/expat/expat.h',
++                             'Modules/expat/expat_config.h',
++                             'Modules/expat/expat_external.h',
++                             'Modules/expat/internal.h',
++                             'Modules/expat/latin1tab.h',
++                             'Modules/expat/utf8tab.h',
++                             'Modules/expat/xmlrole.h',
++                             'Modules/expat/xmltok.h',
++                             'Modules/expat/xmltok_impl.h'
+                              ]
+ 
+         exts.append(Extension('pyexpat',
+                               define_macros = define_macros,
+                               include_dirs = expat_inc,
+                               libraries = expat_lib,
+-                              sources = ['pyexpat.c'] + expat_sources,
++                              sources = ['Modules/pyexpat.c'] + expat_sources,
+                               depends = expat_depends,
+                               ))
+ 
+@@ -1542,10 +1558,10 @@
+ 
+         # Hye-Shik Chang's CJKCodecs modules.
+         exts.append(Extension('_multibytecodec',
+-                              ['cjkcodecs/multibytecodec.c']))
++                              ['Modules/cjkcodecs/multibytecodec.c']))
+         for loc in ('kr', 'jp', 'cn', 'tw', 'hk', 'iso2022'):
+             exts.append(Extension('_codecs_%s' % loc,
+-                                  ['cjkcodecs/_codecs_%s.c' % loc]))
++                                  ['Modules/cjkcodecs/_codecs_%s.c' % loc]))
+ 
+         # Stefan Krah's _decimal module
+         exts.append(self._decimal_ext())
+@@ -1590,11 +1606,11 @@
+                                    ]
+ 
+         else:
+-            multiprocessing_srcs = [ '_multiprocessing/multiprocessing.c',
++            multiprocessing_srcs = [ 'Modules/_multiprocessing/multiprocessing.c',
+                                    ]
+             if (sysconfig.get_config_var('HAVE_SEM_OPEN') and not
+                 sysconfig.get_config_var('POSIX_SEMAPHORES_NOT_ENABLED')):
+-                multiprocessing_srcs.append('_multiprocessing/semaphore.c')
++                multiprocessing_srcs.append('Modules/_multiprocessing/semaphore.c')
+ 
+         if sysconfig.get_config_var('WITH_THREAD'):
+             exts.append ( Extension('_multiprocessing', multiprocessing_srcs,
+@@ -1606,7 +1622,7 @@
+ 
+         # Platform-specific libraries
+         if host_platform.startswith(('linux', 'freebsd', 'gnukfreebsd')):
+-            exts.append( Extension('ossaudiodev', ['ossaudiodev.c']) )
++            exts.append( Extension('ossaudiodev', ['Modules/ossaudiodev.c']) )
+         else:
+             missing.append('ossaudiodev')
+ 
+@@ -1631,7 +1647,7 @@
+ ##         self.extensions.append(ext)
+ 
+         if 'd' not in sys.abiflags:
+-            ext = Extension('xxlimited', ['xxlimited.c'],
++            ext = Extension('xxlimited', ['Modules/xxlimited.c'],
+                             define_macros=[('Py_LIMITED_API', '0x03050000')])
+             self.extensions.append(ext)
+ 
+@@ -2008,7 +2024,7 @@
+                         depends=depends)
+         # function my_sqrt() needs math library for sqrt()
+         ext_test = Extension('_ctypes_test',
+-                     sources=['_ctypes/_ctypes_test.c'],
++                     sources=['Modules/_ctypes/_ctypes_test.c'],
+                      libraries=math_libs)
+         self.extensions.extend([ext, ext_test])
+ 
+@@ -2064,40 +2080,40 @@
+                                                          'libmpdec'))]
+             libraries = []
+             sources = [
+-              '_decimal/_decimal.c',
+-              '_decimal/libmpdec/basearith.c',
+-              '_decimal/libmpdec/constants.c',
+-              '_decimal/libmpdec/context.c',
+-              '_decimal/libmpdec/convolute.c',
+-              '_decimal/libmpdec/crt.c',
+-              '_decimal/libmpdec/difradix2.c',
+-              '_decimal/libmpdec/fnt.c',
+-              '_decimal/libmpdec/fourstep.c',
+-              '_decimal/libmpdec/io.c',
+-              '_decimal/libmpdec/memory.c',
+-              '_decimal/libmpdec/mpdecimal.c',
+-              '_decimal/libmpdec/numbertheory.c',
+-              '_decimal/libmpdec/sixstep.c',
+-              '_decimal/libmpdec/transpose.c',
++              'Modules/_decimal/_decimal.c',
++              'Modules/_decimal/libmpdec/basearith.c',
++              'Modules/_decimal/libmpdec/constants.c',
++              'Modules/_decimal/libmpdec/context.c',
++              'Modules/_decimal/libmpdec/convolute.c',
++              'Modules/_decimal/libmpdec/crt.c',
++              'Modules/_decimal/libmpdec/difradix2.c',
++              'Modules/_decimal/libmpdec/fnt.c',
++              'Modules/_decimal/libmpdec/fourstep.c',
++              'Modules/_decimal/libmpdec/io.c',
++              'Modules/_decimal/libmpdec/memory.c',
++              'Modules/_decimal/libmpdec/mpdecimal.c',
++              'Modules/_decimal/libmpdec/numbertheory.c',
++              'Modules/_decimal/libmpdec/sixstep.c',
++              'Modules/_decimal/libmpdec/transpose.c',
+               ]
+             depends = [
+-              '_decimal/docstrings.h',
+-              '_decimal/libmpdec/basearith.h',
+-              '_decimal/libmpdec/bits.h',
+-              '_decimal/libmpdec/constants.h',
+-              '_decimal/libmpdec/convolute.h',
+-              '_decimal/libmpdec/crt.h',
+-              '_decimal/libmpdec/difradix2.h',
+-              '_decimal/libmpdec/fnt.h',
+-              '_decimal/libmpdec/fourstep.h',
+-              '_decimal/libmpdec/io.h',
+-              '_decimal/libmpdec/mpalloc.h',
+-              '_decimal/libmpdec/mpdecimal.h',
+-              '_decimal/libmpdec/numbertheory.h',
+-              '_decimal/libmpdec/sixstep.h',
+-              '_decimal/libmpdec/transpose.h',
+-              '_decimal/libmpdec/typearith.h',
+-              '_decimal/libmpdec/umodarith.h',
++              'Modules/_decimal/docstrings.h',
++              'Modules/_decimal/libmpdec/basearith.h',
++              'Modules/_decimal/libmpdec/bits.h',
++              'Modules/_decimal/libmpdec/constants.h',
++              'Modules/_decimal/libmpdec/convolute.h',
++              'Modules/_decimal/libmpdec/crt.h',
++              'Modules/_decimal/libmpdec/difradix2.h',
++              'Modules/_decimal/libmpdec/fnt.h',
++              'Modules/_decimal/libmpdec/fourstep.h',
++              'Modules/_decimal/libmpdec/io.h',
++              'Modules/_decimal/libmpdec/mpalloc.h',
++              'Modules/_decimal/libmpdec/mpdecimal.h',
++              'Modules/_decimal/libmpdec/numbertheory.h',
++              'Modules/_decimal/libmpdec/sixstep.h',
++              'Modules/_decimal/libmpdec/transpose.h',
++              'Modules/_decimal/libmpdec/typearith.h',
++              'Modules/_decimal/libmpdec/umodarith.h',
+               ]
+ 
+         config = {
+@@ -2293,7 +2309,7 @@
+                       'install_lib': PyBuildInstallLib},
+           # The struct module is defined here, because build_ext won't be
+           # called unless there's at least one extension module defined.
+-          ext_modules=[Extension('_struct', ['_struct.c'])],
++          ext_modules=[Extension('_struct', ['Modules/_struct.c'])],
+ 
+           # If you change the scripts installed here, you also need to
+           # check the PyBuildScripts command above, and change the links
