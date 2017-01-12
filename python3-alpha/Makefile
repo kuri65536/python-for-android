@@ -71,7 +71,7 @@ CROSS_COMPILE = arm-linux-androideabi-
 CROSS_COMPILE_TARGET = arm
 HOSTARCH = arm-linux-androideabi
 
-    PYTHONSRC := ./python-src_arm
+    export PYTHONSRC := ./python-src_arm
     SFX := _arm
     ZIPMAIN := $(ZIP_BINarm)
 endif
@@ -85,7 +85,7 @@ ifeq (x$(CROSS),xx86)
     MACHINE := i686
     export ARCH := x86
 
-    PYTHONSRC := ./python-src_x86
+    export PYTHONSRC := ./python-src_x86
     SFX := _x86
     ZIPMAIN := $(ZIP_BINx86)
 endif
@@ -316,7 +316,7 @@ build_config:
 	make build_bin CROSS=x86 PIE=yes
 	touch .build_bin
 build_bin: .build_openssl .build_misc
-	CFLAGS=$(CFLAGS) CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) sharedmods # build
+	CFLAGS="$(CFLAGS)" CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) sharedmods # build
 
 .build_install: .build_bin
 	make build_install CROSS=arm PIE=yes
