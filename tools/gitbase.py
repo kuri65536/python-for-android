@@ -16,11 +16,19 @@
 #
 import sys
 import os
-import StringIO
-from ConfigParser import SafeConfigParser
 import logging
 from logging import error as eror, info
-from urlparse import urlparse
+
+
+if sys.version_info[0] == 2:
+    from StringIO import StringIO
+    from ConfigParser import SafeConfigParser
+    from urlparse import urlparse
+else:
+    from io import StringIO
+    from configparser import ConfigParser as SafeConfigParser
+    from urllib.parse import urlparse
+    file = open
 
 
 def main():
@@ -121,7 +129,7 @@ def main_git(drepo):                                        # {{{1
         if line.startswith("\t"):
             line = line.lstrip()
         src += line
-    src = StringIO.StringIO(src)
+    src = StringIO(src)
     cfg = SafeConfigParser()
     cfg.readfp(src)
 
