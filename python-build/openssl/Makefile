@@ -12,7 +12,7 @@ export ANDROID_DEV=$(ANDROID_SYSROOT)/usr
 # export PATH=$(ANDROID_TOOLCHAIN):$(PATH)
 
 OPENSSL_SERIES := 1.0.2
-OPENSSL_RELEASE := d
+OPENSSL_RELEASE := j
 OPENSSL_VERSION := $(OPENSSL_SERIES)$(OPENSSL_RELEASE)
 OPENSSL_DIR = openssl-$(OPENSSL_VERSION)
 OPENSSL_SRC = openssl-$(OPENSSL_VERSION).tar.gz
@@ -56,7 +56,11 @@ clean:
 	make -C .build_x86 clean
 
 $(OPENSSL_SRC):
-	wget https://www.openssl.org/source/old/$(OPENSSL_SERIES)/$(OPENSSL_SRC)
+	if ! wget \
+	    wget https://www.openssl.org/source/$(OPENSSL_SRC); \
+	then \
+	    https://www.openssl.org/source/old/$(OPENSSL_SERIES)/$(OPENSSL_SRC); \
+	fi
 	wget https://wiki.openssl.org/images/7/70/Setenv-android.sh
 
 # setup arch depended variables: arm
@@ -77,9 +81,9 @@ $(OPENSSL_BIN_arm): \
 $(OPENSSL_BIN_arm): .build_armeabi/Makefile
 	./showenv.sh
 	cd $(dir $<); perl $(perlopt) Makefile.org
-	cd $(dir $<); ./Configure $(__PIE_CFLAGS) android no-asm shared no-ssl2 no-ssl3 no-comp no-hw no-engine \
+	cd $(dir $<); ./Configure $(__PIE_CFLAGS) android no-asm shared no-ssl2 no-ssl3 no-comp no-hw \
 	  --openssldir=$(PREFIX)/share --prefix=$(PREFIX)
-	# make -C $(dir $<) depend
+	make -C $(dir $<) depend
 	make -C $(dir $<) all
 	make -C $(dir $<) install_sw
 

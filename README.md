@@ -49,8 +49,8 @@ Instruction for installation
 ### How to install
 1. Download sl4a apk
 2. Download py4a apk
-3. Download py4a zips, [interpreter - python_r28.zip](../../releases/download/r28/python_r28.zip),
-   [modules - python_extras_r26.zip](../../releases/download/r26/python_extras_r28.zip),
+3. Download py4a zips, [interpreter - python_r29.zip](../../releases/download/r29/python_r29.zip),
+   [modules - python_extras_r29.zip](../../releases/download/r29/python_extras_r29.zip),
    [sample scripts - python_scripts_r26.zip](../../releases/download/r26/python_scripts_r26.zip).
 4. Enable "Unknown Sources" in your device settings.
 5. Open 1. apk to install. (sl4a)
@@ -59,6 +59,7 @@ Instruction for installation
 8. push 3. zips to device's /sdcard/com.googlecode.pythonforandroid.
    (be sure /sdcard path to fit your device.)
 9. Click "Local install" to check zips and install python binaries.
+9. Click "Local install" to install these zips.
 10. Launch sl4a, Select 'Menu' >> 'View' >> 'Interpreters'
     and Select 'Python 2.7.?'.
 11. Python will be launched, have fun!

@@ -934,6 +934,7 @@ public abstract class PythonMain extends Main {
       if (seq.size() < 2) {
         return seq.get(0);    // there is only one file, good case!
       }
+      // BUG: not work well, 2017/01/17
       // show users to select zip.
       final CharSequence[] items = seq.toArray(new CharSequence[seq.size()]);
       parent.runOnUiThread(new Runnable() {
