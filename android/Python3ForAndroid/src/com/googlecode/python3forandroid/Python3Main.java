@@ -35,11 +35,11 @@ import com.googlecode.android_scripting.pythoncommon.PythonMain;
  * the module contains shared libraries (*.so) then the module is unpacked into data, other installs
  * in extras.
  * 
- * Typically, these will be /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.4
+ * Typically, these will be /data/data/com.googlecode.python3forandroid/files/python/lib/python3.6
  * and /sdcard/com.googlecode.pythonforandroid/extras respectively.
  * 
  * Egg files are just copied into
- * /data/data/com.googlecode.pythonforandroid/files/python/lib/python3.4
+ * /data/data/com.googlecode.python3forandroid/files/python/lib/python3.6
  * 
  * @author Damon
  * @author Robbie Matthews (rjmatthews62@gmail.com)

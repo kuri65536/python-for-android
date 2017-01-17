@@ -53,17 +53,17 @@ public class Python3Descriptor extends PythonDescriptor {
 
     @Override
     protected String pathEgg() {
-        return this.pathShlib() + "/python3.4/egg-info";
+        return this.pathShlib() + "/python3.6/egg-info";
     }
 
     @Override
     protected String pathSitepkgs() {
-        return this.pathShlib() + "/python3.4/site-packages";
+        return this.pathShlib() + "/python3.6/site-packages";
     }
 
     @Override
     protected String pathDynload() {
-        return this.pathShlib() + "/python3.4/lib-dynload";
+        return this.pathShlib() + "/python3.6/lib-dynload";
     }
 
   @Override
@@ -93,7 +93,7 @@ public class Python3Descriptor extends PythonDescriptor {
 
   @Override
   public String getNiceName() {
-    return "Python 3.4.3";
+    return "Python 3.6.0";
   }
 
   @Override
