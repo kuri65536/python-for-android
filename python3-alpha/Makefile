@@ -6,6 +6,7 @@
 
 # build settings section 1 {{{1
 VER_MAJ=3.6
+VER_MAJ_NODOT=$(subst .,,$(VER_MAJ))
 VERSION=$(VER_MAJ).0
 # set -ex
 CWD := $(shell pwd)
@@ -14,7 +15,7 @@ DEBUG=no
 RELEASE_VERSION:=$(shell cat LATEST_VERSION)
 PYTHONNET := Python-$(VERSION).tgz
 PYTHONTAR := $(CWD)/Python-$(VERSION).tgz
-PYTHONLIB := python$(basename $(VERSION))
+PYTHONLIB := python$(VER_MAJ)
 HOSTPYTHON := $(CWD)/host
 PYTHON_FOR_BUILD := $(HOSTPYTHON)/bin/python3
 
@@ -380,7 +381,8 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	$(PYTHON_FOR_BUILD) -OO -m compileall -qf -x'tests*/.*' $(PYEXT) || echo
 	# FIXME: complex shell script: change __cache__/.pyo to .pyc
 	find $(PYEXT) -name *.pyo -exec sh -c \
-	    'cp $$0 $$(echo $$0 | sed "s/\/__pycache__//" | sed s/.cpython-34.pyo/.pyc/)' {} \;
+	    'cp $$0 $$(echo $$0 | sed "s/\/__pycache__//" | \
+                   sed s/.cpython-$(VER_MAJ_NODOT).pyo/.pyc/)' {} \;
 	
 	cd $(PYEXT_); \
 	zip -Dqgrx"*.so" -x"test/*" -x"*/test/*" -x"*/tests/*" \
