@@ -7,6 +7,11 @@ see [Releases page](../../releases), and select an installer:
 [PythonForAndroid-debug.apk](https://github.com/kuri65536/python-for-android/releases/download/r26/PythonForAndroid-debug-r26.apk)
 .
 
+Status
+===
+- Python2.7.12
+- Python3.6.0
+
 Description
 ===
 This is Python built to run on Android devices.
@@ -82,6 +87,7 @@ Current issue form is here::
   1. 
   2. 
   3. 
+* Provide logcat for detail.
 * What is the expected output%3F What do you see instead?
   * expected: launch ???
   * see: stop running
@@ -111,6 +117,7 @@ Similar projects
 ---
 Please do not ask any question about below!
 
+* No relatations: [SL4A in google-source](https://android.googlesource.com/platform/external/sl4a)
 * No relatations: [Py4A python2.7](https://googlecode.com/p/android-python27)
 * No relatations: [QPython](http://qpython.com)
 * No relatations: [Kivy](http://kivy.org)
@@ -128,6 +135,11 @@ Requirements for build
 * Android NDK >= r10e, maybe < r13 (r13 series does not contain GCC)
 * Android SDK >= 21.1.2
 * Gradle >= 2.0 (included in Android Studio >= 1.0.2)
+* Build packages for build python
+
+    - for openssl: `apt install xutils-dev`
+    - for 64bit linux: `apt install lib32z1 lib32stdc++6`
+    - (?): `apt install aapt`
 
 How to build
 ---
@@ -158,17 +170,17 @@ PythonForAndroid-debug.apk
 $ cd python-build
 $ NDK_PATH=/path/to/android-ndk-r10d make build
 $ ls python*.zip
-python_r18.zip python_extra_r18.zip ... and so on...
+python_r29.zip python_extra_r29.zip ... and so on...
 ```
 * Confirm your binary version.
 ```shell
 $ cd python-build
 $ cat LATEST_VERSION
-r17
+r29
 $ cat LATEST_VERSION_EXTRA
-r17
+r29
 $ cat LATEST_VERSION_SCRIPTS
-r17
+r28
 ```
 * Make a release in github and Upload the binaries to it.
   Please be careful to match the release name and
