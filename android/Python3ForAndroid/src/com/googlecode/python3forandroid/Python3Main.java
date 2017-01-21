@@ -51,6 +51,11 @@ import com.googlecode.android_scripting.pythoncommon.PythonMain;
 // means of uninstalling as well. Import handling could well be a separate activity, too.
 public class Python3Main extends PythonMain {
 
+    @Override
+    public String getPfxPython() {
+        return "python3";
+    }
+
   @Override
   protected InterpreterDescriptor getDescriptor() {
     mDescriptor = new Python3Descriptor();

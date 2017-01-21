@@ -116,6 +116,10 @@ public abstract class PythonMain extends Main {
     }
   }
 
+    public String getPfxPython() {
+        return "";      // override by Python{|3}ForAndroid.
+    }
+
   private String readFirstLine(File target) {
     BufferedReader in;
     String result;
@@ -861,9 +865,14 @@ public abstract class PythonMain extends Main {
 
   class CheckLocalVersion extends CheckVersion {
     int mWhich;
+    String pfxPython;
+    final String sfxPythonBin = "_r";
+    final String sfxPythonExt = "_extras_r";
+    final String sfxPythonScr = "_scripts_r";
 
     CheckLocalVersion(PythonMain parent) {
       super(parent);
+            pfxPython = parent.getPfxPython();
     }
 
     @Override
@@ -888,13 +897,16 @@ public abstract class PythonMain extends Main {
         if (!fname.isFile()) { continue; }
         if (!fname.canRead()) { continue; }
 
-        if (fname.getName().startsWith("python_r")) {
+                if (fname.getName().startsWith(pfxPython + sfxPythonBin)) {
+                    Log.i("found for bin:     " + fname.getName());
           itps.add(fname);
         }
-        if (fname.getName().startsWith("python_extras_r")) {
+                if (fname.getName().startsWith(pfxPython + sfxPythonExt)) {
+                    Log.i("found for extras:  " + fname.getName());
           exts.add(fname);
         }
-        if (fname.getName().startsWith("python_scripts_r")) {
+                if (fname.getName().startsWith(pfxPython + sfxPythonScr)) {
+                    Log.i("found for scripts: " + fname.getName());
           scrs.add(fname);
         }
       }
@@ -914,9 +926,9 @@ public abstract class PythonMain extends Main {
       File ext = doSelectZip(exts, "External modules");
       File scr = doSelectZip(scrs, "Sample scripts");
 
-      version = doExtractVersion(itp, "python_r");
-      extras = doExtractVersion(ext, "pyrhon_extras_r");
-      scripts = doExtractVersion(scr, "python_scripts_r");
+            version = doExtractVersion(itp, pfxPython + sfxPythonBin);
+            extras = doExtractVersion(ext, pfxPython + sfxPythonExt);
+            scripts = doExtractVersion(scr, pfxPython + sfxPythonScr);
       publishProgress("Versions Updated");
 
       parent.runOnUiThread(new Runnable() {
@@ -934,9 +946,10 @@ public abstract class PythonMain extends Main {
       if (seq.size() < 2) {
         return seq.get(0);    // there is only one file, good case!
       }
-      // BUG: not work well, 2017/01/17
       // show users to select zip.
-      final CharSequence[] items = seq.toArray(new CharSequence[seq.size()]);
+            final CharSequence[] items = new CharSequence[seq.size()];
+            int n = 0;
+            for (File f: seq) {items[n++] = f.getName();}
       parent.runOnUiThread(new Runnable() {
         @Override
         public void run() {

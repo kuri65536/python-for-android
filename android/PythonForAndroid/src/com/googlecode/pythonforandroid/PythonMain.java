@@ -53,6 +53,11 @@ public class PythonMain
        extends com.googlecode.android_scripting.pythoncommon.PythonMain {
 
     @Override
+    public String getPfxPython() {
+        return "python";
+    }
+
+    @Override
     protected InterpreterDescriptor getDescriptor() {
         mDescriptor = new PythonDescriptor();
         return mDescriptor;

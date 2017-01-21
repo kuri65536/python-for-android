@@ -68,9 +68,12 @@ def main_hg(drepo):                                         # {{{1
 
     for opt in cfg.options("paths"):
         v = cfg.get("paths", opt)
-        if (v.startswith("git://") or
+        if not (v.startswith("git://") or
                 v.startswith("git+ssh://")):
-            return v     # use 1st URL to git.
+            continue
+        if v.endswith(".git"):
+            v = v[:-4]
+        return v     # use 1st URL to git.
     return ""
 
 
