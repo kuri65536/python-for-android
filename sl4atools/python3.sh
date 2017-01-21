@@ -5,16 +5,7 @@ elif ! type \cut > /dev/null; then api=14; else
     api=`grep build.version.sdk /system/build.prop | cut -d = -f 2`
 fi
 
-# launch SL4A server is you want.
-if false; then
-    export AP_PORT='8888' # SL4A Port
-    sl4a=com.googlecode.android_scripting
-    am start -a $sl4a.action.LAUNCH_SERVER -n
-        $sl4a/.activity.ScriptingLayerServiceLauncher --ei
-        $sl4a.extra.USE_SERVICE_PORT $AP_PORT
-    sleep 2
-fi
-
+# android.Android() will launch SL4A server, if server down.
 
 PW=`pwd`
 ver=`python --version | cut -d " "  -f 2 | cut -d . -f 1-2`
@@ -39,9 +30,9 @@ if [ $api -lt 14 ]; then
         # su -c "chmod 755 $run"
         su -c "$run $bin/bin/python3 $*"
     else
-        $run $bin/bin/python3 $*
+        $run $bin/bin/python3 "$*"
     fi
 else
-    $bin/bin/python3 $*
+    $bin/bin/python3 "$*"
 fi
 

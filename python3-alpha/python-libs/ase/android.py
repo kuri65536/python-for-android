@@ -14,11 +14,12 @@
 
 __author__ = 'Damon Kohler <damonkohler@gmail.com>'
 
+import time
 import collections
 import json
 import os
 import socket
-import sys
+from logging import warning as warn
 
 PORT = os.environ.get('AP_PORT')
 HOST = os.environ.get('AP_HOST')
@@ -31,7 +32,13 @@ class Android(object):
   def __init__(self, addr=None):
     if addr is None:
       addr = HOST, PORT
-    self.conn = socket.create_connection(addr)
+
+    if True:
+        try:
+            self.conn = socket.create_connection(addr)
+        except:
+            self.conn = self.launchSL4A(addr)
+
     self.client = self.conn.makefile('rw', encoding='utf-8')
     self.id = 0
     if HANDSHAKE is not None:
@@ -57,3 +64,21 @@ class Android(object):
     def rpc_call(*args):
       return self._rpc(name, *args)
     return rpc_call
+
+  if True:
+    def launchSL4A(self, addr):
+        if addr[0] is None:
+            addr = ("127.0.0.1", addr[1])
+        if addr[1] is None:
+            addr = (addr[0], "8888")
+        sl4a = 'com.googlecode.android_scripting'
+        cmd = ('am start -a %s.action.LAUNCH_SERVER '
+               '--ei %s.extra.USE_SERVICE_PORT %s '
+               '%s/.activity.ScriptingLayerServiceLauncher '
+               % (sl4a, sl4a, addr[1], sl4a))
+        warn("launch SL4A with %s" % str(addr))
+        os.system(cmd)
+        time.sleep(2)
+        return socket.create_connection(addr)
+
+# vi: et:ts=4:nowrap

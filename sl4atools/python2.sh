@@ -5,16 +5,7 @@ elif ! type \cut > /dev/null; then api=14; else
     api=`grep build.version.sdk /system/build.prop | cut -d = -f 2`
 fi
 
-# launch SL4A server is you want.
-if false; then
-    export AP_PORT='8888' # SL4A Port
-    sl4a=com.googlecode.android_scripting
-    am start -a $sl4a.action.LAUNCH_SERVER -n
-        $sl4a/.activity.ScriptingLayerServiceLauncher --ei
-        $sl4a.extra.USE_SERVICE_PORT $AP_PORT
-    sleep 2
-fi
-
+# android.Android() will launch SL4A server, if server down.
 
 PW=`pwd`
 export EXTERNAL_STORAGE=$st
