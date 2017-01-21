@@ -151,11 +151,24 @@ def test_009s_airplanemode():               # issue sl4a #9 {{{1
 # tests for some facade {{{1
 def event_loop():
   for i in range(10):
-    e = droid.eventPoll(1)
-    if e.result is not None:
-      return True
-    time.sleep(2)
+        time.sleep(1)
+        droid.eventClearBuffer()
+        time.sleep(1)
+        e = droid.eventPoll(1)
+        if e.result is not None:
+            return True
   return False
+
+
+def test_imports():
+  try:
+    import termios
+    import bs4 as BeautifulSoup
+    import pyxmpp2 as xmpp
+    from xml.dom import minidom
+  except ImportError:
+    return False
+  return True
 
 
 def test_clipboard():
@@ -201,6 +214,14 @@ def test_gps():
   finally:
     droid.stopLocating()
 
+
+def test_battery():
+  droid.batteryStartMonitoring()
+  time.sleep(1)
+  try:
+    return bool(droid.batteryGetStatus())
+  finally:
+    droid.batteryStopMonitoring()
 
 def test_sensors():
     ret = droid.startSensingTimed(1, 20)
