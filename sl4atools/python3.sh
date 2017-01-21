@@ -30,9 +30,9 @@ if [ $api -lt 14 ]; then
         # su -c "chmod 755 $run"
         su -c "$run $bin/bin/python3 $*"
     else
-        $run $bin/bin/python3 "$*"
+        $run $bin/bin/python3 $*
     fi
 else
-    $bin/bin/python3 "$*"
+    $bin/bin/python3 $*
 fi
 

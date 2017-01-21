@@ -1,0 +1,97 @@
+diff -ur host-src/Lib/ssl.py python-src_arm/Lib/ssl.py
+--- host-src/Lib/ssl.py	2016-12-23 11:21:19.000000000 +0900
++++ python-src_arm/Lib/ssl.py	2017-01-22 00:37:48.776139228 +0900
+@@ -97,6 +97,93 @@
+ import os
+ from collections import namedtuple
+ from enum import Enum as _Enum, IntEnum as _IntEnum, IntFlag as _IntFlag
++from logging import warning as warn
++
++
++_android_cert = None
++
++
++def __path_self_cert_in_android__():
++    # get python.forandroid directory.
++    path = [i for i in sys.path if "forandroid/extras/python" in i]
++    if not path:
++        for i in ("/mnt/storage", "/mnt/sdcard", "/sdcard",
++                  "/storage/sdcard0"):
++            if os.path.isdir(i):
++                path = sys.version_info[0] == 3 and "3" or ""
++                path = ("com.googlecode.python%sforandroid/files/python%s" %
++                        (path, path))
++                path = os.path.join(i, path)
++                break
++        else:
++            raise IOError("can't create cacert for pythonforandroid")
++        not os.path.isdir(path) and os.makedirs(path)
++    else:
++        path = path[0]
++    # get path of /mnt/sdcard/com.google.python%sforandroid
++    path = os.path.dirname(os.path.dirname(path))
++    not os.path.isdir(path) and os.makedirs(path)
++    fname = os.path.join(path, "cacert.pem")
++    return fname
++
++
++def __check_self_cert_in_android__():
++    global _android_cert
++    import platform
++
++    if not hasattr(platform, "_android_version_property"):
++        return ""
++    if _android_cert is not None:
++        return _android_cert
++
++    key = "SSL_CERT_FILE"
++    # warn("check env: %s" % os.environ.get(key, None))
++    if os.environ.get(key, None):
++        _android_cert = ""      # user was specified cert file.
++        return ""
++    fname = __path_self_cert_in_android__()
++
++    warn("cert file changed, android system have no-compatibles with python"
++         ":%s" % fname)
++    os.environ[key] = fname
++    return __take_self_cert_in_android__(fname)
++
++
++def __take_self_cert_in_android__(fname):
++    global _android_cert
++    if os.path.isfile(fname):
++        return fname
++
++    # downloading cert file need ssl library,
++    # and ssl library did not re-read SSL_CERT_FILE twice.
++    # so downloading cert by another process.
++    warn("cacert.pem is retreiving to => %s" % fname)
++    os.environ["SSL_CERT_FILE"] = fname
++
++    from subprocess import Popen, PIPE
++    if sys.version_info[0] == 2:
++        src = 'from urllib import urlopen'
++    else:
++        src = 'from urllib.request import urlopen'
++    url = "http://curl.haxx.se/ca/cacert.pem"
++    py = Popen(sys.executable, stdin=PIPE)
++    py.communicate(input='\n'.join((
++        src,
++        'import ssl',
++        'ctx = ssl.create_default_context()',
++        'ctx.check_hostname = False',
++        'ctx.verify_mode = ssl.CERT_NONE',
++        'with open("%s", "wb") as f:' % fname,
++        '    resp = urlopen("%s", context=ctx)' % url,
++        '    f.write(resp.read())',
++        '')).encode("latin"))
++
++    _android_cert = fname
++    return fname
++
++
++__check_self_cert_in_android__()
++
+ 
+ import _ssl             # if we can't import it, let the error propagate
+ 
