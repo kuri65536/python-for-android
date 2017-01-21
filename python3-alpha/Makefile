@@ -91,6 +91,8 @@ ifeq (x$(CROSS),xx86)
     ZIPMAIN := $(ZIP_BINx86)
 endif
 
+export _PYTHON_PROJECT_BASE := $(abspath $(PYTHONSRC))
+
 # build settings section 2 {{{1
 ANDROID_NDK_ROOT := $(NDK_PATH)
 ANDROID_SYSROOT = $(NDK_PATH)/platforms/$(ANDROID_API)/$(_ANDROID_ARCH)
@@ -349,7 +351,7 @@ build_zip: .build_strip
 	rm -f $(ZIPMAIN)
 	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYBINR)/bin/python3; \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.so; \
-	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython$(VER_MAJ)m.so
+	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython$(VER_MAJ)m.so.1.0
 	cd $(PYBIN)/..; echo $(ndk_depends) $(PYBINR)/bin/python3
 	cd $(PYBIN)/..; deps="libssl.so.1.0.0 libcrypto.so.1.0.0"; \
 	  for i in $$deps; do \
@@ -378,11 +380,7 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	cp -r $(CWD)/$(PYBINR)_arm/$(PYBINR)/lib/$(PYTHONLIB)/* $(PYEXT)
 	cp -r python-libs/* $(PYEXT)/site-packages
 	rm -rf $(PYEXT)/site-packages/ase           # ignore ase
-	$(PYTHON_FOR_BUILD) -OO -m compileall -qf -x'tests*/.*' $(PYEXT) || echo
-	# FIXME: complex shell script: change __cache__/.pyo to .pyc
-	find $(PYEXT) -name *.pyo -exec sh -c \
-	    'cp $$0 $$(echo $$0 | sed "s/\/__pycache__//" | \
-                   sed s/.cpython-$(VER_MAJ_NODOT).pyo/.pyc/)' {} \;
+	$(PYTHON_FOR_BUILD) -OO -m compileall -qfb -x'tests*/.*' $(PYEXT)
 	
 	cd $(PYEXT_); \
 	zip -Dqgrx"*.so" -x"test/*" -x"*/test/*" -x"*/tests/*" \
@@ -390,8 +388,6 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	                 -x"*/ensurepip/*" \
 	                 -x"*.pyo" -x"*.py" -x"*/__pycache__/*" \
 	                 -x"*.so*" -x"*.exe" -x"*.a" $(CWD)/$@ *
-	# zip -d $@ "*.pc" "*pkgconfig*" "*/libpython$(VER_MAJ)m.a" \
-	#           "*.a" "bin/*" "*.la"
 
 $(ZIPSCRIPTS):
 	echo "Packing $(ZIPSCRIPTS)"

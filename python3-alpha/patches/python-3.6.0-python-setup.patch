@@ -1,7 +1,7 @@
 diff -ur host-src/setup.py python-src_arm/setup.py
 --- host-src/setup.py	2016-12-23 11:21:22.000000000 +0900
-+++ python-src_arm/setup.py	2017-01-13 08:11:01.077979638 +0900
-@@ -18,11 +18,35 @@
++++ python-src_arm/setup.py	2017-01-20 02:39:24.242570580 +0900
+@@ -18,11 +18,37 @@
  
  cross_compiling = "_PYTHON_HOST_PLATFORM" in os.environ
  
@@ -16,6 +16,8 @@ diff -ur host-src/setup.py python-src_arm/setup.py
 +
 +    for override in (('CC', ),
 +                     ('HOST_GNU_TYPE', ),
++                     ('EXT_SUFFIX', ),
++                     ('SO', os.environ["EXT_SUFFIX"]),
 +                     ('srcdir',
 +                      os.path.dirname(sysconfig.get_config_h_filename())),
 +                     ):
@@ -38,7 +40,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
  
  class Dummy:
      """Hack for parallel build"""
-@@ -600,63 +624,66 @@
+@@ -600,63 +626,66 @@
          #
  
          # array objects
@@ -128,7 +130,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
  
          # Modules with some UNIX dependencies -- on by default:
          # (If you have a really backward UNIX, select and socket may not be
-@@ -667,30 +694,33 @@
+@@ -667,30 +696,33 @@
          if (config_h_vars.get('FLOCK_NEEDS_LIBBSD', False)):
              # May be necessary on AIX for flock function
              libs = ['bsd']
@@ -170,7 +172,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
  
          #
          # Here ends the simple stuff.  From here on, modules need certain
-@@ -706,7 +736,7 @@
+@@ -706,7 +738,7 @@
          # 64-bit platforms.
          #
          # audioop needs math_libs for floor() in multiple functions.
@@ -179,7 +181,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                 libraries=math_libs) )
  
          # readline
-@@ -785,7 +815,7 @@
+@@ -785,7 +817,7 @@
                                                       ['/usr/lib/termcap'],
                                                       'termcap'):
                  readline_libs.append('termcap')
@@ -188,7 +190,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                     library_dirs=['/usr/lib/termcap'],
                                     extra_link_args=readline_extra_link_args,
                                     libraries=readline_libs) )
-@@ -798,17 +828,19 @@
+@@ -798,17 +830,19 @@
              libs = ['crypt']
          else:
              libs = []
@@ -213,7 +215,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
          # Detect SSL support for the socket module (via _ssl)
          search_for_ssl_incs_in = [
                                '/usr/local/ssl/include',
-@@ -869,8 +901,8 @@
+@@ -869,8 +903,8 @@
              if have_usable_openssl:
                  # The _hashlib module wraps optimized implementations
                  # of hash functions from the OpenSSL library.
@@ -224,7 +226,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                         include_dirs = ssl_incs,
                                         library_dirs = ssl_libs,
                                         libraries = ['ssl', 'crypto']) )
-@@ -882,14 +914,14 @@
+@@ -882,14 +916,14 @@
          # We always compile these even when OpenSSL is available (issue #14693).
          # It's harmless and the object code is tiny (40-50 KB per module,
          # only loaded when actually used).
@@ -247,7 +249,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
  
          blake2_deps = glob(os.path.join(os.getcwd(), srcdir,
                                          'Modules/_blake2/impl/*'))
-@@ -901,9 +933,9 @@
+@@ -901,9 +935,9 @@
              blake2_macros.append(('BLAKE2_USE_SSE', '1'))
  
          exts.append( Extension('_blake2',
@@ -260,7 +262,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                 define_macros=blake2_macros,
                                 depends=blake2_deps) )
  
-@@ -911,7 +943,7 @@
+@@ -911,7 +945,7 @@
                                        'Modules/_sha3/kcp/*'))
          sha3_deps.append('hashlib.h')
          exts.append( Extension('_sha3',
@@ -269,7 +271,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                 depends=sha3_deps))
  
          # Modules that provide persistent dictionary-like semantics.  You will
-@@ -1324,9 +1356,9 @@
+@@ -1324,9 +1358,9 @@
          # Unix-only modules
          if host_platform != 'win32':
              # Steen Lumholt's termios module
@@ -281,7 +283,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
  
              # Sun yellow pages. Some systems have the functions in libc.
              if (host_platform not in ['cygwin', 'qnx6'] and
-@@ -1410,7 +1442,10 @@
+@@ -1410,7 +1444,10 @@
          #
          # You can upgrade zlib to version 1.1.4 yourself by going to
          # http://www.gzip.org/zlib/
@@ -293,7 +295,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
          have_zlib = False
          if zlib_inc is not None:
              zlib_h = zlib_inc[0] + '/zlib.h'
-@@ -1427,12 +1462,12 @@
+@@ -1427,12 +1464,12 @@
                          version = line.split()[2]
                          break
              if version >= version_req:
@@ -308,7 +310,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                             libraries = ['z'],
                                             extra_link_args = zlib_extra_link_args))
                      have_zlib = True
-@@ -1453,7 +1488,7 @@
+@@ -1453,7 +1490,7 @@
              extra_compile_args = []
              libraries = []
              extra_link_args = []
@@ -317,7 +319,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                 extra_compile_args = extra_compile_args,
                                 libraries = libraries,
                                 extra_link_args = extra_link_args) )
-@@ -1495,32 +1530,33 @@
+@@ -1495,32 +1532,33 @@
              expat_sources = []
              expat_depends = []
          else:
@@ -367,7 +369,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                depends = expat_depends,
                                ))
  
-@@ -1542,10 +1578,10 @@
+@@ -1542,10 +1580,10 @@
  
          # Hye-Shik Chang's CJKCodecs modules.
          exts.append(Extension('_multibytecodec',
@@ -380,7 +382,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
  
          # Stefan Krah's _decimal module
          exts.append(self._decimal_ext())
-@@ -1590,11 +1626,11 @@
+@@ -1590,11 +1628,11 @@
                                     ]
  
          else:
@@ -394,7 +396,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
  
          if sysconfig.get_config_var('WITH_THREAD'):
              exts.append ( Extension('_multiprocessing', multiprocessing_srcs,
-@@ -1606,7 +1642,7 @@
+@@ -1606,7 +1644,7 @@
  
          # Platform-specific libraries
          if host_platform.startswith(('linux', 'freebsd', 'gnukfreebsd')):
@@ -403,7 +405,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
          else:
              missing.append('ossaudiodev')
  
-@@ -1631,7 +1667,7 @@
+@@ -1631,7 +1669,7 @@
  ##         self.extensions.append(ext)
  
          if 'd' not in sys.abiflags:
@@ -412,7 +414,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                              define_macros=[('Py_LIMITED_API', '0x03050000')])
              self.extensions.append(ext)
  
-@@ -2008,7 +2044,7 @@
+@@ -2008,7 +2046,7 @@
                          depends=depends)
          # function my_sqrt() needs math library for sqrt()
          ext_test = Extension('_ctypes_test',
@@ -421,7 +423,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                       libraries=math_libs)
          self.extensions.extend([ext, ext_test])
  
-@@ -2064,40 +2100,40 @@
+@@ -2064,40 +2102,40 @@
                                                           'libmpdec'))]
              libraries = []
              sources = [
@@ -494,7 +496,7 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                ]
  
          config = {
-@@ -2293,7 +2329,7 @@
+@@ -2293,7 +2331,7 @@
                        'install_lib': PyBuildInstallLib},
            # The struct module is defined here, because build_ext won't be
            # called unless there's at least one extension module defined.
