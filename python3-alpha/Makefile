@@ -251,15 +251,17 @@ build_misc_sqlite3: sqlite3.tar.gz
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
+build_misc_bzip2: BZIPPATH = $(call targz,$<)$(SFX)
 build_misc_bzip2: bzip2-1.0.6.tar.gz
+	rm -rf $(BZIPPATH)
 	tar xfz $<
 	cd $(call targz,$<); patch -p1 < $(CWD)/patches/bzip2-1.0.6-pre.patch
-	mv $(call targz,$<) $(call targz,$<)$(SFX)
+	mv $(call targz,$<) $(BZIPPATH)
 	PREFIX=$(PYBIN)\
 	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib \
-	  make -C $(call targz,$<)$(SFX) -f Makefile-libbz2_so
+	  make -C $(BZIPPATH) -f Makefile-libbz2_so
 	mkdir -p $(PYBIN)/lib
-	cp $(call targz,$<)$(SFX)/*.so* $(PYBIN)/lib
+	cp $(BZIPPATH)/*.so* $(PYBIN)/lib
 
 # python3: download and build for current host  {{{1
 $(PYTHONTAR):
@@ -312,7 +314,7 @@ build_config:
 	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
 	./configure CROSS_COMPILE_TARGET=yes \
 	            --host=$(TARGET) --build=$(BUILDARCH) --disable-ipv6 \
-	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=no
+	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=yes
 
 .build_bin: .build_config
 	make build_bin CROSS=arm PIE=yes
@@ -344,6 +346,8 @@ $(ZIP_BINarm): .build_install
 $(ZIP_BINx86): .build_install
 	make CROSS=x86 PIE=yes build_zip
 
+build_zip: deps_so := $(deps_so) libssl.so.1.0.0 libcrypto.so.1.0.0
+build_zip: deps_so := $(deps_so) libbz2.so.1.0.6 libbz2.so.1.0
 build_zip: .build_strip
 	@echo non-PIE: build the android libraries/executables
 	# make strip_bin CROSS=arm
@@ -353,7 +357,7 @@ build_zip: .build_strip
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython3.so; \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/libpython$(VER_MAJ)m.so.1.0
 	cd $(PYBIN)/..; echo $(ndk_depends) $(PYBINR)/bin/python3
-	cd $(PYBIN)/..; deps="libssl.so.1.0.0 libcrypto.so.1.0.0"; \
+	cd $(PYBIN)/..; deps="$(deps_so)"; \
 	  for i in $$deps; do \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$$i; done
 	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYDYNR)

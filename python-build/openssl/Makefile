@@ -114,10 +114,10 @@ $(OPENSSL_BIN_x86): .build_x86/Makefile
 .build_x86/Makefile: $(OPENSSL_SRC)
 	rm -rf $(dir $@)
 	tar xfz $(OPENSSL_SRC)
-	mv $(OPENSSL_DIR) .build_x86
+	mv $(OPENSSL_DIR) $(dir $@)
 
 .build_armeabi/Makefile: $(OPENSSL_SRC)
 	rm -rf $(dir $@)
 	tar xfz $(OPENSSL_SRC)
-	mv $(OPENSSL_DIR) .build_armeabi
+	mv $(OPENSSL_DIR) $(dir $@)
 
