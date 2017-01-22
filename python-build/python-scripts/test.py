@@ -4,10 +4,9 @@ import types
 import traceback
 
 # Test imports.
-import android
 import time
 
-droid = android.Android()
+droid = None
 skip_gui = False
 fOutName = True
 
@@ -118,6 +117,28 @@ def test_106_https_certification_failed():      # issue #106 {{{1
     print(data)
     '''
     return True
+
+
+def test_107_large_file_report():               # issue #107 {{{1
+    import os
+
+    errors = []
+    fname = "sample.bin"
+    for n in (4294967294, 4294967297):
+        fp = open(fname, "wb")
+        fp.seek(n)
+        fp.write("1".encode("utf-8"))
+        fp.close()
+
+        ans = os.path.getsize(fname)
+        if ans != (n + 1):
+            errors.append("%s(answer) vs %s(expected)" % (ans, n + 1))
+        os.remove(fname)
+
+    if not errors:
+        return True
+    print("can't get size collectly with %s" % str(errors))
+    return False
 
 
 def test_013s_scanBarcode():                # issue sl4a #13 {{{1
@@ -520,6 +541,9 @@ def test_xmpp():
 
 
 if __name__ == '__main__':                                  # {{{1
+    import android
+    droid = android.Android()
+
     def boilerplate(f):
         try:
             ret = f()
@@ -552,4 +576,5 @@ if __name__ == '__main__':                                  # {{{1
                 print("S", end="")
             else:
                 print("F:%s" % name, end="")
+
 # vi: ft=python:et:ts=4:fdm=marker
