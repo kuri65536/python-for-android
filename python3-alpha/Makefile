@@ -190,39 +190,51 @@ targz = $(subst .tar.gz,,$1)
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
 build_misc_ncurses: ncurses-5.9.tar.gz
-	tar xfz $<
-	mv $(call targz,$<) $(call targz,$<)$(SFX)
-	cd $(call targz,$<)$(SFX); \
-	  ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
+	if ! [ -d $(call targz,$<) ]; then \
+	    tar xfz $< ; \
+	    cd $(call targz,$<); \
+	    patch -p1 < $(CWD)/patches/$(call targz,$<).patch; fi
+	mkdir -p $(call targz,$<)/build$(SFX)
+	cd $(call targz,$<)/build$(SFX); \
+	  ../configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
 	  --prefix=$(PYBIN) \
+	    --with-shared --without-normal \
+	    --disable-rpath \
 	  --without-ada --without-cxx --without-manpages \
 	  --without-progs --without-tests \
 	  --with-termlib --enable-termcap --enable-widec \
-	  --disable-database --disable-home-terminfo
-	cd $(call targz,$<)$(SFX); patch -p1 < $(CWD)/patches/$(call targz,$<).patch
-	make -C $(call targz,$<)$(SFX)
-	make -C $(call targz,$<)$(SFX) install
+	    --disable-home-terminfo \
+	    --with-default-terminfo-dir=$(PYBIN)/share/terminfo \
+	    --with-terminfo-dirs=$(PYBIN)/share/terminfo
+	#  --disable-database
+	#    --with-install-prefix=$(PYBIN) \
+	make -C $(call targz,$<)/build$(SFX)
+	make -C $(call targz,$<)/build$(SFX) install
 	@echo Fix symlinks for Python _curses and _curses_panel extensions.
 	cd $(PYBIN)/include; cp ncursesw/*.h .
 
 ## readline {{{2
-.build_misc_readline: readline-6.3.tar.gz
+.build_misc_readline: readline-6.3.tar.gz .build_misc_ncurses
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
 build_misc_readline: readline-6.3.tar.gz
-	tar xfz $<
-	cd $(call targz,$<); patch < $(CWD)/patches/readline-6.3-pre.patch
-	mv $(call targz,$<) $(call targz,$<)$(SFX)
-	cd $(call targz,$<)$(SFX); \
-	   autoreconf -i; \
+	if ! [ -d $(call targz,$<) ]; then \
+	    tar xfz $< ; \
+	    cd $(call targz,$<) ; \
+	    autoreconf -i ; \
+	    patch < $(CWD)/patches/readline-6.3-pre.patch ; fi
+	mkdir -p $(call targz,$<)/build$(SFX)
+	cd $(call targz,$<)/build$(SFX); \
 	   bash_cv_wcwidth_broken=no \
 	   CFLAGS="$(CFLAGS) -DANDROID" \
-	   ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
+	    ../configure --host=$(HOSTARCH) --build=$(BUILDARCH) \
 	   --prefix=$(PYBIN) \
-	   --disable-shared --with-curses=$(CWD)/ncurses-5.9$(SFX)
-	make -C $(call targz,$<)$(SFX)
-	make -C $(call targz,$<)$(SFX) install
+	    --with-curses=$(CWD)/ncurses-5.9/build$(SFX) \
+	    --enable-shared --disable-static \
+	    --enable-multibyte
+	make -C $(call targz,$<)/build$(SFX)
+	make -C $(call targz,$<)/build$(SFX) install
 
 ## sqlite3 {{{2
 .build_misc_sqlite3: sqlite3.tar.gz
@@ -258,7 +270,7 @@ build_misc_bzip2: bzip2-1.0.6.tar.gz
 	cd $(call targz,$<); patch -p1 < $(CWD)/patches/bzip2-1.0.6-pre.patch
 	mv $(call targz,$<) $(BZIPPATH)
 	PREFIX=$(PYBIN)\
-	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib \
+	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib CFLAGS="-O3 -DUSE_MMAP" \
 	  make -C $(BZIPPATH) -f Makefile-libbz2_so
 	mkdir -p $(PYBIN)/lib
 	cp $(BZIPPATH)/*.so* $(PYBIN)/lib
@@ -348,6 +360,14 @@ $(ZIP_BINx86): .build_install
 
 build_zip: deps_so := $(deps_so) libssl.so.1.0.0 libcrypto.so.1.0.0
 build_zip: deps_so := $(deps_so) libbz2.so.1.0.6 libbz2.so.1.0
+build_zip: deps_so := $(deps_so) libreadline.so.6.3 libreadline.so.6
+build_zip: deps_so := $(deps_so) libhistory.so.6.3 libhistory.so.6
+build_zip: deps_so := $(deps_so) libncursesw.so.5.9 libncursesw.so.5
+build_zip: deps_so := $(deps_so) libformw.so.5.9 libformw.so.5
+build_zip: deps_so := $(deps_so) libmenuw.so.5.9 libmenuw.so.5
+build_zip: deps_so := $(deps_so) libpanelw.so.5.9 libpanelw.so.5
+build_zip: deps_so := $(deps_so) libtinfow.so.5.9 libtinfow.so.5
+build_zip: tinfo := a/ansi u/unknown v/vt100 v/vt320 x/xterm
 build_zip: .build_strip
 	@echo non-PIE: build the android libraries/executables
 	# make strip_bin CROSS=arm
@@ -360,6 +380,9 @@ build_zip: .build_strip
 	cd $(PYBIN)/..; deps="$(deps_so)"; \
 	  for i in $$deps; do \
 	    zip -g ../$(ZIPMAIN) $(PYBINR)/lib/$$i; done
+	cd $(PYBIN)/..; \
+	  for i in $(tinfo); do \
+	    zip -gur ../$(ZIPMAIN) $(PYBINR)/share/terminfo/$$i; done
 	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYDYNR)
 	cd $(PYBIN)/..; \
 	  zip -g ../$(ZIPMAIN) \
@@ -389,7 +412,6 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	cd $(PYEXT_); \
 	zip -Dqgrx"*.so" -x"test/*" -x"*/test/*" -x"*/tests/*" \
 	                 -x"*/turtledemo/*" -x"*/tkinter/*" -x"*/idlelib/*" \
-	                 -x"*/ensurepip/*" \
 	                 -x"*.pyo" -x"*.py" -x"*/__pycache__/*" \
 	                 -x"*.so*" -x"*.exe" -x"*.a" $(CWD)/$@ *
 
@@ -402,5 +424,14 @@ $(ZIPSCRIPTS):
 patch:
 	diff -wuprN Python-$(VERSION) $(PYTHONSRC) \
 	  > Python-$(VERSION)-android.patch.new
+
+# python3forandroid uninstall removed all file in andpath directory.
+localinstall: andpath := /storage/sdcard0/com.googlecode.python3forandroid
+localinstall:
+	adb shell rm $(andpath)
+	adb shell mkdir $(andpath)
+	adb push $(ZIP_BINarm) $(andpath)
+	adb push $(ZIPEXTRA) $(andpath)
+	adb push $(ZIPSCRIPTS) $(andpath)
 
 # vi: ft=Makefile:fdm=marker

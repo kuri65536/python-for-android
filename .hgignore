@@ -23,7 +23,7 @@ android/PythonForAndroid/res/raw/files.xml
 android/*/dist/*.jar
 android/DocumentationGenerator/doc/*
 python-build/*.tar.bz2
-python-build/*.zip
+python{-build,3-alpha}/python*_r[0-9]*.zip
 python{,3}-{build,alpha}/python-src{,_arm,_x86,_arm_pie,_x86_pie}
 python-build/python-libs/setuptools
 python-build/python-libs/setuptools-*.tar.gz
@@ -44,12 +44,12 @@ android/PythonForAndroid/local.properties
 .build_*
 openssl/openssl-*.tar.gz
 openssl/openssl-src
-python3-alpha/host
+python3-alpha/host-src
 python{-build,3-alpha}/sqlite3.tar.gz
 python{-build,3-alpha}/sqlite3{,_arm,_x86}
 python{-build,3-alpha}/ncurses-5.9.tar.gz
 python{-build,3-alpha}/readline-6.3.tar.gz
-python3-alpha/readline-6.3{_arm,_x86}
+python3-alpha/readline-6.3
 python{-build,3-alpha}/bzip2-1.0.6.tar.gz
 python{-build,3-alpha}/python{,3}{_arm,_x86}
 python3-alpha/python3-extras
@@ -57,7 +57,7 @@ android/Python3ForAndroid/gradle
 android/Python3ForAndroid/local.properties
 python-build/bzip2
 python3-alpha/bzip2-1.0.6{_arm,_x86,_arm_pie,_x86_pie}
-python3-alpha/ncurses-5.9{_arm,_arm_pie,_x86,_x86_pie}
+python3-alpha/ncurses-5.9
 python-build/expat{,-2.1.0.tar.gz}
 python-build/libffi-*.tar.gz
 python-build/libffi
