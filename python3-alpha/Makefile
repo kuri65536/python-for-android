@@ -242,13 +242,15 @@ build_misc_readline: readline-6.3.tar.gz
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch $@
 build_misc_sqlite3: sqlite3.tar.gz
-	tar xfz $<
-	mv sqlite-autoconf-3080803 $(call targz,$<)$(SFX)
-	cd $(call targz,$<)$(SFX); \
-	   ./configure --host=$(HOSTARCH) --build=$(BUILDARCH) --prefix=$(PYBIN) \
+	if ! [ -d $(call targz,$<) ]; then \
+	    tar xfz $<; \
+	    mv sqlite-autoconf-3080803 $(call targz,$<); fi
+	mkdir -p $(call targz,$<)/build$(SFX)
+	cd $(call targz,$<)/build$(SFX); \
+	   ../configure --host=$(HOSTARCH) --build=$(BUILDARCH) --prefix=$(PYBIN) \
 	   --disable-shared
-	make -C $(call targz,$<)$(SFX)
-	make -C $(call targz,$<)$(SFX) install
+	make -C $(call targz,$<)/build$(SFX)
+	make -C $(call targz,$<)/build$(SFX) install
 
 ## zlib => use bionic library {{{2
 # .build_misc_zlib: zlib-1.2.8.tar.gz
@@ -270,7 +272,8 @@ build_misc_bzip2: bzip2-1.0.6.tar.gz
 	cd $(call targz,$<); patch -p1 < $(CWD)/patches/bzip2-1.0.6-pre.patch
 	mv $(call targz,$<) $(BZIPPATH)
 	PREFIX=$(PYBIN)\
-	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib CFLAGS="-O3 -DUSE_MMAP" \
+	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib \
+	  CFLAGS="$(CFLAGS) -O3 -DUSE_MMAP" \
 	  make -C $(BZIPPATH) -f Makefile-libbz2_so
 	mkdir -p $(PYBIN)/lib
 	cp $(BZIPPATH)/*.so* $(PYBIN)/lib

@@ -44,7 +44,7 @@ android/PythonForAndroid/local.properties
 .build_*
 openssl/openssl-*.tar.gz
 openssl/openssl-src
-python3-alpha/host-src
+python3-alpha/host{,-src}
 python{-build,3-alpha}/sqlite3.tar.gz
 python{-build,3-alpha}/sqlite3{,_arm,_x86}
 python{-build,3-alpha}/ncurses-5.9.tar.gz
