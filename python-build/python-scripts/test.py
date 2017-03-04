@@ -15,9 +15,9 @@ fOutName = True
 def test_029_isfile():                          # issue #29 {{{1
     import os
     # FIXME: determine path to sdcard. like: path = os.environ[""]
-    path = "/sdcard"
-    fname = os.path.join(path, "sl4a", "test_isfile")
-    file(fname, "w").write("this is test")
+    path = os.path.dirname(__file__)
+    fname = os.path.abspath(os.path.join(path, "test_isfile"))
+    open(fname, "w").write("this is test")
     os.path.isfile(fname)
     os.remove(fname)
     try:
@@ -41,7 +41,10 @@ def test_047_ttyname():                         # issue #47 {{{1
 
 def test_071_anydbm():                          # issue #71 {{{1
     import os
-    import anydbm
+    if sys.version_info[0] == 2:
+        import anydbm
+    else:
+        import dbm as anydbm
     # FIXME: determine path to sdcard. like: path = os.environ[""]
     del os.chmod
     for fname in (
@@ -65,13 +68,18 @@ def test_071_anydbm():                          # issue #71 {{{1
 def test_075_httpserver():                      # issue #75 {{{1
     import time
     import threading
-    import BaseHTTPServer
+    if sys.version_info[0] == 2:
+        from BaseHTTPServer import BaseHTTPRequestHandler as handler
+        from BaseHTTPServer import HTTPServer
+    else:
+        from http.server import BaseHTTPRequestHandler as handler
+        from http.server import HTTPServer
     fname = "/sdcard/sl4a/test_075.html"
     port = 9090
 
-    class Handler(BaseHTTPServer.BaseHTTPRequestHandler):
+    class Handler(handler):
         def do_GET(s):
-            file(fname, "w").write("""
+            open(fname, "w").write("""
                 <html><head></head><body>fine 075</body></html>""")
             html = open(fname, 'rb')
             s.send_response(200)
@@ -79,7 +87,7 @@ def test_075_httpserver():                      # issue #75 {{{1
             s.end_headers()
             s.wfile.write(html.read())
 
-    server_class = BaseHTTPServer.HTTPServer
+    server_class = HTTPServer
     httpd = server_class(('', port), Handler)
     if not skip_gui:
         # and manual test has passed, open http://127.0.0.1:9090 in browser.
@@ -93,12 +101,17 @@ def test_075_httpserver():                      # issue #75 {{{1
 
 
 def test_106_https_certification_failed():      # issue #106 {{{1
-    import urllib2
+    if sys.version_info[0] == 2:
+        import urllib2
+    else:
+        from urllib import request as urllib2
+
     import os
     import take_cacert_pem
-    if take_cacert_pem.main():
+    fname = take_cacert_pem.main()
+    if not fname:
         return False
-    os.environ["SSL_CERT_FILE"] = "/mnt/sdcard/cacert.pem"
+    os.environ["SSL_CERT_FILE"] = fname
     # input = input.replace("!web ", "")
     url = "https://ccc.de/"
     # url = "https://www.openssl.org/"
@@ -148,7 +161,7 @@ def test_013s_scanBarcode():                # issue sl4a #13 {{{1
         if ext is None:
             return False
         if 'SCAN_RESULT_BYTES' not in ext or 'SCAN_RESULT' not in ext:
-            print("no results:" % ext)
+            print("no results:" + str(ext))
             return False
         bts = ext['SCAN_RESULT_BYTES']
         msg = ext['SCAN_RESULT']
@@ -168,6 +181,33 @@ def test_009s_airplanemode():               # issue sl4a #9 {{{1
         return False
     return True
 
+
+def test_032s_wificonnect():                # issue sl4a #32 {{{1
+    method = "WPA2"
+    if method == "no-security":
+        cfg = dict(
+            SSID="invalidwifi",
+            # below parameters are not used in example of my expalation site.
+            # BSSID=,
+            # hiddenSSID=False,
+            # priority=,
+            # apBand=,
+        )
+    elif method == "WEP":
+        cfg = dict(
+            SSID="invalidwifi",
+            wepKeys=["key0"],
+            wepTxKeyIndex=0,
+        )
+    else:   # elif method == "WPA2":
+        cfg = dict(
+            SSID="invalidwifi",
+            preSharedKey="kuaihuawifi123",
+            # or you can use: password="presharedkey",
+            # be careful SL4A can't allow 64byte key.
+        )
+    droid.wifiConnect(cfg)
+    return True
 
 # tests for some facade {{{1
 def event_loop():
@@ -541,7 +581,12 @@ def test_xmpp():
 
 
 if __name__ == '__main__':                                  # {{{1
-    import android
+    try:
+        import android
+    except:
+        import os
+        sys.path.insert(0, os.path.dirname(__file__))
+        import android_mock as android      # for PC debugging
     droid = android.Android()
 
     def boilerplate(f):

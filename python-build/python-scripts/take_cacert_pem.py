@@ -1,13 +1,20 @@
+import sys
 import os
-import urllib
+
+
+if sys.version_info[0] == 2:
+    from urllib import urlretrieve
+else:
+    from urllib.request import urlretrieve
 
 
 def main():
-    fname = "/mnt/sdcard/cacert.pem"
+    fname = os.path.dirname(__file__)
+    fname = os.path.join(fname, "cacert.pem")
     if os.path.exists(fname):
-        return False
-    urllib.urlretrieve("http://curl.haxx.se/ca/cacert.pem", fname)
-    return False
+        return fname
+    urlretrieve("http://curl.haxx.se/ca/cacert.pem", fname)
+    return fname
 
 
 if __name__ == "__main__":
