@@ -8,7 +8,7 @@ fi
 # android.Android() will launch SL4A server, if server down.
 
 PW=`pwd`
-ver=`python --version | cut -d " "  -f 2 | cut -d . -f 1-2`
+ver=3.6
 export EXTERNAL_STORAGE=$st
 export LANG=en
 bin=/data/data/com.googlecode.python3forandroid/files/python3
@@ -18,8 +18,8 @@ PYTHONPATH=${PYTHONPATH}:$bin/lib/python$ver/lib-dynload
 export PYTHONPATH
 export TEMP=$ext/tmp
 export PYTHON_EGG_CACHE=$TEMP
-# do not use this for Python3... see issue tracker.
-# export PYTHONHOME=$bin
+# do not use this for Python3.4, see issue tracker.
+export PYTHONHOME=$ext:$bin
 export LD_LIBRARY_PATH=$bin/lib
 cd $PW
 if [ $api -lt 14 ]; then
