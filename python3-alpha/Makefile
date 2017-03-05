@@ -415,13 +415,14 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	cp -r $(CWD)/$(PYBINR)_arm/$(PYBINR)/lib/$(PYTHONLIB)/* $(PYEXT)
 	cp -r python-libs/* $(PYEXT)/site-packages
 	rm -rf $(PYEXT)/site-packages/ase           # ignore ase
-	$(PYTHON_FOR_BUILD) -OO -m compileall -qfb -x'tests*/.*' $(PYEXT)
+	$(PYTHON_FOR_BUILD) -OO -m compileall -qfb -r 10 -x'/tests*/' $(PYEXT)
 	
 	cd $(PYEXT_); \
-	zip -Dqgrx"*.so" -x"test/*" -x"*/test/*" -x"*/tests/*" \
+	zip -Dqgr -x "*.so" -x "*.exe" -x "*.a" -x "*/test/*" -x"*/tests/*" \
+	                 -x "*/test.pyc" -x "*/tests.pyc" \
 	                 -x"*/turtledemo/*" -x"*/tkinter/*" -x"*/idlelib/*" \
 	                 -x"*.pyo" -x"*.py" -x"*/__pycache__/*" \
-	                 -x"*.so*" -x"*.exe" -x"*.a" $(CWD)/$@ *
+	                 $(CWD)/$@ *
 
 $(ZIPSCRIPTS):
 	echo "Packing $(ZIPSCRIPTS)"
