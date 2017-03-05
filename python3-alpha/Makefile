@@ -145,15 +145,16 @@ cleanall: clean
 
 clean:
 	make -C openssl clean
+	rm -rf host-src host
+	rm -rf ncurses-5.9
+	rm -rf readline-6.3
+	rm -rf sqlite3
 	make clean_work CROSS=arm PIE=yes
 	make clean_work CROSS=x86 PIE=yes
 	rm -rf python3_extras
 	rm -f .build_*
 clean_work:
-	rm -rf ncurses-5.9$(SFX)
 	rm -rf bzip2-1.0.6$(SFX)
-	rm -rf readline-6.3$(SFX)
-	rm -rf sqlite3$(SFX)
 	rm -rf $(PYTHONSRC)
 	rm -rf $(dir $(PYBIN))
 
@@ -272,11 +273,15 @@ build_misc_bzip2: bzip2-1.0.6.tar.gz
 	cd $(call targz,$<); patch -p1 < $(CWD)/patches/bzip2-1.0.6-pre.patch
 	mv $(call targz,$<) $(BZIPPATH)
 	PREFIX=$(PYBIN)\
+	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib AR=$(TARGET)-ar \
+	  CFLAGS="$(CFLAGS) -O3 -DUSE_MMAP" \
+	  make -C $(BZIPPATH)
+	PREFIX=$(PYBIN)\
 	  CC=$(TARGET)-gcc RANLIB=$(TARGET)-ranlib \
 	  CFLAGS="$(CFLAGS) -O3 -DUSE_MMAP" \
 	  make -C $(BZIPPATH) -f Makefile-libbz2_so
-	mkdir -p $(PYBIN)/lib
-	cp $(BZIPPATH)/*.so* $(PYBIN)/lib
+	PREFIX=$(PYBIN)\
+	  make -C $(BZIPPATH) install
 
 # python3: download and build for current host  {{{1
 $(PYTHONTAR):
@@ -303,7 +308,7 @@ $(PYTHONTAR):
 # python3: patching-configure-build {{{1
 $(CWD)/patches/python-*.patch:
 	echo
-.build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
+.build_src: .build_host $(PYTHONTAR) $(CWD)/patches/python-*.patch
 	make $(subst .,,$@) CROSS=arm PIE=yes
 	make $(subst .,,$@) CROSS=x86 PIE=yes
 	touch .build_src
