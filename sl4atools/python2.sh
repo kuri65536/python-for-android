@@ -8,13 +8,20 @@ fi
 # android.Android() will launch SL4A server, if server down.
 
 PW=`pwd`
+ver=2.7
+py4a=pythonforandroid
+bin=python
 export EXTERNAL_STORAGE=$st
 export LANG=en
-bin=/data/data/com.googlecode.pythonforandroid/files/python
-ext=$st/com.googlecode.pythonforandroid/extras/python
+bin=/data/data/com.googlecode.$py4a/files/$bin
+pfx=$st/com.googlecode.$py4a
+ext=$pfx/extras/$bin
+PYTHONUSERBASE=$pfx/local
 PYTHONPATH=$ext
-PYTHONPATH=${PYTHONPATH}:$bin/lib/python2.7/lib-dynload
+PYTHONPATH=${PYTHONPATH}:$PYTHONUSERBASE
+PYTHONPATH=${PYTHONPATH}:$bin/lib/python$ver/lib-dynload
 export PYTHONPATH
+export PYTHONUSERBASE
 export TEMP=$ext/tmp
 export PYTHON_EGG_CACHE=$TEMP
 export PYTHONHOME=/data/data/com.googlecode.pythonforandroid/files/python

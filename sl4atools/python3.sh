@@ -9,13 +9,19 @@ fi
 
 PW=`pwd`
 ver=3.6
+py4a=python3forandroid
+bin=python3
 export EXTERNAL_STORAGE=$st
 export LANG=en
-bin=/data/data/com.googlecode.python3forandroid/files/python3
-ext=$st/com.googlecode.python3forandroid/extras/python3
+bin=/data/data/com.googlecode.$py4a/files/$bin
+pfx=$st/com.googlecode.$py4a
+ext=$pfx/extras/$bin
+PYTHONUSERBASE=$pfx/local
 PYTHONPATH=$ext
+PYTHONPATH=${PYTHONPATH}:$PYTHONUSERBASE
 PYTHONPATH=${PYTHONPATH}:$bin/lib/python$ver/lib-dynload
 export PYTHONPATH
+export PYTHONUSERBASE
 export TEMP=$ext/tmp
 export PYTHON_EGG_CACHE=$TEMP
 # do not use this for Python3.4, see issue tracker.
