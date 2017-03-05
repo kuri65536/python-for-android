@@ -24,18 +24,12 @@ def setup_dir():
         dname = _dname
     dname = os.path.join(dname, "local")
 
-    # failed: may be not effective in this moment.
+    # try to propagate the PYTHONUSERBASE to sysconfig and site.
     os.environ["PYTHONUSERBASE"] = dname
     import importlib
     import sysconfig
     import site
 
-    # failure code: overriding by simple code
-    # site.USER_BASE = dname
-    # site.USER_SITE = os.path.join(dname, "lib", "python3.6", "site-packges")
-    # sysconfig.get_config_vars()["userbase"] = dname
-
-    # try to propagate the PYTHONUSERBASE to sysconfig and site.
     importlib.reload(sysconfig)
     mods = [i for i in sys.modules.items()
             if getattr(i[1], "__cached__", 1) is None]
@@ -47,11 +41,58 @@ def setup_dir():
     return dname
 
 
+def dummy_utime(path, times=None, ns=None, dir_fd=None, follow_symlinks=True):
+    pass
+
+
+def dummy_chmod(path, mode):
+    pass
+
+
+def pip_rooting(dname):
+    fRoot = False
+    if os.getuid() != 0 and fRoot:
+        # pip need os.utime and os.chmod, need root permission.
+        # ver.1: call python3.sh
+        # dname = os.path.dirname(dname)
+        # cmd = "sh %s/python3.sh" % dname       # need setup script.
+
+        # ver.2: setup like the python3.sh
+        bin = "/data/data/com.googlecode.python3forandroid/files/python3"
+        ext = os.path.join(os.path.dirname(dname), "extras", "python3")
+        dyn = os.path.join(
+                bin, "lib",
+                "python%d.%d" % sys.version_info[0:2], "lib-dynload")
+        cmd = "sh -c '"
+        cmd += " LD_LIBRARY_PATH=%s/lib" % bin
+        cmd += " TEMP=%s/tmp" % ext
+        cmd += " EXTERNAL_STORAGE=" + \
+            os.environ.get("EXTERNAL_STORAGE", "/sdcard")
+        cmd += " PYTHONPATH=%s:%s" % (ext, dyn)
+        cmd += " PYTHON_EGG_CACHE=%s/tmp" % ext
+        cmd += " PYTHONHOME=%s:%s" % (ext, bin)
+        cmd += " %s" % sys.executable
+        cmd = "su 0 %s %s'" % (cmd, sys.argv[0])
+
+        print("launch script by super user: %s" % cmd)
+        os.system(cmd)
+        print("restart %s script" % os.path.basename(__file__))
+        return 1
+    elif os.getuid() != 0:
+        os.utime = dummy_utime
+        os.chmod = dummy_chmod
+    return 0
+
+
 def bootstrap():
-    setup_dir()    # set up site.USER_BASE
+    print("launch ensurepip.")
+    dname = setup_dir()    # set up site.USER_BASE
+    if pip_rooting(dname):
+        return 0
 
     import ensurepip
     ret = ensurepip._main(["--user"])
+    print("restart %s script" % os.path.basename(__file__))
     return ret
 
 
@@ -63,14 +104,8 @@ try:
     setup_dir()
     import pip
 except ImportErrors:
-    if bootstrap():
-        sys.exit(1)
-    print("now pip is ready. restart %s script" % os.path.basename(__file__))
+    bootstrap()
     sys.exit(0)
-    # FIXME: reload new pip (ensurepip load a tempolary pip, try to new file)
-    del sys.modules["pip"]
-    import importlib
-    pip = importlib.reload("pip")
 
 
 def pip_monkeypatch(dname):
@@ -111,7 +146,7 @@ def run(args):
 
 
 def main(args):
-    if args[0] == os.path.basename(__file__):
+    if os.path.basename(__file__) in args[0]:
         args = args[1:]
     if args:    # launch from command line with args.
         return run(args)
@@ -128,6 +163,8 @@ def main(args):
         # BUG: need to parse args with quote and space.
         args = cmd.split(" ")
         args = [i for i in args if i]
+        if not args:
+            continue
         if args[0] == "pip":
             args = args[1:]
         run(args)
@@ -137,5 +174,7 @@ if __name__ == "__main__":
     readline
     dname = setup_dir()
     pip_monkeypatch(dname)
-    main(sys.argv)
+    if pip_rooting(dname):
+        sys.exit(0)
+    main(list(sys.argv))
 # vi: ft=python
