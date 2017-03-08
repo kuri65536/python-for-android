@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Shimoda <kuri65536@hotmail.com>
+ * Copyright (C) 2017, 2015 Shimoda <kuri65536@hotmail.com>
  * Copyright (C) 2010-2011 Naranjo Manuel Francisco <manuel@aircable.net>
  * Copyright (C) 2010-2011 Robbie Matthews <rjmatthews62@gmail.com>
  * Copyright (C) 2009 Google Inc.
@@ -20,7 +20,6 @@
 package com.googlecode.python3forandroid;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Environment;
 
 import com.googlecode.android_scripting.FileUtils;
@@ -35,11 +34,6 @@ import java.util.Map;
 public class Python3Descriptor extends PythonDescriptor {
 
   private static final String PYTHON_BIN = "python3/bin/python3";
-  private static final int LATEST_VERSION = 5;
-  private int cache_version = -1;
-  private int cache_extras_version = -1;
-  private int cache_scripts_version = -1;
-  private SharedPreferences mPreferences;
 
     @Override
     protected String pathBin() {
@@ -83,7 +77,10 @@ public class Python3Descriptor extends PythonDescriptor {
 
   @Override
   public String getExtension() {
-        return ".py3";
+        if (isPython2Installed() && normalExtensionPythonVersion() == 2) {
+            return ".py3";
+        }
+        return ".py";
   }
 
   @Override

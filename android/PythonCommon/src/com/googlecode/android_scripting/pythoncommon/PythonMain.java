@@ -41,6 +41,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -100,6 +101,7 @@ public abstract class PythonMain extends Main {
   Button mButtonInstallScripts;
   Button mButtonInstallModules;
   Button mButtonUninstallModule;
+    CheckBox mChkPyExtention;
   File mDownloads;
   File mLocalInstallRoot;
 
@@ -264,6 +266,22 @@ public abstract class PythonMain extends Main {
 
     mVersions = (TextView)findViewById(R.id.tvHostVersion);
     doCheckVersion();
+
+        mChkPyExtention = (CheckBox)findViewById(R.id.chkPyExtension);
+        mChkPyExtention.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                boolean fPy3 = ((CheckBox)v).isChecked();
+                doChangePyExtension(fPy3);
+            }
+        });
+        int py = 2;
+        if (mPreferences != null) {
+            py = mPreferences.getInt(PythonConstants.PREFFERED_PYEXT, 2);
+            Log.i("pyext was loaded from prefs: " + py);
+        } else {
+            Log.i("pyext can't be loaded from prefs, use default:" + py);
+        }
+        mChkPyExtention.setChecked(py == 3);
   }
 
   void updateVersions() {
@@ -597,6 +615,12 @@ public abstract class PythonMain extends Main {
   private void doCheckVersion() {
     (new CheckVersion(this)).execute();
   }
+
+    public void doChangePyExtension(boolean fPy3) {
+        int prefferedPythonVersion = fPy3 ? 3: 2;
+        mPreferences.edit().putInt(PythonConstants.PREFFERED_PYEXT,
+                                   prefferedPythonVersion);
+    }
 
   class RunExtract extends Thread {
     String caption;

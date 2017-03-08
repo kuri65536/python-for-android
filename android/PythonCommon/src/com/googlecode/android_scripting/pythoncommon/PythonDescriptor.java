@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class PythonDescriptor extends Sl4aHostedInterpreter {
@@ -40,8 +39,10 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   private int cache_version = -1;
   private int cache_extras_version = -1;
   private int cache_scripts_version = -1;
-  private SharedPreferences mPreferences;
   public boolean mfLocalInstall = false;
+    public Boolean cachePython2Installed = null;
+    public Boolean cachePython3Installed = null;
+    public int cachedPrefferedPyExtention = 2;
 
   // path in devices.
     protected String pathBin() {
@@ -84,7 +85,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   public String getNiceName() {
-    return "Python 2.7.10";
+    return "Python 2.7.12";
   }
 
   public boolean hasInterpreterArchive() {
@@ -197,14 +198,45 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   }
 
   public void setSharedPreferences(SharedPreferences prefs) {
-    mPreferences = prefs;
     cache_version = prefs.getInt(PythonConstants.AVAIL_VERSION_KEY, -1);
     cache_extras_version = prefs.getInt(PythonConstants.AVAIL_EXTRAS_KEY, -1);
     cache_scripts_version =
             prefs.getInt(PythonConstants.AVAIL_SCRIPTS_KEY, -1);
+      cachedPrefferedPyExtention = prefs.getInt(
+              PythonConstants.PREFFERED_PYEXT, 2);
   }
 
   public boolean isLocalInstall() {
     return this.mfLocalInstall;
   }
+
+    private Boolean isPythonNInstalled(int n) {
+        String s = n == 2 ? "": String.format("%d", n);
+        String _path = InterpreterConstants.SDCARD_ROOT +
+                String.format("com.googlecode.python%sforandroid", s) +
+                InterpreterConstants.INTERPRETER_EXTRAS_ROOT;
+        File path = new File(_path);
+        this.cachePython2Installed = Boolean.valueOf(path.isDirectory());
+        return Boolean.valueOf(this.cachePython2Installed);
+    }
+
+    // detect Python2 is installed.
+    public boolean isPython2Installed() {
+        if (this.cachePython2Installed != null) {
+            return this.cachePython2Installed.booleanValue();
+        }
+        return this.cachePython2Installed = isPythonNInstalled(2);
+    }
+
+    // detect Python3 is installed.
+    public boolean isPython3Installed() {
+        if (this.cachePython3Installed != null) {
+            return this.cachePython3Installed.booleanValue();
+        }
+        return this.cachePython3Installed = isPythonNInstalled(3);
+    }
+
+    public int normalExtensionPythonVersion() {
+        return cachedPrefferedPyExtention;
+    }
 }

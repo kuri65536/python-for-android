@@ -26,6 +26,7 @@ public class PythonConstants {
   static public final String AVAIL_VERSION_KEY = "py4a.available.version";
   static public final String AVAIL_EXTRAS_KEY = "py4a.available.extras";
   static public final String AVAIL_SCRIPTS_KEY = "py4a.available.scripts";
+    static public final String PREFFERED_PYEXT = "py4a.preffered.pyext";
 
   static public final String ENV_HOME = "PYTHONHOME";
   static public final String ENV_PATH = "PYTHONPATH";
