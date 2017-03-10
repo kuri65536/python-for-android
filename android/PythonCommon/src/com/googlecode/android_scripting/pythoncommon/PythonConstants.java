@@ -34,5 +34,5 @@ public class PythonConstants {
   static public final String ENV_LD = "LD_LIBRARY_PATH";
   static public final String ENV_EXTRAS = "PY4A_EXTRAS";
   static public final String ENV_EGGS = "PYTHON_EGG_CACHE";
-  // static final String ENV_USERBASE = "PYTHONUSERBASE";
+    static public final String ENV_USERBASE = "PYTHONUSERBASE";
 }

@@ -35,7 +35,7 @@ Instruction for installation
 
 ### How to install
 1. Download [SL4A Application](https://github.com/kuri65536/sl4a), such as
-   [sl4a-r6.1.1-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6.1.1/sl4a-r6.1.1-arm-debug.apk)
+   [sl4a-r6.1.1-arm-debug.apk](https://github.com/kuri65536/sl4a/releases/download/6.2.0/sl4a-r6.2.0-arm-debug.apk)
 2. Download [Py4A Application](../../releases), such as
    [PythonForAndroid-debug.apk](../../releases/download/r26/PythonForAndroid-debug-r26.apk)
 3. Enable "Unknown Sources" in your device settings.

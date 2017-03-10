@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Python3Descriptor extends PythonDescriptor {
+    private static int[] nPYVER = {3, 6};
+    private static final String PYVER = "3.6";
 
   private static final String PYTHON_BIN = "python3/bin/python3";
 
@@ -47,17 +49,17 @@ public class Python3Descriptor extends PythonDescriptor {
 
     @Override
     protected String pathEgg() {
-        return this.pathShlib() + "/python3.6/egg-info";
+        return this.pathShlib() + "/python" + PYVER + "/egg-info";
     }
 
     @Override
     protected String pathSitepkgs() {
-        return this.pathShlib() + "/python3.6/site-packages";
+        return this.pathShlib() + "/python" + PYVER + "/site-packages";
     }
 
     @Override
     protected String pathDynload() {
-        return this.pathShlib() + "/python3.6/lib-dynload";
+        return this.pathShlib() + "/python" + PYVER + "/lib-dynload";
     }
 
   @Override
@@ -90,7 +92,7 @@ public class Python3Descriptor extends PythonDescriptor {
 
   @Override
   public String getNiceName() {
-    return "Python 3.6.0";
+        return "Python " + PYVER + ".0";
   }
 
   @Override
@@ -106,11 +108,20 @@ public class Python3Descriptor extends PythonDescriptor {
         String home = getHome(context);
     String pylibs = getExtras();
 
-    // BUG: current binary does not recognize PYTHONHOME collectly... why...?
-    // values.put(ENV_HOME, libs + ":" + new File(home, "python3").getAbsolutePath());
+        // current 3.4.? binary does not recognize PYTHONHOME collectly...why..
+        if (nPYVER[0] >= 3 && nPYVER[1] >= 6) {
+            values.put(
+                PythonConstants.ENV_HOME,
+                pylibs + ":" + new File(home, "python3").getAbsolutePath());
+        }
+        String sitelibs = new File(getExtrasRoot(), "local").getAbsolutePath();
+        values.put(PythonConstants.ENV_USERBASE, sitelibs);
+        sitelibs = new File(sitelibs, "lib").getAbsolutePath();
+
         values.put(PythonConstants.ENV_LD, home + pathShlib());
     values.put(PythonConstants.ENV_PATH,
                pylibs + ":" +
+               sitelibs + ":" +                     // for USERBASE (pip)
                home + this.pathShlib() + ":" +
                home + this.pathSitepkgs() + ":" +
                home + this.pathDynload());

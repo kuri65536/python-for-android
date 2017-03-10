@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Shimoda <kuri65536@hotmail.com>
+ * Copyright (C) 2017, 2015 Shimoda <kuri65536@hotmail.com>
  * Copyright (C) 2009 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -216,8 +216,9 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
                 String.format("com.googlecode.python%sforandroid", s) +
                 InterpreterConstants.INTERPRETER_EXTRAS_ROOT;
         File path = new File(_path);
-        this.cachePython2Installed = Boolean.valueOf(path.isDirectory());
-        return Boolean.valueOf(this.cachePython2Installed);
+        boolean ret = path.isDirectory();
+        Log.i("isPython" + n + "Installed was cached to " + ret);
+        return Boolean.valueOf(ret);
     }
 
     // detect Python2 is installed.
