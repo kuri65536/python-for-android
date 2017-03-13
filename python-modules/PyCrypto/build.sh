@@ -1,8 +1,34 @@
-#!/bin/bash
-
-# build script for pycrypto for Py4a
+#!/bin/bash # build script for pycrypto for Py4a
 if [ x$ANDROID_NDK = x ]; then
     echo "ANDROID_NDK is null"
+    exit 1
+fi
+PY4A_SRC=$(realpath ../..)
+if [ x$PY = x2 ]; then
+    hostpython=$PY4A_SRC/python-build/host/bin/python
+    pylib=$PY4A_SRC/python-build/python_arm/python/lib
+    opt_setup=
+elif [ x$PY = x3 ]; then
+    hostpython=$PY4A_SRC/python3-alpha/host/bin/python3
+    pylib=$PY4A_SRC/python3-alpha/python3_arm/python3/lib
+
+    PYSUB=3.6
+    PYHOST=linux-armv
+    ARCH=arm
+    BUILDMACHINE=$(uname -m)
+    BUILDOS=$(uname -s | tr A-Z a-z)
+    BUILD=$BUILDOS-$BUILDMACHINE
+
+    BINPATH=$ANDROID_NDK/toolchains/arm-linux-androideabi-4.9
+    export PATH=$BINPATH/prebuilt/$BUILD/bin:$PATH
+
+    export PY4A=$PY4A_SRC/python3-alpha/python3_$ARCH/python3
+    export PY4A_ROOT=$ANDROID_NDK/platforms/android-9/arch-arm
+    export PY4A_INC=$PY4A/include/python${PYSUB}m
+    export PY4A_LIB=$PY4A/lib
+    opt_setup="-m py4a"
+else
+    echo "PY is null, specify 2 or 3"
     exit 1
 fi
 # Is it not needed?
@@ -31,9 +57,12 @@ if [ ! -d ${NAME}-${VERSION} ]; then
 fi
 
 pushd ${NAME}-${VERSION}
-source $(pwd)/../../python/bin/setup.sh
+ln -sf $PY4A_SRC/python-build/python-libs/py4a .
+# source $(pwd)/../../python/bin/setup.sh
 export ac_cv_func_malloc_0_nonnull=yes
-python setup.py build_ext --plat-name=linux-armv \
-                          --library-dirs=../python/lib
-python setup.py bdist_egg
+# $hostpython $opt_setup setup.py build_ext --plat-name=linux-armv \
+#                           --library-dirs=$pylib
+# $hostpython $opt_setup setup.py bdist_egg
+# $hostpython $opt_setup setup.py build
+$hostpython $opt_setup setup.py bdist_wheel
 

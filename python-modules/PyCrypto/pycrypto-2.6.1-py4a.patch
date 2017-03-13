@@ -10,18 +10,16 @@ diff -uprN pycrypto-2.3/setup.cfg pycrypto-2.3.mine//setup.cfg
 diff -uprN pycrypto-2.3/setup.py pycrypto-2.3.mine//setup.py
 --- pycrypto-2.3/setup.py	2010-08-27 01:41:55.000000000 -0300
 +++ pycrypto-2.3.mine//setup.py	2011-05-26 14:00:00.000000000 -0300
-@@ -37,6 +37,10 @@
+@@ -36,7 +36,7 @@
+ 
  __revision__ = "$Id$"
  
- from distutils import core
-+from py4a import patch_distutils
-+patch_distutils()
-+
-+from setuptools import setup
+-from distutils import core
++import setuptools as core
  from distutils.ccompiler import new_compiler
  from distutils.core import Extension, Command
  from distutils.command.build import build
-@@ -145,6 +149,8 @@
+@@ -145,6 +145,8 @@
                  self.__add_compiler_option("-fprofile-arcs")
                  self.__add_compiler_option("-ftest-coverage")
                  self.compiler.libraries += ['gcov']
@@ -30,7 +28,7 @@ diff -uprN pycrypto-2.3/setup.py pycrypto-2.3.mine//setup.py
  
          # Call the superclass's build_extensions method
          build_ext.build_extensions(self)
-@@ -209,7 +215,7 @@
+@@ -209,7 +211,7 @@
          Return true if the option was found.  Return false otherwise.
          """
          found = 0
@@ -39,20 +37,11 @@ diff -uprN pycrypto-2.3/setup.py pycrypto-2.3.mine//setup.py
              compiler = getattr(self.compiler, attrname, None)
              if compiler is not None:
                  while option in compiler:
-@@ -274,6 +280,7 @@
+@@ -274,6 +276,7 @@
              cmd = "sh configure"    # we use "sh" here so that it'll work on mingw32 with standard python.org binaries
              if self.verbose < 1:
                  cmd += " -q"
-+            cmd += " --host=arm-linux-androideabi"
++            cmd += " --build=arm-linux-androideabi"
              if os.system(cmd) != 0:
                  raise RuntimeError("autoconf error")
  
-@@ -453,7 +460,7 @@
-           'Programming Language :: Python :: 3',
-           ]
- 
--core.setup(**kw)
-+setup(**kw)
- 
- def touch(path):
-     import os, time
