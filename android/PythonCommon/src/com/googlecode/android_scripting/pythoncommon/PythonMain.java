@@ -37,8 +37,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup.LayoutParams;
-import android.view.ViewGroup.MarginLayoutParams;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -48,6 +46,7 @@ import android.widget.Toast;
 import com.googlecode.android_scripting.FileUtils;
 import com.googlecode.android_scripting.InterpreterInstaller;
 import com.googlecode.android_scripting.Log;
+import com.googlecode.android_scripting.ZipExtractorTask;
 import com.googlecode.android_scripting.activity.Main;
 import com.googlecode.android_scripting.exception.Sl4aException;
 import com.googlecode.android_scripting.interpreter.InterpreterConstants;
@@ -102,6 +101,7 @@ public abstract class PythonMain extends Main {
   Button mButtonInstallModules;
   Button mButtonUninstallModule;
     CheckBox mChkPyExtention;
+    boolean fPyextto3 = false;
   File mDownloads;
   File mLocalInstallRoot;
 
@@ -160,7 +160,13 @@ public abstract class PythonMain extends Main {
         mProgress.dismiss();
         String info = message.getData().getString("info");
         if (info != null) {
-          showMessage("Import Module", info);
+                // if (running){
+                // ...
+                //  return;
+                // }
+                String title = message.getData().getString("title");
+                title = (title == null) ? "Import Module": title;
+                showMessage(title, info);
         }
       }
     }
@@ -194,6 +200,14 @@ public abstract class PythonMain extends Main {
     }
   }
 
+    protected File getInstallRoot() {
+        if (mLocalInstallRoot == null) {
+            mLocalInstallRoot = new File(
+                InterpreterConstants.SDCARD_ROOT, getPackageName());
+        }
+        return mLocalInstallRoot;
+    }
+
   @Override
   protected void initializeViews() {
     setContentView(R.layout.main);
@@ -210,8 +224,7 @@ public abstract class PythonMain extends Main {
         }
       }
     }
-    mLocalInstallRoot = new File(
-            InterpreterConstants.SDCARD_ROOT, getPackageName());
+        getInstallRoot();
 
     mButton = (Button)findViewById(R.id.btnItpInstall);
     // set by super class.
@@ -275,9 +288,9 @@ public abstract class PythonMain extends Main {
             }
         });
         int py = 2;
-        if (mPreferences != null) {
-            py = mPreferences.getInt(PythonConstants.PREFFERED_PYEXT, 2);
-            Log.i("pyext was loaded from prefs: " + py);
+        if (mDescriptor != null) {
+            py = mDescriptor.getPyExtPreffered();
+            Log.i("pyext was loaded from file: " + py);
         } else {
             Log.i("pyext can't be loaded from prefs, use default:" + py);
         }
@@ -616,11 +629,38 @@ public abstract class PythonMain extends Main {
     (new CheckVersion(this)).execute();
   }
 
+    /** change Python Extension setting
+     */
     public void doChangePyExtension(boolean fPy3) {
-        int prefferedPythonVersion = fPy3 ? 3: 2;
-        mPreferences.edit().putInt(PythonConstants.PREFFERED_PYEXT,
-                                   prefferedPythonVersion);
+        /// 1. change setting file
+        int n = fPy3 ? 3: 2;
+        String ext = n == 3 ? "": "3";
+        mDescriptor.putPyExtPreffered(n);
+
+        /// 2. change scripts extension to .py or .py3
+        fPyextto3 = fPy3;
+        prompt("Change scripts name (.extension) to .py" + ext + "?",
+               listenerPyExt);
     }
+
+    protected DialogInterface.OnClickListener listenerPyExt =
+            new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            if (which != AlertDialog.BUTTON_POSITIVE) {
+                return;
+            }
+            String cap, extFrom, extTo;
+            extFrom = fPyextto3 ? ".py3": ".py";
+            extTo = fPyextto3 ? ".py": ".py3";
+            cap = "Change " + extFrom + " to " + extTo;
+            mProgress = showProgress(cap);
+            Thread t = new RunRename(
+                    cap, new File(InterpreterConstants.SCRIPTS_ROOT),
+                    extFrom, extTo, mModuleHandler);
+            t.start();
+        }
+    };
 
   class RunExtract extends Thread {
     String caption;
@@ -1017,4 +1057,120 @@ public abstract class PythonMain extends Main {
       }
     }
   }
+
+
+    /** <!-- RunRename {{{1 -->
+     */
+    class RunRename extends Thread {
+        String caption;
+        File pypath;
+        String extFrom, extTo;
+        Handler mHandler;
+
+        RunRename(String caption, File pypath, String extFrom, String extTo,
+                  Handler h) {
+            this.caption = caption;
+            this.pypath = pypath;
+            this.extFrom = extFrom;
+            this.extTo = extTo;
+            mHandler = h;
+        }
+
+        private ZipExtractorTask.Replace rename(
+                File fsrc,
+                ZipExtractorTask.Replace mode) {
+            boolean fOverride = false;
+            String fbase = fsrc.getName();
+            fbase = fbase.substring(0, fbase.length() - extFrom.length());
+            File fdest = new File(fsrc.getParent(), fbase + extTo);
+            if (fdest.canWrite() && !fdest.exists()) {
+                // skip to confirm.
+            } else if (!fdest.isDirectory()) {
+                System.out.println(fdest.getName() +
+                                   "already exists and directory");
+            } else if (mode == ZipExtractorTask.Replace.YESTOALL) {
+                fOverride = true;
+            } else if (mode == ZipExtractorTask.Replace.SKIPALL) {
+                return mode;
+            } else {
+                ZipExtractorTask.Replace answer =
+                        ZipExtractorTask.showDialog(PythonMain.this,
+                                                    fsrc.getName());
+                switch (answer) {
+                    case YES:
+                        fOverride = true;
+                        break;
+                    case YESTOALL:
+                        fOverride = true;
+                        mode = answer;
+                        break;
+                    case SKIPALL:
+                        return answer;
+                    case NO:
+                    default:
+                        return ZipExtractorTask.Replace.NO;
+                }
+            }
+            if (fOverride) { try {
+                fdest.delete();
+            } catch (Exception ex) {
+                System.out.println(fdest.getName() + " failed to delete");
+            } }
+            try {
+                fsrc.renameTo(fdest);
+                System.out.println(fsrc.getName() + " renamed");
+            } catch (Exception ex) {
+                System.out.println(fsrc.getName() + " failed to rename" +
+                                   ex.toString());
+            }
+            return mode;
+        }
+
+        private ArrayList<File> renameCount() {
+            ArrayList<File> ret = new ArrayList<>();
+            File path = new File(InterpreterConstants.SCRIPTS_ROOT);
+            for (File fname: path.listFiles()) {
+                if (!fname.getName().endsWith(this.extFrom)) {
+                    continue;
+                }
+                ret.add(fname);
+            }
+            return ret;
+        }
+
+        @Override
+        public void run() {
+            int i = 0;
+            ZipExtractorTask.Replace mode = ZipExtractorTask.Replace.NO;
+
+            sendmsg(true, "max", 100, null);
+            ArrayList<File> seq = renameCount();
+            for (File fname: seq) {
+                sendmsg(true, "pos", 50 + (i++ * 50) / seq.size(), null);
+                mode = rename(fname, mode);
+            }
+            sendmsg(true, "pos", 100, null);
+            sendmsg(false, "info", null,
+                    "Success, shutdown SL4A process " +
+                    "and restart to change extension.");
+
+            // PythonMain.setInstalled cannot be used by touching GUI.
+            PythonMain.super.setInstalled(true);
+        }
+
+        private void sendmsg(boolean running, String key,
+                             Integer nInfo, String sInfo) {
+            Message message = mHandler.obtainMessage();
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("running", running);
+            if (nInfo != null) {
+                bundle.putInt(key, nInfo);
+            } else if (sInfo != null) {
+                bundle.putString("title", "Rename");
+                bundle.putString(key, sInfo);
+            }
+            message.setData(bundle);
+            mHandler.sendMessage(message);
+        }
+    }
 }

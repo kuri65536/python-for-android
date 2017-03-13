@@ -27,12 +27,16 @@ import com.googlecode.android_scripting.interpreter.Sl4aHostedInterpreter;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Map;
 
 public class PythonDescriptor extends Sl4aHostedInterpreter {
+    protected final String FNAME_PYEXTCFG = ".pyextpreffered";
 
   protected static final String PYTHON_BIN = "bin/python";
   private static final int LATEST_VERSION_FAILED = -1;
@@ -42,7 +46,7 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
   public boolean mfLocalInstall = false;
     public Boolean cachePython2Installed = null;
     public Boolean cachePython3Installed = null;
-    public int cachedPrefferedPyExtention = 2;
+    public Integer cachedPrefferedPyExtention = null;
 
   // path in devices.
     protected String pathBin() {
@@ -169,8 +173,13 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     return new File(getExtrasPath(context), PYTHON_BIN);
   }
 
+    protected File getLanguageRoot() {
+        return new File(InterpreterConstants.SDCARD_ROOT,
+                getClass().getPackage().getName());
+    }
+
   protected String getExtrasRoot() {
-    return InterpreterConstants.SDCARD_ROOT + getClass().getPackage().getName()
+    return getLanguageRoot().getAbsolutePath()
         + InterpreterConstants.INTERPRETER_EXTRAS_ROOT;
   }
 
@@ -202,8 +211,6 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     cache_extras_version = prefs.getInt(PythonConstants.AVAIL_EXTRAS_KEY, -1);
     cache_scripts_version =
             prefs.getInt(PythonConstants.AVAIL_SCRIPTS_KEY, -1);
-      cachedPrefferedPyExtention = prefs.getInt(
-              PythonConstants.PREFFERED_PYEXT, 2);
   }
 
   public boolean isLocalInstall() {
@@ -213,11 +220,11 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
     private Boolean isPythonNInstalled(int n) {
         String s = n == 2 ? "": String.format("%d", n);
         String _path = InterpreterConstants.SDCARD_ROOT +
-                String.format("com.googlecode.python%sforandroid", s) +
+                String.format("/com.googlecode.python%sforandroid", s) +
                 InterpreterConstants.INTERPRETER_EXTRAS_ROOT;
         File path = new File(_path);
         boolean ret = path.isDirectory();
-        Log.i("isPython" + n + "Installed was cached to " + ret);
+        Log.i("isPython" + n + "Installed: was cached to " + ret);
         return Boolean.valueOf(ret);
     }
 
@@ -237,7 +244,47 @@ public class PythonDescriptor extends Sl4aHostedInterpreter {
         return this.cachePython3Installed = isPythonNInstalled(3);
     }
 
-    public int normalExtensionPythonVersion() {
-        return cachedPrefferedPyExtention;
+    public int getPyExtPreffered() {
+        if (this.cachedPrefferedPyExtention != null) {
+            return this.cachedPrefferedPyExtention;
+        }
+
+        FileInputStream fp = null;
+        int ret = 2;
+        File fname = new File(getLanguageRoot(), FNAME_PYEXTCFG);
+
+        if (!fname.canRead()) {
+            Log.w("can't read " + fname.getName() + " fallback to " + ret);
+            return ret;
+        } else try {
+            fp = new FileInputStream(fname);
+            ret = fp.read() - '0';
+        } catch (IOException ex) {
+            Log.w("can't read " + fname.getName() + " fallback to " +
+                  ret + " by exception: " + ex.toString());
+            return ret;
+        }
+        this.cachedPrefferedPyExtention = ret;
+        return ret;
+    }
+
+    public int putPyExtPreffered(int n) {
+        FileOutputStream fp = null;
+
+        int m = getPyExtPreffered();
+        File fname = new File(getLanguageRoot(), FNAME_PYEXTCFG);
+        if (fname.exists() && !fname.canWrite()) {
+            Log.w("can't write " + n + " to: " + fname.getAbsolutePath());
+            return m;
+        } else try {
+            fp = new FileOutputStream(fname);
+            fp.write('0' + n);
+        } catch (IOException ex) {
+            Log.w("can't write " + n + " to: " + fname.getName() +
+                  " with exception:" + ex.toString());
+            return m;
+        }
+        this.cachedPrefferedPyExtention = null;
+        return n;
     }
 }

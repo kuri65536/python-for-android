@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.concurrent.RunnableFuture;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -42,7 +43,7 @@ import java.util.zip.ZipFile;
  */
 public class ZipExtractorTask extends AsyncTask<Void, Integer, Long> {
 
-  private static enum Replace {
+  public static enum Replace {
     YES, NO, YESTOALL, SKIPALL
   }
 
@@ -216,13 +217,23 @@ public class ZipExtractorTask extends AsyncTask<Void, Integer, Long> {
     return originalSize;
   }
 
-  private Replace showDialog(final String name) {
+    private Replace showDialog(final String name) {
+        return showDialog(mContext, name);
+    }
+
+    public static Replace showDialog(Context ctx, final String name) {
     final FutureResult<Replace> mResult = new FutureResult<Replace>();
 
-    MainThread.run(mContext, new Runnable() {
+        Runnable prg = new Runnable() {
+            Context m_ctx;
+            public Runnable setParam(Context _ctx) {
+                m_ctx = _ctx;
+                return this;
+            }
+
       @Override
       public void run() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+            AlertDialog.Builder builder = new AlertDialog.Builder(m_ctx);
         builder.setTitle(String.format("Script \"%s\" already exist.", name));
         builder.setMessage(String.format("Do you want to replace script \"%s\" ?", name));
 
@@ -258,7 +269,8 @@ public class ZipExtractorTask extends AsyncTask<Void, Integer, Long> {
         });
         builder.show();
       }
-    });
+        }.setParam(ctx);
+        MainThread.run(ctx, prg);
 
     try {
       return mResult.get();

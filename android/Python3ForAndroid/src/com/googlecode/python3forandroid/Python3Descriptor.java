@@ -79,7 +79,10 @@ public class Python3Descriptor extends PythonDescriptor {
 
   @Override
   public String getExtension() {
-        if (isPython2Installed() && normalExtensionPythonVersion() == 2) {
+        if (getPyExtPreffered() == 2) {
+            return ".py3";
+        }
+        if (isPython2Installed()) {
             return ".py3";
         }
         return ".py";

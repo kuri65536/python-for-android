@@ -11,4 +11,5 @@
     <string name="Itp_title">Interpreter</string>
     <string name="Itp_LocalInstall">Local Install</string>
     <string name="Itp_LocalInstall_Ready">Run Local Install</string>
+    <string name="Itp_PyExtPreffered">Preffered python3 to use .py extension. (and change scripts File-name)</string>
 </resources>

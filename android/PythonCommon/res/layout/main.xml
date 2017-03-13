@@ -76,10 +76,10 @@
         android:layout_height="match_parent">
 
         <CheckBox
-            android:text="Preffered python3 to use .py extension."
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/chkPyExtension"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:text="@string/Itp_PyExtPreffered"/>
     </LinearLayout>
 </LinearLayout>
