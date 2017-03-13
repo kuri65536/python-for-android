@@ -45,3 +45,13 @@ diff -uprN pycrypto-2.3/setup.py pycrypto-2.3.mine//setup.py
              if os.system(cmd) != 0:
                  raise RuntimeError("autoconf error")
  
+@@ -347,7 +350,8 @@
+       'author':"Dwayne C. Litzenberger",
+       'author_email':"dlitz@dlitz.net",
+       'url':"http://www.pycrypto.org/",
+-
++      'platforms': ["arm-linux-androideabi"],
++      'license': "Public Domain",
+       'cmdclass' : {'build_configure': PCTBuildConfigure, 'build_ext': PCTBuildExt, 'build_py': PCTBuildPy, 'test': TestCommand },
+       'packages' : ["Crypto", "Crypto.Hash", "Crypto.Cipher", "Crypto.Util",
+                   "Crypto.Random",

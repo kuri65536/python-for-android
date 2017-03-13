@@ -1,11 +1,50 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 import sysconfig
+from distutils import sysconfig as dstconfig
 import os
 
 
+cross_compiling = "_PYTHON_HOST_PLATFORM" in os.environ
+
+
+if cross_compiling:
+    def _cross_cfg():
+        ret = os.path.join(os.environ["PYTHONSRC"], "pyconfig.h")
+        ret = os.path.abspath(ret)
+        return ret
+
+    sysconfig.get_config_h_filename = _cross_cfg
+
+    for override in (
+                     # ('CC', ),
+                     # ('HOST_GNU_TYPE', ),
+                     ('EXT_SUFFIX', ),
+                     # ('SO', os.environ["EXT_SUFFIX"]),
+                     ('srcdir',
+                      os.path.dirname(sysconfig.get_config_h_filename())),
+                     ):
+        if len(override) == 1:
+            v = override[0]
+            v = os.environ[v]
+        else:
+            v = override[1]
+        sysconfig.get_config_vars()[override[0]] = v
+
+    for override in (
+                     ('EXT_SUFFIX', ),
+                     ('SOABI', ),
+                     ):
+        if len(override) == 1:
+            v = override[0]
+            v = os.environ[v]
+        else:
+            v = override[1]
+        dstconfig.get_config_vars()[override[0]] = v
+
+
 def customize_compiler36(compiler):
-    sysroot = " --sysroot=%s" % os.environ["PY4A_ROOT"]
+    sysroot = " --sysroot=%s" % os.environ["ANDROID_SYSROOT"]
     cflags = ("-I%s" % os.environ["PY4A_INC"] +
               " -MMD -MP -MF -fpic -ffunction-sections -funwind-tables"
               " -fstack-protector"
@@ -52,6 +91,10 @@ def customize_compiler36(compiler):
     compiler.shared_lib_extension = so_ext
 
 
+def customize_compiler2(compiler):
+    sysroot = " --sysroot=%s" % os.environ["ANDROID_SYSROOT"]
+
+
 def patch_distutils():
     import os
     from distutils import sysconfig
@@ -66,7 +109,6 @@ def patch_distutils():
     setattr(sysconfig, 'get_python_inc', get_python_inc)
 
     def customize_compiler(compiler):
-        sysroot = " --sysroot=%s" % os.environ["PY4A_ROOT"]
         cflags = "-I%s/python2.7" % os.environ["PY4A_INC"]
         cflags+=" -MMD -MP -MF -fpic -ffunction-sections -funwind-tables -fstack-protector"
         cflags+=" -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__"
