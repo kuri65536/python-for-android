@@ -1,4 +1,4 @@
-# Copyright 2015 Shimoda (kuri65536 at hotmail dot com)
+# Copyright 2017, 2015 Shimoda (kuri65536 at hotmail dot com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,85 +14,128 @@
 
 # This makefile builds the host binary (egg).
 # minimize duplication between the build rules.
-
+VERSION := 1.9.2
+NAME := numpy
+URL := http://downloads.sourceforge.net/project/numpy/NumPy/$(VERSION)/$(tar)
 
 # settings {{{1
-bin = $(src)/dist/$(src)-py2.7-$(PYHOST).egg
-tar := numpy-1.9.2.tar.gz
-src := numpy-1.9.2
-url := http://downloads.sourceforge.net/project/numpy/NumPy/1.9.2/$(tar)
+SRCDIR := $(NAME)-$(VERSION)
+SRCTGZ := $(NAME)-$(VERSION).tar.gz
+
+DISTWHL = $(NAME)-$(VERSION)-$(PYVER)-$(PYABI)-$(PYTHON_PLATNAME).whl
+
+
+ifeq (x$(NDK_PATH),x)
+    errmsg := "NDK_PATH is null"
+endif
+
+## python 2 or 3 {{{2
+PY4A_SRC := $(abspath ../..)
+
+ifeq (x$(ARCH),xx86)
+    errmsg += x86 arch is not supported, now.  #
+
+else
+    ARCH := arm
+    PYHOST := linux-armv
+endif
+
+ifeq (x$(PY),x2)
+    # python2 is not maintained, now.
+    PYSUB := 2.7
+
+    export PY4A_ := $(PY4A_SRC)/python-build/python
+    export PY4A_ROOT := $(ANDROID_NDK)/platforms/android-3/arch-arm
+    export PY4A := $(PY4A_SRC)/python-build/python
+    PYTHON_FOR_BUILD := $(PY4A_SRC)/python-build/host/bin/python
+
+else ifeq (x$(PY),x3)
+    PYTHON_PLATNAME := linux-armv7l
+    export _PYTHON_HOST_PLATFORM := arm-linux-androideabi
+    export EXT_SUFFIX := .cpython-36m-$(_PYTHON_HOST_PLATFORM).so
+    export SOABI := cpython-36m-arm-linux-androideabi
+    PYTHON_FOR_BUILD := $(PY4A_SRC)/python3-alpha/host/bin/python3
+    pylib := $(PY4A_SRC)/python3-alpha/python3_arm/python3/lib
+
+    VER_MAJ := 3.6
+    PYVER := cp36
+    PYABI := cp36m
+    ARCH=arm
+
+    TARGET := arm-linux-androideabi
+    tabi := $(TARGET)-4.9
+    _ANDROID_ARCH = arch-arm
+
+    PY4A := $(PY4A_SRC)/python3-alpha/python3_$(ARCH)/python3
+    export PY4A_INC := $(PY4A)/include/python$(VER_MAJ)m
+    export PY4A_LIB := $(PY4A)/lib
+    opt_setup := -m py4a
+    export ANDROID_API := android-9
+
+    export PYTHONSRC := $(PY4A_SRC)/python3-alpha/python-src_arm
+
+else
+    errmsg += ", PY is null, specify 2 or 3"
+endif
 
 # numpy-1.9.2/dist/numpy-1.9.2-py2.7-linux-armv.egg
 # numpy-1.9.2/build/scripts.linux-x86_64-2.7/f2py
-buildend = $(src)/build/scripts.$(BUILD)-2.7/f2py
-
-
-# build rules {{{1
-.PHONY: all error build
-
-ifeq (x$(ANDROID_NDK),x)
-    all: error
-else
-    all: build
-endif
-
-build: $(bin)
-
-error:
-	echo ANDROID_NDK must be set.
-
-$(tar):
-	wget -O $@ $(url)
-
-$(src)/setup.py: $(tar)
-	tar xfz $(tar)
-	cd $(src); for i in $(PWD)/*.patch; do patch -p1 -i $$i; done
-	touch $@
-
-$(buildend): $(src)/setup.py
-	# cd $(dir $<); python setup.py --help; exit 1
-	# invalid: --plat-name=linux-armv
-	@echo these might be null, are set by py4a/__init__.py
-	@echo CC      : $(CC)
-	@echo CFLAGS  : $(CFLAGS)
-	@echo CPPFLAGS: $(CPPFLAGS)
-	@echo CXXFLAGS: $(CXXFLAGS)
-	@echo LDFLAGS : $(LDFLAGS)
-	@echo LDSHARED: $(LDSHARED)
-	cd $(dir $<); \
-	  $(HOSTPYTHON) setup.py -v build --fcompiler=fake
-
-$(bin): $(buildend)
-	@echo build $(bin) from $(buildend)
-	$(HOSTPYTHON) check_setuptools.py
-	# invalid: --prefix=/mnt/sdcard/com.googlecode.pythonforandroid/extras/python
-	cd $(src); \
-	  $(HOSTPYTHON) setupegg.py bdist_egg --plat-name=$(PYHOST)
 
 
 # build variables {{{1
-export PY4A := $(PWD)/../python
-export PY4A_INC := $(PY4A)/include/python2.7
-export PY4A_LIB := $(PY4A)/lib
-export PYTHONPATH := $(PY4A_LIB)/python2.7
-HOSTPYTHON := $(PWD)/../../python-build/host/bin/python
+# PWD for py4a module
+# export PYTHONPATH := $(PYTHONPATH):$(PWD)
 
 BUILDMACHINE := $(shell uname -m)
 BUILDOS := $(shell uname -s | tr A-Z a-z)
+BUILDARCH := $(BUILDMACHINE)-$(BUILDOS)-gnu
 BUILD := $(BUILDOS)-$(BUILDMACHINE)
-
+ifeq (x$(host),x)
+    # check host variable: linux-x86_64, linux-x86 or darwin-x86
+    host := $(BUILDOS)-$(BUILDMACHINE)
+endif
 
 ifeq (x$(ARCH),xx86)
     export CC := 
 else
-    PYHOST := linux-armv
-    export PY4A_ROOT := $(ANDROID_NDK)/platforms/android-3/arch-arm
-    BINPATH := $(ANDROID_NDK)/toolchains/arm-linux-androideabi-4.9
-    export PATH := $(BINPATH)/prebuilt/$(BUILD)/bin:$(PATH)
     #these are set in py4a/__init__.py
     # export CC := arm-linux-androideabi-gcc --sysroot=$(PY4A_ROOT)
     # export CFLAGS := -mtune=xscale -march=armv5te -msoft-float
 endif
+
+# build settings section 2 {{{1
+ANDROID_NDK_ROOT := $(NDK_PATH)
+export ANDROID_SYSROOT := $(NDK_PATH)/platforms/$(ANDROID_API)/$(_ANDROID_ARCH)
+export ANDROID_TOOLCHAIN := $(NDK_PATH)/toolchains/$(tabi)/prebuilt/$(host)/bin
+export PATH := $(ANDROID_TOOLCHAIN):$(PATH)
+
+
+ifeq (x$(errmsg),x)
+    all: build
+else
+    all: error
+endif
+
+# build rules {{{1
+.PHONY: all error build clean
+
+error:
+	@echo $(errmsg)
+
+build: $(DISTWHL)
+
+clean:
+	rm -rf $(DISTWHL) $(SRCDIR)
+
+$(SRCTGZ):
+	wget -O $@ $(URL)
+
+$(SRCDIR): $(SRCTGZ)
+	rm -rf $@
+	tar xfz $<
+	cd $@; ln -sf $(PY4A_SRC)/python-build/python-libs/py4a .
+	cd $@; for i in $(PWD)/*.patch; do patch -p1 -i $$i; done
+	touch $@
 
 #these are set in py4a/__init__.py
 # export CFLAGS += --sysroot=$(NDK_SYSROOT) -DANDROID \
@@ -103,5 +146,23 @@ endif
 #                   -rdynamic -fPIE
 # export LDSHARED := $(LDFLAGS)
 
+$(DISTWHL): $(SRCDIR)
+	# cd $(dir $<); python setup.py --help; exit 1
+	# invalid: --plat-name=linux-armv
+	@echo these might be null, are set by py4a/__init__.py
+	@echo PATH    : $(PATH)
+	@echo CC      : $(CC)
+	@echo CFLAGS  : $(CFLAGS)
+	@echo CPPFLAGS: $(CPPFLAGS)
+	@echo CXXFLAGS: $(CXXFLAGS)
+	@echo LDFLAGS : $(LDFLAGS)
+	@echo LDSHARED: $(LDSHARED)
+	@echo PYTHONPATH: $$PYTHONPATH
+	arm-linux-androideabi-gcc -v
+	cd $<; \
+	  $(PYTHON_FOR_BUILD) $(opt_setup) setup.py bdist_wheel \
+	    --plat-name=$(PYTHON_PLATNAME) --dist-dir ..
+#	  $(HOSTPYTHON) -m py4a setup.py -v build --fcompiler=fake
+
 # end of file {{{1
-# vi: ft=makefile:nowrap:fdm=marker
+# vi: ft=make:ts=4:et:nowrap:fdm=marker

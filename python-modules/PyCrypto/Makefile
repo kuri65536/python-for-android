@@ -1,10 +1,27 @@
+# Copyright 2017 Shimoda (kuri65536 at hotmail dot com)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This makefile builds the host binary (egg).
+# minimize duplication between the build rules.
 VERSION := 2.6.1
 NAME := pycrypto
 URL := http://ftp.dlitz.net/pub/dlitz/crypto/pycrypto
 # URL=https://ftp.dlitz.net/pub/dlitz/crypto/pycrypto/pycrypto-2.6.1.tar.gz
 
-SRCDIR := ${NAME}-${VERSION}
-SRCTGZ := ${NAME}-${VERSION}.tar.gz
+# settings {{{1
+SRCDIR := $(NAME)-$(VERSION)
+SRCTGZ := $(NAME)-$(VERSION).tar.gz
 
 DISTWHL = $(NAME)-$(VERSION)-$(PYVER)-$(PYABI)-$(PYTHON_PLATNAME).whl
 
@@ -13,7 +30,7 @@ ifeq (x$(NDK_PATH),x)
     errmsg := "NDK_PATH is null"
 endif
 
-PY4A_SRC=$(abspath ../..)
+PY4A_SRC := $(abspath ../..)
 
 ifeq (x$(PY),x2)
     # python2 is not maintained, now.
@@ -87,9 +104,7 @@ clean:
 	rm -rf $(DISTWHL) $(SRCDIR)
 
 $(SRCTGZ):
-	if [ ! -f $@ ]; then
-	  wget -O $@ ${URL}/${NAME}-${VERSION}.tar.gz
-	fi
+	wget -O $@ ${URL}/${NAME}-${VERSION}.tar.gz
 
 $(SRCDIR): $(SRCTGZ)
 	rm -rf $@
@@ -99,6 +114,7 @@ $(SRCDIR): $(SRCTGZ)
 	    patch -p1 -i $$i; \
 	done
 	cd $@; ln -sf $(PY4A_SRC)/python-build/python-libs/py4a .
+	touch $@
 
 $(DISTWHL): $(SRCDIR)
 	@echo build $@
@@ -107,4 +123,5 @@ $(DISTWHL): $(SRCDIR)
 	  $(PYTHON_FOR_BUILD) $(opt_setup) setup.py bdist_wheel \
 	    --plat-name=$(PYTHON_PLATNAME) --dist-dir ..
 
-# vi: ft=make:ts=4:et:nowrap
+# end of file {{{1
+# vi: ft=make:ts=4:et:nowrap:fdm=marker
