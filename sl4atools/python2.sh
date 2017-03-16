@@ -10,12 +10,12 @@ fi
 PW=`pwd`
 ver=2.7
 py4a=pythonforandroid
-bin=python
+binr=python
 export EXTERNAL_STORAGE=$st
 export LANG=en
-bin=/data/data/com.googlecode.$py4a/files/$bin
+bin=/data/data/com.googlecode.$py4a/files/$binr
 pfx=$st/com.googlecode.$py4a
-ext=$pfx/extras/$bin
+ext=$pfx/extras/$binr
 PYTHONUSERBASE=$pfx/local
 PYTHONPATH=$ext
 PYTHONPATH=${PYTHONPATH}:$PYTHONUSERBASE

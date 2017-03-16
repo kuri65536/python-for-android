@@ -10,13 +10,16 @@ fi
 PW=`pwd`
 ver=3.6
 py4a=python3forandroid
-bin=python3
+binr=python3
 export EXTERNAL_STORAGE=$st
 export LANG=en
-bin=/data/data/com.googlecode.$py4a/files/$bin
+bin=/data/data/com.googlecode.$py4a/files/$binr
 pfx=$st/com.googlecode.$py4a
-ext=$pfx/extras/$bin
+ext=$pfx/extras/$binr
+# normal (pure python modules only)
 PYTHONUSERBASE=$pfx/local
+# to use C extension modules (with shared lib)
+# PYTHONUSERBASE=/data/local/tmp/local
 PYTHONPATH=$ext
 PYTHONPATH=${PYTHONPATH}:$PYTHONUSERBASE
 PYTHONPATH=${PYTHONPATH}:$bin/lib/python$ver/lib-dynload
