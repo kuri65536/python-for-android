@@ -55,10 +55,17 @@ clean:
 	make -C .build_armeabi clean
 	make -C .build_x86 clean
 
+
+URL1 := https://www.openssl.org/source/$(OPENSSL_SRC)
+URL2 := https://www.openssl.org/source/old/$(OPENSSL_SERIES)/$(OPENSSL_SRC)
+
 $(OPENSSL_SRC):
-	if ! wget https://www.openssl.org/source/$(OPENSSL_SRC); \
-	then \
-	    wget https://www.openssl.org/source/old/$(OPENSSL_SERIES)/$(OPENSSL_SRC); \
+	if wget $(URL1); then \
+	    echo; \
+	elif wget $(URL2); then \
+	    echo; \
+	else \
+	    echo "can't get $(OPENSSL_SRC)" && exit 1; \
 	fi
 	wget https://wiki.openssl.org/images/7/70/Setenv-android.sh
 
