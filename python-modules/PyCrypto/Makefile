@@ -113,7 +113,8 @@ $(SRCDIR): $(SRCTGZ)
 	for i in ../*.patch; do \
 	    patch -p1 -i $$i; \
 	done
-	cd $@; ln -sf $(PY4A_SRC)/python-build/python-libs/py4a .
+	cp -r $(PY4A_SRC)/python-build/python-libs/py4a $@/
+	cp __main__.py $@/py4a
 	touch $@
 
 $(DISTWHL): $(SRCDIR)
