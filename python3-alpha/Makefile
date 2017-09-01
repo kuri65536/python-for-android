@@ -7,7 +7,7 @@
 # build settings section 1 {{{1
 VER_MAJ=3.6
 VER_MAJ_NODOT=$(subst .,,$(VER_MAJ))
-VERSION=$(VER_MAJ).0
+VERSION=$(VER_MAJ).2
 # set -ex
 CWD := $(shell pwd)
 DEBUG=no
@@ -39,12 +39,21 @@ endif
 ifeq (x$(NDK_PATH),x)
 build: error
 else
-build: $(ZIP)
+build: .build_tools $(ZIP)
 endif
 
 error:
 	@echo please set NDK_PATH to android-ndk-r10d or later::
 	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10d make build"
+
+.build_tools:
+	@echo "check zlib,               if failed: apt install zlib-dev"
+	python ../tools/check_zlib.py
+	@echo "check makedepend command, if failed: apt install xutils-dev"
+	makedepend
+	@echo "check zip command,        if failed: apt install zip"
+	zip -v > /dev/null 2>&1
+	touch .build_tools
 
 # tools {{{2
 ndk_depends = $(NDK_PATH)/ndk-depends
@@ -301,8 +310,8 @@ $(PYTHONTAR):
 	make -C host-src Parser/pgen
 	make -C host-src install
 	cp host-src/Parser/pgen $(HOSTPYTHON)/bin/hostpgen
-	cp host-src/Programs/_freeze_importlib \
-	    $(HOSTPYTHON)/bin/host_freeze_importlib
+	# cp host-src/Programs/_freeze_importlib \
+	#     $(HOSTPYTHON)/bin/host_freeze_importlib
 	touch .build_host
 
 # python3: patching-configure-build {{{1
@@ -444,3 +453,4 @@ localinstall:
 	adb push $(ZIPSCRIPTS) $(andpath)
 
 # vi: ft=Makefile:fdm=marker
+# DO NOT DELETE

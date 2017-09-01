@@ -1,5 +1,5 @@
---- python-src_arm/build/lib.linux-arm-3.6/_sysconfigdata_m_linux_arm-linux-androideabi.py	2017-01-20 04:10:36.871532034 +0900
-+++ host/lib/python3.6/_sysconfigdata_m_linux_arm-linux-androideabi.py	2017-01-20 04:13:45.625071251 +0900
+--- python-src_arm/build/lib.linux-arm-3.6/_sysconfigdata_m_linux_.py	2017-01-20 04:10:36.871532034 +0900
++++ host/lib/python3.6/_sysconfigdata_m_linux_.py	2017-01-20 04:13:45.625071251 +0900
 @@ -109,6 +109,7 @@
   'ENSUREPIP': 'no',
   'EXE': '',

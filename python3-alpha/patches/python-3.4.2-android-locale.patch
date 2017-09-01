@@ -102,24 +102,6 @@ diff -ru Python-3.3.5/Python/fileutils.c Python-3.3.5-android/Python/fileutils.c
  extern wchar_t* _Py_DecodeUTF8_surrogateescape(const char *s, Py_ssize_t size);
  #endif
 
-@@ -44,7 +44,7 @@
-     Py_RETURN_NONE;
- }
-
--#if !defined(__APPLE__) && !defined(MS_WINDOWS)
-+#if !defined(__APPLE__) && !defined(__ANDROID__) && !defined(MS_WINDOWS)
- extern int _Py_normalize_encoding(const char *, char *, size_t);
-
- /* Workaround FreeBSD and OpenIndiana locale encoding issue with the C locale.
-@@ -194,7 +194,7 @@
- }
- #endif   /* !defined(__APPLE__) && !defined(MS_WINDOWS) */
-
--#if !defined(__APPLE__) && (!defined(MS_WINDOWS) || !defined(HAVE_MBRTOWC))
-+#if !defined(__APPLE__) && !defined(__ANDROID__) && (!defined(MS_WINDOWS) || !defined(HAVE_MBRTOWC))
- static wchar_t*
- decode_ascii_surrogateescape(const char *arg, size_t *size)
- {
 @@ -241,7 +241,7 @@
  wchar_t*
  _Py_char2wchar(const char* arg, size_t *size)

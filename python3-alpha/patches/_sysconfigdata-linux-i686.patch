@@ -1,5 +1,5 @@
---- python-src_x86/build/lib.linux-i686-3.6/_sysconfigdata_m_linux_i686-linux-android.py	2017-01-20 07:46:04.726217475 +0900
-+++ host/lib/python3.6/_sysconfigdata_m_linux_i686-linux-android.py	2017-01-20 07:55:21.667754773 +0900
+--- python-src_x86/build/lib.linux-i686-3.6/_sysconfigdata_m_linux_.py	2017-01-20 07:46:04.726217475 +0900
++++ host/lib/python3.6/_sysconfigdata_m_linux_.py	2017-01-20 07:55:21.667754773 +0900
 @@ -109,6 +109,7 @@
   'ENSUREPIP': 'no',
   'EXE': '',
