@@ -30,7 +30,7 @@ Index
 [10]:tips_installndk.md
 [11]:contributions.md
 [12]:versions.md
-[13]:building_apk.md
+[13]:building_apks.md
 [14]:building_python.md
 
 <!---
