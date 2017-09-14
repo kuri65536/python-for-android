@@ -2,12 +2,11 @@
 
 Tips: Helper Files
 ---
-[androidhelper.py](http://code.google.com/p/python-for-android/downloads/detail?name=androidhelper.py)
+[androidhelper.py](https://github.com/kuri65536/python-for-android/tree/master/tools/androidhelper.py)
 for simplifying Python-for-Android SL4A development in IDEs.
 
 This creates a "helper" class derived from the default Android class
-and defines SL4A
-[R5](https://code.google.com/p/python-for-android/source/detail?r=5)
+and defines [SL4A](https://github.com/kuri65536/sl4a)
 functions with API documentation in DocString & uses RPC calls derived
 from the base android.py.
 
@@ -30,11 +29,12 @@ class if not.
 
 Generating
 ---
-To generate this file, I have written [createandroidhelper.py](http://code.google.com/p/python-for-android/downloads/detail?name=createandroidhelper.py).
+To generate this file, I have written
+[createandroidhelper.py](https://github.com/kuri65536/python-for-android/tree/master/tools/createandroidhelper.py).
 
 After some trial & error, I finally chose to use the HTML documentation
 contained at
-http://android-scripting.googlecode.com/hg/android/ScriptingLayerForAndroid/assets/sl4adoc.zip
+https://github.com/kuri65536/sl4a/tree/master/android/ScriptingLayerForAndroid/assets/sl4adoc.zip
 to generate androidhelper.py.
 
 Note that this currently has issues with 2 API functions which need manual

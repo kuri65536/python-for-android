@@ -100,6 +100,7 @@ Pages
 ---
 * [Examples](docs/examples.md) as cookbooks.
 * [Modules](docs/modules.md)
+* [Creating APKs](docs/building_apks.md)
 * [fullscreenwrapper2](docs/fullscreenwrapper2.md)
 * [Versions](docs/versions.md)
 * [BuildingModules](docs/building_modules.md)

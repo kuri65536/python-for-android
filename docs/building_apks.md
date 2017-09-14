@@ -4,7 +4,7 @@ Buildin APK
 ===
 You can mostly follow the instructions in the SL4A Wiki:
 
-http://code.google.com/p/android-scripting/wiki/SharingScripts
+https://github.com/kuri65536/sl4a/tree/master/docs/SharingScripts.md
 
 Python-specific Tricks
 ---
