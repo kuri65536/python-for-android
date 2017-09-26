@@ -452,5 +452,10 @@ localinstall:
 	adb push $(ZIPEXTRA) $(andpath)
 	adb push $(ZIPSCRIPTS) $(andpath)
 
+src_featured_java = ../android/Common/src/com/googlecode/android_scripting/FeaturedInterpreters.java
+update_links:
+	sed -i 's/Python .*"/Python 3.6.2"/' $(src_featured_java)
+	sed -i 's/\([\/_]\)r[0-9]+/\1r33/' $(src_featured_java)
+
 # vi: ft=Makefile:fdm=marker
 # DO NOT DELETE

@@ -943,14 +943,33 @@ public abstract class PythonMain extends Main {
     protected Boolean doInBackground(Integer... params) {
       publishProgress("Checking folder for Updates");
 
-      if (!mLocalInstallRoot.exists() ||
-              !mLocalInstallRoot.isDirectory() ||
-              !mLocalInstallRoot.canRead() ||
+          if (!mLocalInstallRoot.exists()) {
+              String msg = "Can't found " +
+                      InterpreterConstants.SDCARD_ROOT + " or " +
+                      "/sdcard. ";
+              Log.e(msg);
+              this.publishProgress(msg);
+              return false;
+          }
+          if (!mLocalInstallRoot.isDirectory()) {
+              String msg = "'" + mLocalInstallRoot.getAbsolutePath() +
+                           "' is not directory, please remove and retry.";
+              Log.e(msg);
+              this.publishProgress(msg);
+              return false;
+          }
+          if (!mLocalInstallRoot.canRead() ||
               !mLocalInstallRoot.canWrite()) {
-        this.publishProgress("Please put zips to: " +
-                mLocalInstallRoot.getAbsolutePath());
-        return false;
-      }
+              String msg = "";
+              msg += !mLocalInstallRoot.canRead() ? "read/": "";
+              msg += !mLocalInstallRoot.canWrite() ? "write/": "";
+              msg = "can not " + msg + " to '" +
+                           mLocalInstallRoot.getAbsolutePath() +
+                           "', please check the permissions";
+              Log.e(msg);
+              this.publishProgress(msg);
+              return false;
+          }
 
       ArrayList<File> itps = new ArrayList<File>();
       ArrayList<File> exts = new ArrayList<File>();

@@ -61,9 +61,10 @@ public class Python3Installer extends InterpreterInstaller {
     File tmp =
         new File(InterpreterConstants.SDCARD_ROOT + getClass().getPackage().getName()
             + InterpreterConstants.INTERPRETER_EXTRAS_ROOT, mDescriptor.getName() + "/tmp");
-    if (!tmp.isDirectory()) {
-      try {
-        tmp.mkdir();
+        if (tmp.isDirectory()) {
+            // TODO: check some permissions.
+        } else try {
+            tmp.mkdir();
       } catch (SecurityException e) {
         Log.e(mContext, "Setup failed.", e);
         return false;
@@ -76,7 +77,6 @@ public class Python3Installer extends InterpreterInstaller {
         editor.putInt(PythonConstants.INSTALLED_SCRIPTS_KEY, descriptor.getScriptsVersion());
         editor.commit();
       }
-    }
 
     return true;
   }
