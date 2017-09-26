@@ -89,21 +89,6 @@ diff -ru Python-3.3.5/Lib/subprocess.py Python-3.3.5-android/Lib/subprocess.py
 
              if executable is None:
                  executable = args[0]
-diff -ru Python-3.3.5/Modules/posixmodule.c Python-3.3.5-android/Modules/posixmodule.c
---- Python-3.3.5/Modules/posixmodule.c	2014-03-09 08:40:28.000000000 +0000
-+++ Python-3.3.5-android/Modules/posixmodule.c	2015-02-24 19:57:05.368843433 +0000
-@@ -403,6 +403,11 @@
- #endif
- #endif
- 
-+/* Android doesn't expose AT_EACCESS - manually define it. */
-+#if !defined(AT_EACCESS) && defined(__ANDROID__)
-+#define AT_EACCESS     0x200
-+#endif
-+
- 
- #ifdef MS_WINDOWS
- static int
 diff -ru Python-3.4.2/configure Python-3.4.2-android/configure
 --- Python-3.4.2/configure	2015-02-24 23:18:31.000000000 +0100
 +++ Python-3.4.2-android/configure	2015-03-01 20:15:02.000000000 +0100

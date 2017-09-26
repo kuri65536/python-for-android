@@ -1,0 +1,33 @@
+--- host-src/Programs/python.c	2017-09-25 20:53:09.501889900 +0900
++++ python-src_arm/Programs/python.c	2017-09-26 00:43:18.108582700 +0900
+@@ -43,10 +43,13 @@
+     fedisableexcept(FE_OVERFLOW);
+ #endif
+ 
+-    oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
+-    if (!oldloc) {
+-        fprintf(stderr, "out of memory\n");
+-        return 1;
++    oldloc = setlocale(LC_ALL, NULL);
++    if (oldloc) {
++        oldloc = _PyMem_RawStrdup(oldloc);
++        if (!oldloc) {
++            fprintf(stderr, "out of memory\n");
++            return 1;
++        }
+     }
+ 
+     setlocale(LC_ALL, "");
+@@ -63,8 +66,10 @@
+     }
+     argv_copy2[argc] = argv_copy[argc] = NULL;
+ 
+-    setlocale(LC_ALL, oldloc);
+-    PyMem_RawFree(oldloc);
++    if (oldloc) {
++        setlocale(LC_ALL, oldloc);
++        PyMem_RawFree(oldloc);
++    }
+ 
+     res = Py_Main(argc, argv_copy);
+ 

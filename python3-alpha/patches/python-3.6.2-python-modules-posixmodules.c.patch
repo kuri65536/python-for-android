@@ -1,5 +1,6 @@
---- host-src/Modules/posixmodule.c	2017-07-08 12:33:27.000000000 +0900
-+++ python-src_arm/Modules/posixmodule.c	2017-08-31 16:04:39.609134000 +0900
+diff -ur host-src/Modules/posixmodule.c python-src_arm/Modules/posixmodule.c
+--- host-src/Modules/posixmodule.c	2017-09-16 17:14:55.810834700 +0900
++++ python-src_arm/Modules/posixmodule.c	2017-09-25 05:15:22.555184600 +0900
 @@ -416,6 +416,11 @@
  }
  #endif

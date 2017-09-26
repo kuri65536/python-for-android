@@ -90,36 +90,6 @@ diff -ru Python-3.3.5/Modules/main.c Python-3.3.5-android/Modules/main.c
              /* Use utf-8 on Mac OS X */
              unicode = PyUnicode_FromString(p);
  #else
-diff -ru Python-3.3.5/Python/fileutils.c Python-3.3.5-android/Python/fileutils.c
---- Python-3.3.5/Python/fileutils.c	2014-03-09 09:40:32.000000000 +0100
-+++ Python-3.3.5-android/Python/fileutils.c	2014-08-04 22:16:29.000000000 +0200
-@@ -10,7 +10,7 @@
- #include <langinfo.h>
- #endif
-
--#ifdef __APPLE__
-+#if defined(__APPLE__) || defined(__ANDROID__)
- extern wchar_t* _Py_DecodeUTF8_surrogateescape(const char *s, Py_ssize_t size);
- #endif
-
-@@ -241,7 +241,7 @@
- wchar_t*
- _Py_char2wchar(const char* arg, size_t *size)
- {
--#ifdef __APPLE__
-+#if defined(__APPLE__) || defined(__ANDROID__)
-     wchar_t *wstr;
-     wstr = _Py_DecodeUTF8_surrogateescape(arg, strlen(arg));
-     if (size != NULL) {
-@@ -384,7 +384,7 @@
- char*
- _Py_wchar2char(const wchar_t *text, size_t *error_pos)
- {
--#ifdef __APPLE__
-+#if defined(__APPLE__) || defined(__ANDROID__)
-     Py_ssize_t len;
-     PyObject *unicode, *bytes = NULL;
-     char *cpath;
 diff -ru Python-3.3.5/Python/formatter_unicode.c Python-3.3.5-android/Python/formatter_unicode.c
 --- Python-3.3.5/Python/formatter_unicode.c	2014-03-09 09:40:32.000000000 +0100
 +++ Python-3.3.5-android/Python/formatter_unicode.c	2014-08-04 22:16:29.000000000 +0200

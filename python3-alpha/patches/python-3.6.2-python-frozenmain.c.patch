@@ -1,0 +1,33 @@
+--- host-src/Python/frozenmain.c	2017-09-16 17:15:18.989360000 +0900
++++ python-src_arm/Python/frozenmain.c	2017-09-25 08:26:41.055236600 +0900
+@@ -46,10 +46,13 @@
+         setbuf(stderr, (char *)NULL);
+     }
+ 
+-    oldloc = _PyMem_RawStrdup(setlocale(LC_ALL, NULL));
+-    if (!oldloc) {
+-        fprintf(stderr, "out of memory\n");
+-        goto error;
++    oldloc = setlocale(LC_ALL, NULL);
++    if (oldloc) {
++        oldloc = _PyMem_RawStrdup(oldloc);
++        if (!oldloc) {
++            fprintf(stderr, "out of memory\n");
++            goto error;
++        }
+     }
+ 
+     setlocale(LC_ALL, "");
+@@ -63,8 +66,10 @@
+             goto error;
+         }
+     }
+-    setlocale(LC_ALL, oldloc);
+-    PyMem_RawFree(oldloc);
++    if (oldloc) {
++        setlocale(LC_ALL, oldloc);
++        PyMem_RawFree(oldloc);
++    }
+     oldloc = NULL;
+ 
+ #ifdef MS_WINDOWS
