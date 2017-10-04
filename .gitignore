@@ -1,0 +1,4 @@
+python3-alpha/Python-3*.tgz
+python3-alpha/host
+python3-alpha/host-src
+python3-alpha/.build*
