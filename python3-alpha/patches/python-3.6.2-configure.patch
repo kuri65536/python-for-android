@@ -1,0 +1,50 @@
+--- host-src/configure	2017-07-08 12:33:27.000000000 +0900
++++ python-src_arm/configure	2017-10-05 07:17:57.844399770 +0900
+@@ -5214,7 +5214,11 @@
+ #undef sparc
+ #undef unix
+ #if defined(__ANDROID__)
+-    # Android is not a multiarch system.
++# if defined(__i386__)
++        i686-linux-android
++# else
++        arm-linux-androideabi
++# endif
+ #elif defined(__linux__)
+ # if defined(__x86_64__) && defined(__LP64__)
+         x86_64-linux-gnu
+@@ -5756,6 +5760,34 @@
+ # with the ABI build flags appended.
+ 
+ 
++# Test if we're running on Android.
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if target is Android-based" >&5
++$as_echo_n "checking if target is Android-based... " >&6; }
++cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++
++#if __ANDROID__
++yes
++#endif
++
++_ACEOF
++if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
++  $EGREP "yes" >/dev/null 2>&1; then :
++
++    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
++$as_echo "yes" >&6; }
++    with_android=yes
++
++else
++
++    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
++$as_echo "no" >&6; }
++    with_android=no
++
++
++fi
++rm -f conftest*
++
+ 
+ 
+ 
