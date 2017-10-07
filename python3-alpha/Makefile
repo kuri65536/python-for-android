@@ -7,7 +7,7 @@
 # build settings section 1 {{{1
 VER_MAJ=3.6
 VER_MAJ_NODOT=$(subst .,,$(VER_MAJ))
-VERSION=$(VER_MAJ).2
+VERSION=$(VER_MAJ).3
 # set -ex
 CWD := $(shell pwd)
 DEBUG=no
@@ -47,7 +47,7 @@ error:
 	@echo "  $$ NDK_PATH=/path/to/android-ndk-r10d make build"
 
 .build_tools:
-	@echo "check zlib,               if failed: apt install zlib-dev"
+	@echo "check zlib,               if failed: apt install zlib1g-dev"
 	python ../tools/check_zlib.py
 	@echo "check makedepend command, if failed: apt install xutils-dev"
 	makedepend

@@ -15,9 +15,9 @@ with open(fname, "w") as fp:
     fp.write(src)
 os.close(fd)
 
-ret = os.system("gcc -lz %s" % fname)
-os.remove(fname)
+ret = os.system("gcc %s -lz" % fname)
 if ret != 0:
     sys.exit(1)
+os.remove(fname)
 sys.exit(0)
 # vi: ft=python
