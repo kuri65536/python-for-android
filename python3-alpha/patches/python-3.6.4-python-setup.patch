@@ -324,6 +324,15 @@ diff -ur host-src/setup.py python-src_arm/setup.py
                                 depends=sha3_deps))
  
          # Modules that provide persistent dictionary-like semantics.  You will
+@@ -1169,7 +1206,7 @@
+                              '/usr/local/include/sqlite3',
+                              ]
+         if cross_compiling:
+-            sqlite_inc_paths = []
++            sqlite_inc_paths = cross_incs
+         MIN_SQLITE_VERSION_NUMBER = (3, 0, 8)
+         MIN_SQLITE_VERSION = ".".join([str(x)
+                                     for x in MIN_SQLITE_VERSION_NUMBER])
 @@ -1358,9 +1395,9 @@
          # Unix-only modules
          if host_platform != 'win32':
