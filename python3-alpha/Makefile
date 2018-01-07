@@ -7,7 +7,7 @@
 # build settings section 1 {{{1
 VER_MAJ=3.6
 VER_MAJ_NODOT=$(subst .,,$(VER_MAJ))
-VERSION=$(VER_MAJ).3
+VERSION=$(VER_MAJ).4
 # set -ex
 CWD := $(shell pwd)
 DEBUG=no
@@ -26,6 +26,15 @@ ZIPSCRIPTS := python3_scripts_$(shell cat LATEST_VERSION_SCRIPTS).zip
 ZIP := $(ZIP_BINarm) $(ZIP_BINx86) \
        $(ZIPEXTRA) \
        $(ZIPSCRIPTS)
+
+ifeq (x$log_arm,x)
+    log_arm := > build.arm.log 2>&1
+endif
+ifeq (x$log_x86,x)
+    log_x86 := > build.x86.log 2>&1
+endif
+lad_arm := $(subst >,>>,$(log_arm))
+lad_x86 := $(subst >,>>,$(log_x86))
 
 # check environment {{{1
 BUILDMACHINE := $(shell uname -m)
@@ -330,8 +339,8 @@ build_src: $(PYTHONTAR) $(CWD)/patches/python-*.patch
 	    echo "patching: $$p..."; patch -p1 -i $$p; done
 
 .build_config: .build_src .build_misc .build_openssl
-	make build_config CROSS=arm PIE=yes
-	make build_config CROSS=x86 PIE=yes
+	make build_config CROSS=arm PIE=yes $(log_arm)
+	make build_config CROSS=x86 PIE=yes $(log_x86)
 	touch .build_config
 build_config:
 	# @echo PATH: "'$$PATH'"
@@ -346,11 +355,12 @@ build_config:
 	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=yes
 
 .build_bin: .build_config
-	make build_bin CROSS=arm PIE=yes
-	make build_bin CROSS=x86 PIE=yes
+	make build_bin CROSS=arm PIE=yes $(lad_arm)
+	make build_bin CROSS=x86 PIE=yes $(lad_x86)
 	touch .build_bin
 build_bin: .build_openssl .build_misc
-	CFLAGS="$(CFLAGS)" CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) sharedmods # build
+	CFLAGS="$(CFLAGS)" CROSS_COMPILE_TARGET=yes make \
+	    -C $(PYTHONSRC) sharedmods # build
 
 .build_install: .build_bin
 	make build_install CROSS=arm PIE=yes
