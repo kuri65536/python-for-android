@@ -1,4 +1,4 @@
-VERSION=2.7.12
+VERSION=2.7.14
 ndk_build = $(NDK_PATH)/ndk-build
 # set -ex
 CWD := $(shell pwd)
@@ -86,6 +86,7 @@ $(PYTHONTAR):
 	mkdir -p $(PYTHONHST)
 	cd Python-$(VERSION)/; ./configure --prefix=$(PYTHONHST)
 	make -C Python-$(VERSION)
+	make -C Python-$(VERSION) regen-grammar
 	make -C Python-$(VERSION) install
 	cp Python-$(VERSION)/Parser/pgen $(PYTHONHST)
 	rm -rf Python-$(VERSION)
