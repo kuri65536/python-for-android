@@ -1,6 +1,6 @@
 diff -ur host-src/Makefile.pre.in python-src_arm/Makefile.pre.in
 --- host-src/Makefile.pre.in	2016-12-23 11:21:21.000000000 +0900
-+++ python-src_arm/Makefile.pre.in	2017-01-20 07:29:33.327508353 +0900
++++ python-src_arm/Makefile.pre.in	2018-01-09 02:48:42.884307702 +0900
 @@ -142,7 +142,7 @@
  
  # Symbols used for using shared libraries
@@ -22,6 +22,14 @@ diff -ur host-src/Makefile.pre.in python-src_arm/Makefile.pre.in
  
  # Tcl and Tk config info from --with-tcltk-includes and -libs options
  TCLTK_INCLUDES=	@TCLTK_INCLUDES@
+@@ -575,6 +586,7 @@
+ 	esac; \
+ 	$(RUNSHARED) CC='$(CC)' LDSHARED='$(BLDSHARED)' OPT='$(OPT)' \
+ 		_TCLTK_INCLUDES='$(TCLTK_INCLUDES)' _TCLTK_LIBS='$(TCLTK_LIBS)' \
++		LDFLAGS='-lpython3.6m' \
+ 		$(PYTHON_FOR_BUILD) $(srcdir)/setup.py $$quiet build
+ 
+ 
 @@ -1431,6 +1436,7 @@
  # Install the dynamically loadable modules
  # This goes into $(exec_prefix)

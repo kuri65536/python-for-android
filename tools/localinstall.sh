@@ -14,14 +14,21 @@ EOF
 sdext=/sdcard           # fix to fit your devcie.
 zip_bin=python${_2or3}_$(cat LATEST_VERSION)$arch.zip
 zip_ext=python${_2or3}_extras_$(cat LATEST_VERSION_EXTRA).zip
+zip_scr=python${_2or3}_scripts_$(cat LATEST_VERSION_SCRIPTS).zip
 pkg=com.googlecode.python${_2or3}forandroid
 path_inst=$sd/$pkg
 path_app=/data/data/$pkg/files
 
+$adb shell mkdir -p $path_inst
 $adb push $zip_bin $path_inst
 $adb push $zip_ext $path_inst
-for i in python-scripts/*.py; do
-    $adb push $i $sd/sl4a/scripts; done
+$adb push $zip_scr $path_inst
+# for i in python-scripts/*.py; do
+#     $adb push $i $sd/sl4a/scripts; done
+
+echo pkg:       $pkg
+echo path_app:  $path_app
+echo path_inst: $path_inst
 # you need root permission with it
 if [ x$nosu = x ]; then
     $adb shell "su -c \"cd $path_app; rm -r python; unzip -o $path_inst/$zip_bin\""
