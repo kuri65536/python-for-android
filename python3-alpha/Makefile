@@ -27,14 +27,14 @@ ZIP := $(ZIP_BINarm) $(ZIP_BINx86) \
        $(ZIPEXTRA) \
        $(ZIPSCRIPTS)
 
-ifeq (x$log_arm,x)
+ifeq (x$(log_arm),x)
     log_arm := > build.arm.log 2>&1
 endif
-ifeq (x$log_x86,x)
+ifeq (x$(log_x86),x)
     log_x86 := > build.x86.log 2>&1
 endif
-lad_arm := $(subst >,>>,$(log_arm))
-lad_x86 := $(subst >,>>,$(log_x86))
+lad_arm := $(subst > ,>> ,$(log_arm))
+lad_x86 := $(subst > ,>> ,$(log_x86))
 
 # check environment {{{1
 BUILDMACHINE := $(shell uname -m)
@@ -179,7 +179,8 @@ clean_work:
 
 # libraries {{{1
 .build_misc: .build_misc_sqlite3 .build_misc_ncurses \
-             .build_misc_readline .build_misc_bzip2
+             .build_misc_readline .build_misc_bzip2 \
+             .build_misc_libffi
 	touch .build_misc
 
 ## download {{{2
@@ -193,6 +194,8 @@ readline-6.3.tar.gz:
 # 	wget http://zlib.net/zlib-1.2.8.tar.gz
 bzip2-1.0.6.tar.gz:
 	wget http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
+libffi-3.2.1.tar.gz:
+	wget ftp://sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
 
 
 targz = $(subst .tar.gz,,$1)
@@ -203,6 +206,21 @@ targz = $(subst .tar.gz,,$1)
 	# install_sw is contained in build.
 	touch .build_openssl
 
+# ffi {{{1
+.build_misc_libffi: libffi-3.2.1.tar.gz
+	rm -rf libffi
+	tar xfz $<
+	mv libffi-3.2.1 libffi
+	make $(subst .,,$@) CROSS=arm PIE=yes
+	make $(subst .,,$@) CROSS=x86 PIE=yes
+	touch $@
+build_misc_libffi: libffi-3.2.1.tar.gz
+	mkdir -p libffi/build$(SFX)
+	cd libffi/build$(SFX); ../configure \
+	    --host=$(HOSTARCH) --build=$(BUILDARCH) --prefix=$(PYBIN) \
+	    --enable-static --disable-shared
+	cd libffi/build$(SFX); make; make install
+	ln -sf $(PYBIN)/lib/$(call targz,$<)/include/* $(PYBIN)/include
 ## ncurses {{{2
 .build_misc_ncurses: ncurses-5.9.tar.gz
 	make $(subst .,,$@) CROSS=arm PIE=yes
@@ -352,7 +370,8 @@ build_config:
 	cd $(PYTHONSRC); CONFIG_SITE=`pwd`/config.site \
 	./configure CROSS_COMPILE_TARGET=yes \
 	            --host=$(TARGET) --build=$(BUILDARCH) --disable-ipv6 \
-	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=yes
+	            --prefix=$(PYBIN) --enable-shared --with-ensurepip=yes \
+	            --with-system-ffi
 
 .build_bin: .build_config
 	make build_bin CROSS=arm PIE=yes $(lad_arm)
