@@ -9,8 +9,8 @@ see [Releases page](../../releases), and select an installer:
 
 Status
 ===
-- Python2.7.12
-- Python3.6.0
+- Python2.7.14
+- Python3.6.4
 
 Description
 ===
