@@ -381,9 +381,13 @@ build_bin: .build_openssl .build_misc
 	CFLAGS="$(CFLAGS)" CROSS_COMPILE_TARGET=yes make \
 	    -C $(PYTHONSRC) sharedmods # build
 
+.build_install: PYDYN_ARM:=python3_arm/python3/lib/python$(VER_MAJ)/lib-dynload
 .build_install: .build_bin
 	make build_install CROSS=arm PIE=yes
 	make build_install CROSS=x86 PIE=yes
+	# work around begging from r34.
+	mv $(PYDYN_ARM)/_sysconfigdata*.py \
+	   $(PYDYN_ARM)/_sysconfigdata_m_linux_arm-linux-androideabi.py
 	touch .build_install
 build_install: .build_bin
 	CROSS_COMPILE_TARGET=yes make -C $(PYTHONSRC) install
@@ -430,6 +434,7 @@ build_zip: .build_strip
 	  for i in $(tinfo); do \
 	    zip -gur ../$(ZIPMAIN) $(PYBINR)/share/terminfo/$$i; done
 	cd $(PYBIN)/..; zip -gri"*.so" ../$(ZIPMAIN) $(PYDYNR)
+	cd $(PYBIN)/..; zip -g ../$(ZIPMAIN) $(PYDYNR)/_sysconfigdata*.py
 	cd $(PYBIN)/..; \
 	  zip -g ../$(ZIPMAIN) \
 	    $(PYBINR)/lib/$(PYTHONLIB)/config-$(VER_MAJ)m/Makefile \
@@ -457,6 +462,7 @@ $(ZIPEXTRA): $(ZIPMAIN) .build_host
 	
 	cd $(PYEXT_); \
 	zip -Dqgr -x "*.so" -x "*.exe" -x "*.a" -x "*/test/*" -x"*/tests/*" \
+	                 -x "*/lib-dynload/*.py*" -x "*/tests.pyc" \
 	                 -x "*/test.pyc" -x "*/tests.pyc" \
 	                 -x"*/turtledemo/*" -x"*/tkinter/*" -x"*/idlelib/*" \
 	                 -x"*.pyo" -x"*.py" -x"*/__pycache__/*" \
