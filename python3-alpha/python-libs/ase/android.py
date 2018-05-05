@@ -16,6 +16,7 @@ from __future__ import print_function
 
 __author__ = 'Damon Kohler <damonkohler@gmail.com>'
 
+import sys
 import time
 import collections
 import json
@@ -41,7 +42,10 @@ class Android(object):
         except:
             self.conn = self.launchSL4A(addr)
 
-    self.client = self.conn.makefile('rw', encoding='utf-8')
+        if sys.version_info[0] == 2:
+            self.client = self.conn.makefile('rw')
+        else:
+            self.client = self.conn.makefile('rw', encoding='utf-8')
     self.id = 0
     if HANDSHAKE is not None:
       self._authenticate(HANDSHAKE)
